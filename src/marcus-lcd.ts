@@ -58,7 +58,7 @@ export class LCDLaunch {
    for(const e of g.enemies)if(!e.dead&&!f.hit.has(e)&&Math.hypot(clamp(hx,e.x,e.x+e.w)-hx,clamp(hy,e.y,e.y+e.h)-hy)<15&&g.lineOfSight(p.x+10,p.y+16,e.x+10,e.y+15)){
     f.hit.add(e);this.impactPose=.17;this.hits++;this.owner.combo++;this.owner.comboLife=1.9;const power=5+f.charge*3+(f.batch?3:0);
     if(e.type==='shield'&&e.shield>0){e.shield=Math.max(0,e.shield-(f.charge>=.5?6:2));g.debris.armor(e.x,e.y,dx>=0?1:-1);}
-    e.hp-=power;e.stun=.5;e.hurt=.2;e.flung=.65;e.vx=dx*(640+f.charge*220);e.vy=dy*480-160;
+    e.hp-=power;e.stun=.5;e.hurt=.2;e.flungBy=g.id;e.flung=.65;e.vx=dx*(640+f.charge*220);e.vy=dy*480-160;
     f.drawX=p.x+10;f.drawY=p.y+16;f.nextFrame=f.age+1/12;
     if(e.hp<=0)g.kill(e,e.vx,e.vy,true);else g.audio.scrap(true);
     g.emit(e.x+10,e.y+15,20,['#f1efd0',MARCUS_COLOR,'#728984'],260,4,.4);g.rings.push({x:hx,y:hy,r:2,max:38,life:.18,color:'#edf0cf'});g.audio.tone(120,.08,'square',.04,55);g.audio.tone(460,.07,'square',.018,280);g.shake=Math.max(g.shake,6);if(g.effects)g.freeze=Math.max(g.freeze,.045);

@@ -1,0 +1,18 @@
+async(page)=>{
+ for(const extra of page.context().pages())if(extra!==page)await extra.close();const errors=[];const instrument=async p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',e=>{if(e.type()==='error')errors.push(e.text());});await p.route('**/src/main.ts*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.__qa=game;'});});};await instrument(page);
+ await page.goto('http://127.0.0.1:5175/');await page.locator('[data-bro="tibo"]').click();
+ await page.evaluate(()=>{const c=window.__qa.coop,make=c.makePeer.bind(c);c.makePeer=()=>{const p=make();p.options.config={...p.options.config,iceTransportPolicy:'all'};return p;};});
+ await page.locator('#coop-start').click();await page.waitForFunction(()=>window.__qa.coop.invite);const invite=await page.evaluate(()=>window.__qa.coop.invite);
+ const guest=await page.context().newPage();await instrument(guest);await guest.goto(invite);await guest.locator('[data-bro="dimillian"]').click();await guest.evaluate(()=>{const c=window.__qa.coop,make=c.makePeer.bind(c);c.makePeer=()=>{const p=make();p.options.config={...p.options.config,iceTransportPolicy:'all'};return p;};});await guest.locator('#coop-start').click();
+ await guest.waitForFunction(()=>window.__qa.coop.running||window.__qa.state==='paused',{timeout:30000});if(!await guest.evaluate(()=>window.__qa.coop.running))return {failed:await guest.locator('body').innerText(),errors};
+ const stats=await guest.evaluate(async()=>{const all=[...(await window.__qa.coop.conn.peerConnection.getStats()).values()];return all.filter(s=>s.type==='candidate-pair'&&s.nominated).map(s=>({rtt:s.currentRoundTripTime,local:all.find(c=>c.id===s.localCandidateId)?.candidateType,remote:all.find(c=>c.id===s.remoteCandidateId)?.candidateType}));});
+ await page.evaluate(()=>{const g=window.__qa;g.enemies=[];g.barrels=[];g.alarms=[];g.world.blocks.fill(null);for(let i=0;i<204;i++)g.world.set(i,43,3);g.peers.forEach(a=>a.invuln=100);});
+ for(const p of [page,guest])await p.evaluate(()=>{const c=window.__qa.coop.conn,send=c.send.bind(c);c.send=m=>{setTimeout(()=>{if(c.open)send(m);},90);};});
+ await guest.locator('#game').focus();await guest.keyboard.press('Digit3');await guest.waitForTimeout(600);
+ const before=await guest.evaluate(()=>window.__qa.player.x);await guest.keyboard.down('KeyD');await guest.waitForTimeout(70);const immediate=await guest.evaluate(()=>window.__qa.player.x);await guest.waitForTimeout(1200);await guest.keyboard.up('KeyD');await guest.waitForTimeout(550);
+ const hostX=await page.evaluate(()=>window.__qa.peers.find(a=>a.id==='p1').player.x),guestX=await guest.evaluate(()=>window.__qa.player.x);
+ if(immediate<=before+1)throw Error('Local prediction waited for network');if(Math.abs(hostX-guestX)>18)throw Error('Movement failed reconciliation '+hostX+' '+guestX);
+ // Missing inputs become neutral instead of walking forever.
+ await guest.keyboard.down('KeyD');await guest.waitForTimeout(300);await guest.evaluate(()=>{const c=window.__qa.coop.conn,send=c.send.bind(c);c.send=m=>{if(m.type!=='input')send(m);};});await page.waitForTimeout(1100);const released=await page.evaluate(()=>{const a=window.__qa.peers.find(a=>a.id==='p1');return {keys:[...a.keys],vx:a.player.vx};});if(released.keys.length||Math.abs(released.vx)>1)throw Error('Stale input not neutralized');
+ await page.evaluate(()=>window.__qa.coop.close());await guest.waitForFunction(()=>!window.__qa.coop.running);await guest.close();await page.unroute('**/src/main.ts*');await page.reload();if(errors.length)throw Error(errors.join('\n'));return {stats,latency:'180ms injected RTT',before,immediate,hostX,guestX,released,errors};
+}

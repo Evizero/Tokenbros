@@ -132,3 +132,38 @@
 :root[data-character="marcus"]{--acid:#70e1ef;--accent:#70e1ef;--accent-soft:#bdeef4}
 
 @media(max-width:650px){.bro-showcase[data-preview-character=marcus] #showcase-clips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}}
+/* Co-op deploy controls use the roster's arcade typography and flat cut-out shapes. */
+.coop-button{background:#303c4b;color:#edf0e4;border:2px solid #758497;padding:16px 20px;font:700 13px monospace;cursor:pointer;white-space:nowrap}.coop-button:hover{background:#45556b;color:#fff}.coop-button:disabled,.primary:disabled{opacity:.6;cursor:wait}.coop-status{font:10px monospace;color:#c9d5dd;letter-spacing:1px;padding:8px 0}.coop-invite{display:flex;gap:10px;padding:5px 0}.coop-invite input{min-width:0;flex:1;color:#eef2e6;background:#17222f;border:1px solid #667185;padding:9px;font:11px monospace}.coop-invite button{background:#303b4c;border:0;color:#f1e6ce;font:10px monospace;cursor:pointer;padding:8px}@media(max-width:700px){.roster-deploy{flex-wrap:wrap}.coop-button{padding:12px;font-size:10px}.coop-status{font-size:8px;letter-spacing:0}.coop-invite input{font-size:9px}}
+
+/* The window is the game. Menus are overlays within it, never a page frame. */
+html,body,#app{width:100%;height:100%;overflow:hidden;background:#101214}
+.stage,.stage.roster-open,.stage:fullscreen,.stage.roster-open:fullscreen{width:100%;height:100dvh;min-height:0;max-height:none;aspect-ratio:auto;margin:0;box-shadow:none;display:block;overflow:hidden;background:#101214}
+.stage{--play-top:max(0px,calc((100dvh - 56.25vw)/2));--play-side:max(0px,calc((100vw - 177.7778dvh)/2))}
+.hud{top:calc(var(--play-top) + 24px);left:calc(var(--play-side) + 26px);right:calc(var(--play-side) + 26px)}
+.toast{bottom:calc(var(--play-top) + 28px)}
+.touch{bottom:calc(var(--play-top) + 10px);left:calc(var(--play-side) + 10px);right:calc(var(--play-side) + 10px)}
+.roster-screen{padding:clamp(20px,3vw,42px);padding-bottom:58px;gap:20px}
+.roster-body{min-height:280px}
+.game-options{display:none;position:absolute;right:28px;bottom:17px;z-index:6;background:none;border:0;color:#c2c9d3;font-size:10px;letter-spacing:2px;padding:8px 0;align-items:center;gap:14px}
+.game-options span{font-size:16px;color:var(--acid)}
+.game-options:hover{color:var(--acid)}
+.stage:has(>.overlay:not([hidden]):not(.intro-overlay))>.game-options{display:flex}
+.roster-bottom{padding-right:140px}
+#options{color:#e5e8ec;background:#15191ff5;border:0;width:min(760px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:clamp(24px,5vw,48px);overflow:auto;box-shadow:0 20px 100px #0008}
+#options[open]{animation:arrive .18s ease-out}
+#options::backdrop{background:#090c12c9;backdrop-filter:blur(7px)}
+.options-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.options-heading h2{font:900 clamp(34px,6vw,56px)/.95 'Barlow Condensed',Impact,sans-serif;margin:0;color:var(--acid)}
+#close-options{padding:14px 0;white-space:nowrap}
+.options-switches{display:flex;flex-wrap:wrap;gap:12px 24px;margin:32px 0;padding:20px 0;border-block:1px solid #46505d}
+.options-switches button{border:0;background:none;color:#e2e6ec;padding:8px 0;font-size:11px;font-weight:600}
+.options-switches button:hover{color:var(--acid)}
+#options h3{font:700 20px 'Barlow Condensed',Impact,sans-serif;letter-spacing:2px;margin:0 0 22px}
+#options .controls{display:grid;grid-template-columns:1fr 1fr;gap:20px 28px;align-items:start;font-size:10px;color:#c0c7d1}
+#options .controls>span{display:flex;align-items:center;gap:12px;line-height:1.6}
+#options kbd{font-size:10px;white-space:nowrap;min-width:45px;padding:5px 7px}
+.options-note{margin:32px 0 0;font-size:9px;color:#86909e;line-height:1.8}
+@media(max-width:850px){.hud{top:calc(var(--play-top) + 12px);left:calc(var(--play-side) + 12px);right:calc(var(--play-side) + 12px)}}
+@media(max-width:650px){.roster-screen{position:absolute;padding:20px 14px 58px;overflow:auto}.roster-body{flex:none;min-height:0}.roster-bottom{padding-right:0}.game-options{right:14px;bottom:10px;background:#15181ef2;padding:9px 14px}.briefing{width:100%;max-height:90%;overflow:auto}.options-switches{gap:8px 18px;margin:24px 0}#options .controls{grid-template-columns:1fr;gap:15px}.options-note{margin-top:24px}}
+@media(prefers-reduced-motion:reduce){#options[open]{animation:none}}
+.stage canvas#game:focus{outline:none}

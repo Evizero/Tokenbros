@@ -1,4 +1,4 @@
-import type { Game } from './game';
+import type { PlayerRuntime as Game } from './player-runtime';
 import { shieldCrossing,type ShieldPlane } from './defense-geometry';
 import { TOKEN_CAPACITY } from './tokens';
 import { rect,text } from './art';

@@ -17,5 +17,8 @@
   "license": "MIT",
   "engines": {
     "node": ">=22.6.0"
+  },
+  "dependencies": {
+    "peerjs": "^1.5.5"
   }
 }

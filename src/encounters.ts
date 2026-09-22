@@ -1,4 +1,4 @@
-import type { Game } from './game';
+import type { PlayerRuntime as Game } from './player-runtime';
 import { SECTORS,SUPPLIES } from './level';
 import { rect,text } from './art';
 import { hear } from './perception';
@@ -20,11 +20,11 @@ export class Encounters {
  update(dt:number){
   const g=this.g;if(g.preview)return;
   for(const [i,s] of SECTORS.entries()){
-   const state=this.states[i],near=g.player.x>s.from-60&&g.player.x<s.to+60;
+   const state=this.states[i],near=g.living.some(a=>a.player.x>s.from-60&&a.player.x<s.to+60);
    const locals=g.enemies.filter(e=>e.sector===i);
    if(!state.active&&near&&locals.some(e=>e.dead||e.awareness.state==='combat'))state.active=true;
    if(!state.active||!near||state.wave>=s.waves.length)continue;
-   if(g.enemies.filter(e=>!e.dead&&Math.abs(e.x-g.player.x)<700).length>=10)continue;
+   if(g.enemies.filter(e=>!e.dead&&g.living.some(a=>Math.abs(e.x-a.player.x)<700)).length>=10)continue;
    state.timer-=dt;if(state.timer>0)continue;
    const types=s.waves[state.wave];
    for(const [n,type] of types.entries()){
@@ -36,12 +36,12 @@ export class Encounters {
   for(const drop of this.pending){drop.time-=dt;if(drop.time>0)continue;
    // A blast may have destroyed the landing during the warning; find safe footing again.
    const spot=this.landing(drop.x,drop.floor);if(!spot){drop.time=-999;continue;}
-   const e=g.spawnEnemy(spot.x,spot.y,drop.type,spot.x>g.player.x?-1:1);e.sector=drop.sector;e.arrival=.8;e.cool=1.4;
-   hear(e.awareness,g.player.x+10,g.player.y+16,6);g.enemies.push(e);g.emit(e.x+10,e.y,10,['#c6c5ad','#a0937b'],70,3,.4);drop.time=-999;
+   const target=g.living.reduce((a,b)=>Math.abs(a.player.x-spot.x)<Math.abs(b.player.x-spot.x)?a:b,g.living[0]??g).player;const e=g.spawnEnemy(spot.x,spot.y,drop.type,spot.x>target.x?-1:1);e.sector=drop.sector;e.arrival=.8;e.cool=1.4;
+   hear(e.awareness,target.x+10,target.y+16,6);g.enemies.push(e);g.emit(e.x+10,e.y,10,['#c6c5ad','#a0937b'],70,3,.4);drop.time=-999;
   }
   this.pending=this.pending.filter(d=>d.time>0);
-  for(const s of this.supplies)if(!s.used&&Math.hypot(g.player.x+10-s.x,g.player.y+16-s.y)<42){
-   s.used=true;g.health=3;g.usage=TOKEN_CAPACITY;g.tokenTrail=TOKEN_CAPACITY;g.peterKit.stock=6;g.charges=Math.max(1,g.charges);
+  for(const s of this.supplies)for(const actor of g.living)if(!s.used&&Math.hypot(actor.player.x+10-s.x,actor.player.y+16-s.y)<42){
+   s.used=true;actor.health=3;actor.usage=TOKEN_CAPACITY;actor.tokenTrail=TOKEN_CAPACITY;actor.peterKit.stock=6;actor.charges=Math.max(1,actor.charges);
    if(s.x>g.checkpoint){g.checkpoint=s.x;g.checkpointY=s.y-2;}
    g.emit(s.x,s.y,20,['#e9d8ac','#adc7bf'],120,3,.6);g.audio.pickup();g.barks.request('rescue');
   }

@@ -1,5 +1,5 @@
 import type { MarcusKit } from './marcus';
-import type { Game } from './game';
+import type { PlayerRuntime as Game } from './player-runtime';
 import { text,robot } from './art';
 import { pacmanArt } from './marcus-art';
 type Enemy=Game['enemies'][number];
@@ -12,7 +12,7 @@ export class Pacman {
  get g(){return this.owner.g;}
  clear(){this.active=null;this.cooldown=0;this.eyes=[];this.notice=0;}
  target(x:number,y:number,hit=new Set<Enemy>()){
-  const a=this.g.aimPoint();return this.g.enemies.filter(e=>!e.dead&&e.hacked<=0&&!e.sheep&&!hit.has(e)&&Math.hypot(e.x+10-x,e.y+15-y)<480&&Math.hypot(e.x+10-a.x,e.y+15-a.y)<170&&this.g.lineOfSight(x,y,e.x+10,e.y+15))
+  const a=this.g.aimPoint();return this.g.enemies.filter(e=>!e.dead&&!this.g.claimedByOther(e)&&e.hacked<=0&&!e.sheep&&!hit.has(e)&&Math.hypot(e.x+10-x,e.y+15-y)<480&&Math.hypot(e.x+10-a.x,e.y+15-a.y)<170&&this.g.lineOfSight(x,y,e.x+10,e.y+15))
    .sort((a1,b)=>Math.hypot(a1.x+10-a.x,a1.y+15-a.y)-Math.hypot(b.x+10-a.x,b.y+15-a.y))[0]??null;
  }
  click(){

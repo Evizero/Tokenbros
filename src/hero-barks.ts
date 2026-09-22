@@ -1,4 +1,4 @@
-import type { Game } from './game';
+import type { PlayerRuntime as Game } from './player-runtime';
 import lines from './hero-lines.json';
 import { clamp } from './world';
 import { W,H,text } from './art';
@@ -11,7 +11,7 @@ export class HeroBarks {
  pending:{event:HeroEvent;expires:number}|null=null;
  private next=new Map<string,number>();private cooldowns=new Map<HeroEvent,number>();private places=new Set<HeroEvent>();private kills:number[]=[];
  constructor(private g:Game){}
- clear(){this.active=null;this.pending=null;if(!this.g.preview){const e=document.querySelector('#hero-caption');if(e)e.textContent='';}}
+ clear(){this.active=null;this.pending=null;if(this.g.local){const e=document.querySelector('#hero-caption');if(e&&this.g.local)e.textContent='';}}
  reset(){this.clear();this.clock=0;this.gap=0;this.cooldowns.clear();this.places.clear();this.kills=[];}
  request(event:HeroEvent){
   const g=this.g;if(g.preview||!['playing','dead','won'].includes(g.state)||!bank[g.character][event])return false;
@@ -24,18 +24,19 @@ export class HeroBarks {
   const key=g.character+':'+event,variants=bank[g.character][event]!,i=this.next.get(key)??0,line=variants[i%variants.length];this.next.set(key,i+1);
   this.cooldowns.set(event,this.clock+(priority(event)>=80?1:25));this.gap=this.clock+7;
   const active={event,line,life:Math.max(2.4,line.length*.062),age:0,hero:g.character,x:g.player.x+10,y:g.player.y,fixed:event==='death'};this.active=active;
-  const e=document.querySelector('#hero-caption');if(e)e.textContent=`${g.character.toUpperCase()}: ${line}`;
+  const e=document.querySelector('#hero-caption');if(e&&this.g.local)e.textContent=`${g.character.toUpperCase()}: ${line}`;
   return true;
  }
  place(event:HeroEvent){if(this.places.has(event))return;this.places.add(event);this.request(event);}
  killed(){this.kills=this.kills.filter(t=>this.clock-t<1.6);this.kills.push(this.clock);if(this.kills.length>=3){this.request('multikill');this.kills=[];}}
  update(dt:number){
   if(this.g.preview||!['playing','dead','won'].includes(this.g.state))return;
-  this.clock+=dt;if(this.active){this.active.life-=dt;this.active.age+=dt;if(this.active.life<=0){this.active=null;const e=document.querySelector('#hero-caption');if(e)e.textContent='';}}
+  this.clock+=dt;if(this.active){this.active.life-=dt;this.active.age+=dt;if(this.active.life<=0){this.active=null;const e=document.querySelector('#hero-caption');if(e&&this.g.local)e.textContent='';}}
   if(this.pending){const p=this.pending;if(p.expires<this.clock)this.pending=null;else if(!this.active){this.pending=null;this.gap=this.clock;this.request(p.event);}}
  }
  draw(){
   const a=this.active,g=this.g;if(!a||g.preview||!['playing','dead'].includes(g.state))return;
+  if(!g.local&&(g.player.x-g.cam< -80||g.player.x-g.cam>W+80||g.player.y-g.camY< -50||g.player.y-g.camY>H+50))return;
   const c=g.c;c.save();c.font='bold 11px monospace';
   const words=a.line.split(' '),rows:string[]=[];let row='';for(const word of words){const next=row?row+' '+word:word;if(row&&c.measureText(next).width>202){rows.push(row);row=word;}else row=next;}if(row)rows.push(row);
   const width=Math.ceil(Math.max(70,...rows.map(s=>c.measureText(s).width)))+20,height=12+rows.length*14;

@@ -1,9 +1,11 @@
 export class AudioFX {
+  onSound:((method:'tone'|'noise',args:any[])=>void)|null=null;
   ctx: AudioContext | null = null;
   muted = false;
   robotGeneration=0;
   start() { this.ctx??=new AudioContext(); void this.ctx.resume(); }
   tone(freq:number,duration:number,type:OscillatorType='square',gain=.045,end=0,pan=0) {
+    this.onSound?.('tone',[freq,duration,type,gain,end,pan]);
     if(!this.ctx||this.muted)return;
     const c=this.ctx,o=c.createOscillator(),g=c.createGain();
     o.type=type;o.frequency.setValueAtTime(freq,c.currentTime);
@@ -12,6 +14,7 @@ export class AudioFX {
     const p=c.createStereoPanner();p.pan.value=pan;o.connect(g);g.connect(p);p.connect(c.destination);o.start();o.stop(c.currentTime+duration);
   }
   noise(duration:number,gain:number,filter:number) {
+    this.onSound?.('noise',[duration,gain,filter]);
     if(!this.ctx||this.muted)return;
     const c=this.ctx,buffer=c.createBuffer(1,Math.ceil(c.sampleRate*duration),c.sampleRate),data=buffer.getChannelData(0);
     for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length);

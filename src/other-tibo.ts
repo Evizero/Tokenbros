@@ -1,4 +1,4 @@
-import type { Game } from './game';
+import type { PlayerRuntime as Game } from './player-runtime';
 import type { Body } from './world';
 import { overlap } from './world';
 import { TOKEN_CAPACITY } from './tokens';
@@ -24,7 +24,7 @@ export class OtherTibo {
  fling(b:Double){
   const g=this.g,e=b.target;b.target=null;b.thrown=true;b.phase='guard';b.bark=.8;
   if(!e||e.dead)return;
-  if(e.shield>0)g.debris.armor(e.x,e.y,e.face);e.shield=0;e.wind=0;e.cool=1.1;e.hp-=3;e.vx=Math.cos(b.angle)*640;e.vy=Math.sin(b.angle)*480-200;e.stun=.85;e.flung=.75;e.grounded=false;
+  if(e.shield>0)g.debris.armor(e.x,e.y,e.face);e.shield=0;e.wind=0;e.cool=1.1;e.hp-=3;e.vx=Math.cos(b.angle)*640;e.vy=Math.sin(b.angle)*480-200;e.stun=.85;e.flungBy=g.id;e.flung=.75;e.grounded=false;
   if(e.hp<=0)g.kill(e,e.vx,e.vy,true);
   this.rewardTotal=0;for(let i=0;i<6;i++)this.flights.push({x:e.x+10,y:e.y+15,fromX:e.x+10,fromY:e.y+15,age:0,duration:.38+i*.055,bend:(i-2.5)*14});
   g.emit(e.x+10,e.y+15,22,['#f4edbf','#d5ff60','#a3b3ae'],210,4,.45);g.makeNoise(e.x+10,e.y+15,480);g.shake=Math.max(g.shake,5);if(g.effects)g.freeze=Math.max(g.freeze,.035);g.audio.noise(.1,.045,1200);g.audio.tone(125,.13,'square',.035,50);

@@ -13,6 +13,24 @@ npm run dev
 
 Open the local URL printed by Vite. `npm run build` validates TypeScript and creates `dist/`. `npm run preview` serves the production build. `npm test` runs collision and destructibility tests (Node 22.6+).
 
+## Play with a friend
+
+1. Both open the [same deployed game](https://evizero.github.io/Tokenbros/).
+2. Choose your character and **Host co-op**, then **Copy invite**.
+3. Your friend opens the link, picks a character and clicks **Join friend**. The mission starts for both of you.
+
+All five characters and duplicate picks work. Each browser has its own camera and HUD. Friendly attacks pass through teammates; shields protect anyone behind them or inside the mage bubble. Health, resources and deaths are individual, with shared checkpoints. A nearby Tibo reset also refills another Tibo. The teammate marker helps you find each other across the refinery.
+
+Escape opens a local menu while the fight continues. Keep the host tab open and visible: browsers can throttle background tabs. Either player leaving ends the room; create a fresh invite to play again. Refresh both pages after a deployment if you get a version mismatch.
+
+**Direct connections only for this release**, as requested. PeerJS Cloud handles signaling, with Google/Cloudflare STUN for NAT discovery. Some home, corporate and VPN networks need TURN and will not connect yet. Failed connections show a retry message. No accounts or private service keys are needed. A managed TURN relay is deferred; there is no claim of connectivity across every network. Solo play continues to work without the signaling service.
+
+See [co-op architecture and verification](docs/coop-plan.md) for the host-authoritative simulation, replication and regression checks.
+
+## Game menus
+
+The game fills the browser window. **Options** on the roster, lobby or Escape menu provides sound, fullscreen, screen shake and the selected character’s controls. Escape closes Options first; solo stays paused, while co-op continues for your friend. Narrow screens scroll the roster inside the game, without an outer webpage.
+
 ## The refinery
 
 Four connected combat spaces lead to the boss: a stacked loading yard, a tower with two climbing routes, a cable landing with a lower service route, and a demolition pit with high flanks. Warm marked decking breaks; reinforced steel keeps the core routes usable. Explosions can drop fights to a lower floor.
@@ -122,9 +140,9 @@ A sound triggers investigation of its location, not instant combat. Enemies reta
 - Three security beacons each call two drones once per mission when a nearby blast trips them. Flashing lights and arrival markers give 2.4 seconds of warning. The response investigates the blast location; it does not automatically know the player’s position.
 - Start with two reset charges. Five bot kills earn a charge; rescues refill one. If empty, one charge recovers in 12 seconds; kills can earn it sooner.
 - Three-hit health, brief hit invulnerability, quick checkpoint respawns, two developer rescues, and a telegraphed boss with an orange exposed core.
-- Final extraction and replay. Pause on focus loss. Sound and screen shake can be disabled.
+- Final extraction and replay. Solo pauses on focus loss; co-op opens a local menu and continues. Sound and screen shake can be disabled.
 
-Implementation: TypeScript + Vite, custom Canvas 2D renderer and fixed-step simulation. This first slice uses Canvas 2D rather than the earlier Phaser/WebGL recommendation to keep the feel experiment small. No live AI service, account, backend, or network gameplay dependency. Google Fonts are optional presentation assets with local font fallbacks.
+Implementation: TypeScript + Vite, custom Canvas 2D renderer and fixed-step simulation. This first slice uses Canvas 2D rather than the earlier Phaser/WebGL recommendation to keep the feel experiment small. No live AI service or account is needed. Solo play has no network gameplay dependency; optional co-op uses PeerJS/WebRTC. Google Fonts are optional presentation assets with local font fallbacks.
 
 ## Project memory
 

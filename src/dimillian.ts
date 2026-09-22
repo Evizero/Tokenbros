@@ -1,4 +1,4 @@
-import type { Game } from './game';
+import type { PlayerRuntime as Game } from './player-runtime';
 import { reflect,shieldCrossing } from './defense-geometry';
 import { clamp } from './world';
 import { rect,text } from './art';
@@ -30,7 +30,7 @@ export class DimillianKit {
  hit(e:Enemy,power:number,vx:number,heavy=false,vy=-100){
   if(e.dead||e.hacked>0)return;
   const g=this.g;if(heavy&&e.shield>0){g.debris.armor(e.x,e.y,e.face);e.shield=0;}
-  e.sheep=0;e.hp-=power;e.wind=0;e.hurt=.13;e.stun=heavy?.5:.16;e.vx=vx;e.vy=vy;e.flung=heavy?.5:0;e.grounded=false;
+  e.sheep=0;e.hp-=power;e.wind=0;e.hurt=.13;e.stun=heavy?.5:.16;e.vx=vx;e.vy=vy;e.flungBy=g.id;e.flung=heavy?.5:0;e.grounded=false;
   g.emit(e.x+10,e.y+15,heavy?20:8,[this.color,'#fff0cc','#9976b4'],heavy?260:130,4,.35);
   if(e.hp<=0)g.kill(e,vx,vy,heavy);else{g.audio.impact();g.shake=Math.max(g.shake,heavy?5:2);if(g.effects)g.freeze=Math.max(g.freeze,heavy?.04:.02);}
  }
@@ -40,7 +40,7 @@ export class DimillianKit {
  area(x:number,y:number,r:number,power:number,heavy=false,terrain=false,fire=false){
   const g=this.g;if(terrain)this.smash(x,y,r*.7);
   for(const e of g.enemies)if(Math.hypot(e.x+10-x,e.y+15-y)<r+12&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,power,(Math.sign(e.x+10-x)||g.face)*(heavy?430:170),heavy,heavy?-240:-120);
-  for(const b of g.barrels)if(!b.dead&&Math.hypot(b.x+9-x,b.y+15-y)<r)b.fuse=b.fuse||.08;
+  for(const b of g.barrels)if(!b.dead&&Math.hypot(b.x+9-x,b.y+15-y)<r){b.owner=g.id;b.fuse=b.fuse||.08;}
   const b=g.boss;if(b.active&&!b.dead&&b.phase===2&&Math.hypot(b.x+38-x,b.y+38-y)<r+35&&g.lineOfSight(x,y,b.x+38,b.y+38))b.hp-=power;
   g.rings.push({x,y,r:5,max:r,life:.28,color:fire?'#ffbd67':heavy?'#ffcaa1':'#d9b5ff'});g.emit(x,y,heavy?42:20,fire?['#ff6635','#ffb448','#fff0af']:['#d2aaff','#fff0dc',heavy?'#ff9869':'#94def3'],heavy?290:180,5,.5);
   g.makeNoise(x,y,heavy?1400:500);g.audio.noise(.16,.06,heavy?700:2100);g.audio.tone(heavy?90:340,.17,'triangle',.05,60);g.shake=Math.max(g.shake,heavy?8:3);if(g.effects)g.freeze=Math.max(g.freeze,heavy?.05:.02);
@@ -60,9 +60,9 @@ export class DimillianKit {
    const prior=s.start+(s.end-s.start)*(previous*previous*(3-2*previous)),x=g.player.x+10,y=g.player.y+16;
    const contact=(tx:number,ty:number,padding=16)=>{const dx=tx-x,dy=ty-y,d=Math.hypot(dx,dy),angle=Math.atan2(dy,dx);let relative=Math.atan2(Math.sin(angle-prior),Math.cos(angle-prior))*s.direction;return d<s.radius+padding&&relative>=-.28&&relative<=Math.abs(s.angle-prior)+.28;};
    const velocity=(tx:number,ty:number)=>{const a=Math.atan2(ty-y,tx-x),dx=-Math.sin(a)*s.direction*.8+Math.cos(s.aim)*.65,dy=Math.cos(a)*s.direction*.8+Math.sin(s.aim)*.65;return {vx:dx*s.force,vy:dy*s.force};};
-   for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&!s.hits.has(e)&&contact(e.x+10,e.y+15)&&g.lineOfSight(x,y,e.x+10,e.y+15)){s.hits.add(e);const v=velocity(e.x+10,e.y+15);this.hit(e,s.power,v.vx,s.heavy,s.heavy?v.vy:-60);s.connected=true;if(!e.dead){e.flung=s.heavy?.65:.12;e.stun=s.heavy?.6:.17;}if(s.step===2){this.feedback('VOILÀ!');g.barks.request('finisher');}g.emit(e.x+10,e.y+15,15,['#ffe3a9','#d49b5e','#af7846'],210,4,.45);}
+   for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&!s.hits.has(e)&&contact(e.x+10,e.y+15)&&g.lineOfSight(x,y,e.x+10,e.y+15)){s.hits.add(e);const v=velocity(e.x+10,e.y+15);this.hit(e,s.power,v.vx,s.heavy,s.heavy?v.vy:-60);s.connected=true;if(!e.dead){e.flungBy=g.id;e.flung=s.heavy?.65:.12;e.stun=s.heavy?.6:.17;}if(s.step===2){this.feedback('VOILÀ!');g.barks.request('finisher');}g.emit(e.x+10,e.y+15,15,['#ffe3a9','#d49b5e','#af7846'],210,4,.45);}
    const b=g.boss;if(b.active&&!b.dead&&b.phase===2&&!s.hits.has(b)&&contact(b.x+38,b.y+38,35)&&g.lineOfSight(x,y,b.x+38,b.y+38)){s.hits.add(b);b.hp-=s.power;s.connected=true;}
-   for(const b of g.barrels)if(!b.dead&&!s.hits.has(b)&&contact(b.x+9,b.y+15)&&g.lineOfSight(x,y,b.x+9,b.y+15)){s.hits.add(b);b.hp-=s.power;if(b.hp<=0)b.fuse=.06;}
+   for(const b of g.barrels)if(!b.dead&&!s.hits.has(b)&&contact(b.x+9,b.y+15)&&g.lineOfSight(x,y,b.x+9,b.y+15)){s.hits.add(b);b.hp-=s.power;if(b.hp<=0){b.owner=g.id;b.fuse=.06;}}
    // Trace the swept blade, stopping at the first wall on each ray. A tile
    // takes damage once per swing, even when several rays touch it.
    const sweep=Math.abs(s.angle-prior),rays=Math.max(1,Math.ceil(sweep*s.radius/5));
@@ -90,12 +90,12 @@ export class DimillianKit {
  cannon(){
   const g=this.g;
   const a=g.aimAngle,side=g.shotCount%2?1:-1,boost=this.special>0&&this.specialForm===2,x=g.player.x+10,y=g.player.y+20;
-  g.bullets.push({x:x+Math.cos(a)*12-Math.sin(a)*side*7,y:y+Math.sin(a)*12+Math.cos(a)*side*7,vx:Math.cos(a)*900,vy:Math.sin(a)*900,life:.85,hostile:false,power:boost?2.4:1.5,pierce:boost?1:0,boost:false,tier:boost?1:0,color:boost?'#e8c9ff':'#9ceaf2',hit:new Set()});
+  g.bullets.push({owner:g.id,x:x+Math.cos(a)*12-Math.sin(a)*side*7,y:y+Math.sin(a)*12+Math.cos(a)*side*7,vx:Math.cos(a)*900,vy:Math.sin(a)*900,life:.85,hostile:false,power:boost?2.4:1.5,pierce:boost?1:0,boost:false,tier:boost?1:0,color:boost?'#e8c9ff':'#9ceaf2',hit:new Set()});
   g.fireTimer=boost?.065:.13;g.lastCooldown=g.fireTimer;g.shotCount++;this.attack=.08;g.makeNoise(x,y,400);g.audio.tone(boost?380:560,.06,'triangle',.03,130);
  }
  cast(){
   const g=this.g,t=clamp(this.charge/1.15,0,1),a=g.aimAngle;
-  g.bullets.push({x:g.player.x+10+Math.cos(a)*12,y:g.player.y+16+Math.sin(a)*12,vx:Math.cos(a)*(380-t*60),vy:Math.sin(a)*(380-t*60),life:1.6,hostile:false,power:2+t*4,pierce:0,boost:false,tier:t>.55?1:0,color:'#ffb96a',fireball:t,spell:t>=.99?88:undefined,hit:new Set()});
+  g.bullets.push({owner:g.id,x:g.player.x+10+Math.cos(a)*12,y:g.player.y+16+Math.sin(a)*12,vx:Math.cos(a)*(380-t*60),vy:Math.sin(a)*(380-t*60),life:1.6,hostile:false,power:2+t*4,pierce:0,boost:false,tier:t>.55?1:0,color:'#ffb96a',fireball:t,spell:t>=.99?88:undefined,hit:new Set()});
   g.fireTimer=.3+t*.2;g.lastCooldown=g.fireTimer;g.shotCount++;this.attack=.18;this.charge=0;g.makeNoise(g.player.x,g.player.y,430);g.audio.noise(.17,.06,950);g.audio.tone(145,.19,'sine',.055,65);g.emit(g.player.x+10+Math.cos(a)*25,g.player.y+16+Math.sin(a)*25,8,['#ff9b49','#ffe5a3'],120,3,.3);
  }
  fireInput(dt:number,firing:boolean){
@@ -122,7 +122,7 @@ export class DimillianKit {
   const x=g.player.x+10,y=g.player.y+16,dx=b.x-x,dy=b.y-y,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx);
   const relative=Math.atan2(Math.sin(a-s.prior),Math.cos(a-s.prior))*s.direction;
   if(d<10||d>s.radius+5||relative<-.2||relative>Math.abs(s.angle-s.prior)+.2||dx*b.vx+dy*b.vy>=0||!g.lineOfSight(x,y,b.x,b.y))return false;
-  const v=reflect(b.vx,b.vy,a);b.vx=v.vx;b.vy=v.vy;b.hostile=false;b.hit.clear();b.power=Math.max(2,b.power);b.tier=Math.max(1,b.tier??0);b.life=Math.max(.7,b.life);b.color='#ffe0a1';
+  const v=reflect(b.vx,b.vy,a);b.vx=v.vx;b.vy=v.vy;b.hostile=false;b.owner=this.g.id;b.hit.clear();b.power=Math.max(2,b.power);b.tier=Math.max(1,b.tier??0);b.life=Math.max(.7,b.life);b.color='#ffe0a1';
   g.emit(b.x,b.y,12,['#fff5d2','#ffd17e','#c7a0ff'],190,3,.25);g.rings.push({x:b.x,y:b.y,r:2,max:14,life:.14,color:'#fff0bc'});
   g.audio.tone(1050,.08,'triangle',.045,430);g.shake=Math.max(g.shake,1.5);if(g.effects)g.freeze=Math.max(g.freeze,.025);
   return true;
@@ -134,6 +134,13 @@ export class DimillianKit {
   else if(s.kind===2){s.angle=g.aimAngle;if(!shieldCrossing(from,b,{x:x+Math.cos(s.angle)*27,y:y+Math.sin(s.angle)*27,angle:s.angle,half:34}))return false;}
   else{const inside=(p:{x:number;y:number})=>Math.abs(p.x-s.x)<33&&p.y>s.y-48&&p.y<s.y+17;if(inside(from)||!inside(b))return false;}
   b.life=0;this.drainShield(20*Math.max(1,b.power));g.emit(b.x,b.y,10,['#d4b3ff','#eef2ff'],130,3,.25);g.audio.tone(560,.07,'triangle',.035,260);return true;
+ }
+ protects(p:{x:number;y:number;w:number;h:number}){
+  const s=this.shield;if(!s)return false;const x=p.x+p.w/2,y=p.y+p.h/2;
+  if(p===this.g.player)return true;
+  if(s.kind===1)return Math.hypot(x-this.g.player.x-10,y-this.g.player.y-16)<50;
+  if(s.kind===0)return Math.abs(x-s.x)<33&&y>s.y-48&&y<s.y+17;
+  return false;
  }
  absorbBlast(x:number,y:number){
   const s=this.shield;if(!s)return false;const dx=x-this.g.player.x-10,dy=y-this.g.player.y-16;
@@ -155,19 +162,19 @@ export class DimillianKit {
   const g=this.g;if(this.eCooldown>0||g.state!=='playing')return false;
   if(this.form===0)return this.pair();
   if(this.form===2){this.bombs.push({x:g.player.x+10,y:g.player.y+30,vy:30,life:5});this.eCooldown=2.8;g.audio.tone(210,.11,'triangle',.035,90);return true;}
-  g.updateAim();const p=g.aimPoint(),e=g.enemies.filter(e=>!e.dead&&e.hacked<=0&&!e.sheep&&Math.hypot(e.x+10-p.x,e.y+15-p.y)<44&&Math.hypot(e.x-g.player.x,e.y-g.player.y)<400&&g.lineOfSight(g.player.x+10,g.player.y+16,e.x+10,e.y+15)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
+  g.updateAim();const p=g.aimPoint(),e=g.enemies.filter(e=>!e.dead&&!g.claimedByOther(e)&&e.hacked<=0&&!e.sheep&&Math.hypot(e.x+10-p.x,e.y+15-p.y)<44&&Math.hypot(e.x-g.player.x,e.y-g.player.y)<400&&g.lineOfSight(g.player.x+10,g.player.y+16,e.x+10,e.y+15)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
   if(!e){this.feedback('AIM AT A BOT');return false;}
   e.sheep=6;e.wind=0;e.dash=0;e.cool=1;e.stun=0;e.vx=0;e.vy=0;this.eCooldown=5.5;this.feedback('BÊÊÊ.');g.barks.request('sheep');g.emit(e.x+10,e.y+15,24,['#ead9ff','#faf0da','#bd92ec'],150,4,.5);g.audio.tone(380,.18,'triangle',.04,280);g.audio.tone(520,.14,'sine',.025,340);return true;
  }
  pair(){
   const g=this.g;if(this.form!==0||this.eCooldown>0||this.pairing||g.state!=='playing')return false;g.updateAim();const p=g.aimPoint();
-  const e=g.enemies.filter(e=>!e.dead&&e.hacked<=0&&Math.hypot(e.x+10-p.x,e.y+15-p.y)<42&&Math.hypot(e.x-g.player.x,e.y-g.player.y)<380&&g.lineOfSight(g.player.x+10,g.player.y+16,e.x+10,e.y+15)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
+  const e=g.enemies.filter(e=>!e.dead&&!g.claimedByOther(e)&&e.hacked<=0&&Math.hypot(e.x+10-p.x,e.y+15-p.y)<42&&Math.hypot(e.x-g.player.x,e.y-g.player.y)<380&&g.lineOfSight(g.player.x+10,g.player.y+16,e.x+10,e.y+15)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
   if(!e){this.feedback('AIM AT A BOT');return false;}this.pairing=e;this.pairTime=.35;this.feedback('PAIRING…');g.audio.tone(660,.08,'sine',.025,900);return true;
  }
  disconnect(){if(this.paired){this.paired.hacked=0;this.paired.cool=.7;this.paired.wind=0;this.paired.stun=Math.max(this.paired.stun,.2);}this.paired=null;this.pairing=null;this.remoteTime=0;}
  remoteUpdate(dt:number){
   const g=this.g;if(this.pairing){const e=this.pairing;if(e.dead||Math.hypot(e.x-g.player.x,e.y-g.player.y)>400||!g.lineOfSight(g.player.x+10,g.player.y+16,e.x+10,e.y+15)){this.pairing=null;this.feedback('PAIR LOST');}
-   else{this.pairTime-=dt;if(this.pairTime<=0){this.disconnect();this.paired=e;e.hacked=6;e.wind=0;e.stun=0;this.remoteTime=6;this.eCooldown=10;this.remoteShot=.1;this.feedback('REMOTE CONNECTED');g.barks.request('paired');g.audio.tone(900,.14,'sine',.04,1200);}}
+   else{this.pairTime-=dt;if(this.pairTime<=0){if(g.peers.some(a=>a!==g&&(a.dimillianKit.paired===e||a.pidalfKit.controls(e)||a.marcusKit.pacman.controls(e)))){this.pairing=null;return;}this.disconnect();this.paired=e;e.hacked=6;e.wind=0;e.stun=0;this.remoteTime=6;this.eCooldown=10;this.remoteShot=.1;this.feedback('REMOTE CONNECTED');g.barks.request('paired');g.audio.tone(900,.14,'sine',.04,1200);}}
   }
   const e=this.paired;if(!e)return;this.remoteTime-=dt;this.remoteShot-=dt;
   if(e.dead||this.remoteTime<=0||Math.hypot(e.x-g.player.x,e.y-g.player.y)>650){this.disconnect();this.feedback('DISCONNECTED');return;}
@@ -179,7 +186,7 @@ export class DimillianKit {
   if(this.remoteShot<=0&&(firing||enemy)&&g.lineOfSight(e.x+10,e.y+15,aim.x,aim.y)){
     this.remoteShot=e.type==='turret'?.38:.65;
     if(e.type==='runner'){for(const o of g.enemies)if(o!==e&&Math.hypot(o.x-e.x,o.y-e.y)<65)this.hit(o,3,e.face*230,true);}
-    else for(const spread of e.type==='drone'?[-.08,0,.08]:[0])g.bullets.push({x:e.x+10,y:e.y+15,vx:Math.cos(a+spread)*620,vy:Math.sin(a+spread)*620,life:1,hostile:false,power:e.type==='turret'?3:2,pierce:0,boost:false,tier:1,color:'#c9a4ff',hit:new Set([e])});
+    else for(const spread of e.type==='drone'?[-.08,0,.08]:[0])g.bullets.push({owner:g.id,x:e.x+10,y:e.y+15,vx:Math.cos(a+spread)*620,vy:Math.sin(a+spread)*620,life:1,hostile:false,power:e.type==='turret'?3:2,pierce:0,boost:false,tier:1,color:'#c9a4ff',hit:new Set([e])});
     g.audio.tone(460,.07,'triangle',.025,170);g.makeNoise(e.x,e.y,330,e);
   }
  }
@@ -199,7 +206,7 @@ export class DimillianKit {
   this.qCooldown=this.shieldBroken?(100-this.shieldHP)/20:0;
   if(g.keys.has('KeyQ')&&!this.shieldBroken)this.defend();
   if(this.shield){this.shield.age+=dt;this.shield.kind=this.form;this.shield.flash=Math.max(0,this.shield.flash-dt);}
-  for(const b of this.bombs){b.life-=dt;b.vy=Math.min(620,b.vy+780*dt);const step=b.vy*dt;let hit=false;for(let i=0;i<=step;i+=3)if(g.world.at(b.x,b.y+i+5)||g.enemies.some(e=>!e.dead&&e.hacked<=0&&b.x>e.x-5&&b.x<e.x+25&&b.y+i>e.y-5&&b.y+i<e.y+30)){hit=true;break;}b.y+=hit?0:step;if(hit){this.area(b.x,b.y,84,8,true,true,true);b.life=0;}}
+  for(const b of this.bombs){b.life-=dt;b.vy=Math.min(620,b.vy+780*dt);const step=b.vy*dt;let hit=false;for(let i=0;i<=step;i+=3)if(g.world.at(b.x,b.y+i+5)||g.enemies.some(e=>!e.dead&&!g.claimedByOther(e)&&e.hacked<=0&&b.x>e.x-5&&b.x<e.x+25&&b.y+i>e.y-5&&b.y+i<e.y+30)){hit=true;break;}b.y+=hit?0:step;if(hit){this.area(b.x,b.y,84,8,true,true,true);b.life=0;}}
   this.bombs=this.bombs.filter(b=>b.life>0&&b.y<1100);
   if(this.special>0){this.special=Math.max(0,this.special-dt);}
   if(this.meteor){const m=this.meteor;m.life-=dt;const step=Math.min(650*dt,Math.max(0,m.targetY-m.y));let hit=false;for(let i=0;i<=step;i+=4){if(g.world.at(m.x,m.y+i)){m.y+=Math.max(0,i-4);hit=true;break;}}if(!hit)m.y+=step;

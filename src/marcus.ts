@@ -1,7 +1,7 @@
 import { Pacman } from './marcus-pacman';
 import { LCDLaunch } from './marcus-lcd';
 import { Invader } from './marcus-invader';
-import type { Game } from './game';
+import type { PlayerRuntime as Game } from './player-runtime';
 import { clamp,LEVEL_HEIGHT } from './world';
 import { text } from './art';
 import { marcus,marcusPortrait,cartridgeArt,MARCUS_COLOR,AUGMENT_NAMES,AUGMENT_COLORS } from './marcus-art';
@@ -50,7 +50,7 @@ export class MarcusKit {
   d.hit.add(e);const g=this.g,frontal=e.type==='shield'&&e.shield>0&&e.shieldDown<=0&&Math.sign(d.vx)===-e.face&&Math.abs(d.vy)<Math.abs(d.vx)*.85;
   if(frontal&&d.mode<2){e.shield=Math.max(0,e.shield-1);d.vx*=-1;d.bounces++;g.emit(d.x,d.y,7,['#fff4c9','#8bcbd4'],140,2,.25);g.audio.tone(950,.06,'square',.02,300);return;}
   if(frontal){e.shield=0;g.debris.armor(e.x,e.y,Math.sign(d.vx)||1);}
-  const knock=d.mode===2?520:170;e.hp-=d.power;e.hurt=.15;e.stun=d.mode===2?.38:.12;e.flung=d.mode===2?.5:.14;
+  const knock=d.mode===2?520:170;e.hp-=d.power;e.hurt=.15;e.stun=d.mode===2?.38:.12;e.flungBy=g.id;e.flung=d.mode===2?.5:.14;
   e.vx=Math.sign(d.vx)*knock;e.vy=d.mode===2?-240:-85;this.hitCount++;if(d.back)this.returnHits++;this.combo++;this.comboLife=1.9;
   g.emit(d.x,d.y,d.mode===2?16:7,[AUGMENT_COLORS[d.mode],'#fff0bc'],200,3,.3);g.shake=Math.max(g.shake,d.mode===2?5:2);if(g.effects)g.freeze=Math.max(g.freeze,d.mode===2?.035:.018);
   if(e.hp<=0)g.kill(e,e.vx,e.vy,d.mode===2);else g.audio.scrap(false);
@@ -81,7 +81,7 @@ export class MarcusKit {
     }
     d.x=nx;d.y=ny;
     for(const e of g.enemies)if(!e.dead&&!d.hit.has(e)&&Math.hypot(clamp(d.x,e.x,e.x+e.w)-d.x,clamp(d.y,e.y,e.y+e.h)-d.y)<d.r+2&&g.lineOfSight(d.x,d.y,e.x+e.w/2,e.y+e.h/2))this.hitEnemy(d,e);
-    for(const b of g.barrels)if(!b.dead&&!d.hit.has(b)&&Math.hypot(d.x-b.x-9,d.y-b.y-15)<d.r+15&&g.lineOfSight(d.x,d.y,b.x+9,b.y+15)){d.hit.add(b);b.hp-=d.power;if(b.hp<=0)b.fuse=.06;}
+    for(const b of g.barrels)if(!b.dead&&!d.hit.has(b)&&Math.hypot(d.x-b.x-9,d.y-b.y-15)<d.r+15&&g.lineOfSight(d.x,d.y,b.x+9,b.y+15)){d.hit.add(b);b.hp-=d.power;if(b.hp<=0){b.owner=g.id;b.fuse=.06;}}
     const b=g.boss;if(b.active&&!b.dead&&b.phase===2&&!d.hit.has(b)&&d.x+d.r>b.x&&d.x-d.r<b.x+b.w&&d.y+d.r>b.y&&d.y-d.r<b.y+b.h){d.hit.add(b);b.hp-=d.power;g.emit(d.x,d.y,12,[MARCUS_COLOR,'#fff4c9'],180,3,.3);}
     if(d.x<0||d.x>4080||d.y>LEVEL_HEIGHT+30||d.y<0)d.life=0;
    }

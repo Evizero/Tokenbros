@@ -1,4 +1,4 @@
-import type { Game } from './game';
+import type { PlayerRuntime as Game } from './player-runtime';
 import type { Body } from './world';
 import { clamp } from './world';
 import { claw,terminal,CLAW_COLORS } from './peter-art';
@@ -33,7 +33,7 @@ export class PeterKit {
   const g=this.g,a=g.aimAngle,x=g.player.x+10,y=g.player.y+16,k=this.kind;
   this.punch=k===2?.17:.1;g.fireTimer=[.55,.22,.42][k];g.lastCooldown=g.fireTimer;g.shotCount++;
   if(k===1){
-    g.bullets.push({x:x+Math.cos(a)*18,y:y+Math.sin(a)*18,vx:Math.cos(a)*680,vy:Math.sin(a)*680,life:.7,hostile:false,power:1.5,pierce:0,boost:false,tier:0,color:CLAW_COLORS[1],hit:new Set()});
+    g.bullets.push({owner:g.id,x:x+Math.cos(a)*18,y:y+Math.sin(a)*18,vx:Math.cos(a)*680,vy:Math.sin(a)*680,life:.7,hostile:false,power:1.5,pierce:0,boost:false,tier:0,color:CLAW_COLORS[1],hit:new Set()});
     g.makeNoise(x,y,280);g.audio.tone(720,.075,'triangle',.035,240);return;
   }
   if(k===0){
@@ -42,12 +42,12 @@ export class PeterKit {
     const bx=x+Math.cos(a)*reach,by=y+Math.sin(a)*reach;
     this.handBurst={x:bx,y:by,angle:a,life:.1};
     g.emit(bx,by,17,['#ff8457','#ffcf91','#fff0ca'],170,4,.25);g.rings.push({x:bx,y:by,r:8,max:35,life:.15,color:'#ffb084'});g.shake=Math.max(g.shake,2);
-    for(const e of g.enemies)if(!e.dead&&Math.hypot(e.x+10-bx,e.y+15-by)<42&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,2,Math.cos(a)*105);
+    for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&Math.hypot(e.x+10-bx,e.y+15-by)<42&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,2,Math.cos(a)*105);
     const b=g.boss;if(b.active&&!b.dead&&b.phase===2&&Math.hypot(b.x+38-bx,b.y+38-by)<65&&g.lineOfSight(x,y,b.x+38,b.y+38))b.hp-=2;
     for(const b of g.bullets)this.deflect(b);
     g.makeNoise(bx,by,320);g.audio.noise(.09,.045,2200);g.audio.tone(150,.1,'triangle',.035,65);return;
   }
-  for(const e of g.enemies){const dx=e.x+10-x,dy=e.y+15-y,d=Math.hypot(dx,dy);if(!e.dead&&d<82&&dx*Math.cos(a)+dy*Math.sin(a)>d*.4&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,2.5,Math.cos(a)*130,true);}
+  for(const e of g.enemies){const dx=e.x+10-x,dy=e.y+15-y,d=Math.hypot(dx,dy);if(!e.dead&&e.hacked<=0&&d<82&&dx*Math.cos(a)+dy*Math.sin(a)>d*.4&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,2.5,Math.cos(a)*130,true);}
   const b=g.boss,dx=b.x+38-x,dy=b.y+38-y,d=Math.hypot(dx,dy);
   if(b.active&&!b.dead&&b.phase===2&&d<110&&dx*Math.cos(a)+dy*Math.sin(a)>d*.4&&g.lineOfSight(x,y,b.x+38,b.y+38))b.hp-=2.5;
   g.makeNoise(x,y,120);g.audio.tone(150,.075,'triangle',.025,100);
@@ -56,14 +56,14 @@ export class PeterKit {
   const pulse=this.handBurst;if(!pulse||pulse.life<=0||!b.hostile||b.life<=0)return false;
   const nx=Math.cos(pulse.angle),ny=Math.sin(pulse.angle);
   if(Math.hypot(b.x-pulse.x,b.y-pulse.y)>35||b.vx*nx+b.vy*ny>=0||!this.g.lineOfSight(pulse.x,pulse.y,b.x,b.y))return false;
-  const v=reflect(b.vx,b.vy,pulse.angle);b.vx=v.vx;b.vy=v.vy;b.hostile=false;b.power=2;b.tier=0;b.pierce=0;b.color='#ffc193';b.hit.clear();b.life=1.2;
+  const v=reflect(b.vx,b.vy,pulse.angle);b.vx=v.vx;b.vy=v.vy;b.hostile=false;b.owner=this.g.id;b.power=2;b.tier=0;b.pierce=0;b.color='#ffc193';b.hit.clear();b.life=1.2;
   this.g.emit(b.x,b.y,6,['#ffca91','#fff1c9'],130,2,.2);return true;
  }
  burst(p:Pet){
   const g=this.g,x=p.x+7,y=p.y+5;p.hp=0;p.fuse=0;
   g.emit(x,y,24,['#ff8457','#ffc88a','#fff0c1'],180,4,.5);g.rings.push({x,y,r:0,max:48,life:.22,color:'#ff986c'});g.shake=Math.max(g.shake,3);g.audio.noise(.18,.08,2100);g.audio.tone(110,.2,'sine',.08,35);g.makeNoise(x,y,560);
-  for(const e of g.enemies)if(!e.dead&&Math.hypot(e.x+10-x,e.y+15-y)<52&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,5,Math.sign(e.x-x)*180,true);
-  for(const b of g.barrels)if(!b.dead&&Math.hypot(b.x+9-x,b.y+15-y)<48)b.fuse=b.fuse||.12;
+  for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&Math.hypot(e.x+10-x,e.y+15-y)<52&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,5,Math.sign(e.x-x)*180,true);
+  for(const b of g.barrels)if(!b.dead&&Math.hypot(b.x+9-x,b.y+15-y)<48){b.owner=g.id;b.fuse=b.fuse||.12;}
   const b=g.boss;if(b.active&&!b.dead&&b.phase===2&&Math.hypot(b.x+38-x,b.y+38-y)<80&&g.lineOfSight(x,y,b.x+38,b.y+38)) b.hp-=6;
  }
  dashStep(p:Pet,dt:number){
@@ -71,7 +71,7 @@ export class PeterKit {
   for(let i=0;i<steps;i++){
     p.vx=Math.cos(p.attackAngle)*720;p.vy=Math.sin(p.attackAngle)*720;
     const wall=g.world.move(p,distance/steps/720);p.dash=Math.max(0,p.dash-distance/steps);
-    for(const e of g.enemies)if(!e.dead&&!p.dashHits.has(e)&&Math.hypot(e.x+10-p.x-7,e.y+15-p.y-5)<26&&g.lineOfSight(p.x+7,p.y+5,e.x+10,e.y+15)){p.dashHits.add(e);this.hit(e,4,Math.cos(p.attackAngle)*160);p.bite=.15;}
+    for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&!p.dashHits.has(e)&&Math.hypot(e.x+10-p.x-7,e.y+15-p.y-5)<26&&g.lineOfSight(p.x+7,p.y+5,e.x+10,e.y+15)){p.dashHits.add(e);this.hit(e,4,Math.cos(p.attackAngle)*160);p.bite=.15;}
     const b=g.boss;if(b.active&&!b.dead&&b.phase===2&&!p.dashHits.has(b)&&Math.hypot(b.x+38-p.x,b.y+38-p.y)<52&&g.lineOfSight(p.x+7,p.y+5,b.x+38,b.y+38)){p.dashHits.add(b);b.hp-=5;}
     if(wall||p.grounded||p.vx===0&&Math.abs(Math.cos(p.attackAngle))>.2||p.vy===0&&Math.abs(Math.sin(p.attackAngle))>.2){p.dash=0;break;}
   }
@@ -81,9 +81,9 @@ export class PeterKit {
   const g=this.g,x=p.x+7,y=p.y+5,nx=Math.cos(p.attackAngle),ny=Math.sin(p.attackAngle);
   p.cool=.8;p.bite=.3;this.smash(x+nx*25,y+ny*25,30);
   for(const e of g.enemies){const dx=e.x+10-x,dy=e.y+15-y,d=Math.hypot(dx,dy);
-    if(!e.dead&&e.hacked<=0&&d<55&&dx*nx+dy*ny>-d*.2&&g.lineOfSight(x,y,e.x+10,e.y+15)){
+    if(!e.dead&&e.hacked<=0&&e.hacked<=0&&d<55&&dx*nx+dy*ny>-d*.2&&g.lineOfSight(x,y,e.x+10,e.y+15)){
       this.hit(e,6,(Math.sign(nx)||g.face)*430,true);
-      if(!e.dead){e.vy=-220;e.stun=.5;e.flung=.4;}
+      if(!e.dead){e.vy=-220;e.stun=.5;e.flungBy=g.id;e.flung=.4;}
     }
   }
   const b=g.boss;if(this.focusBoss&&b.active&&!b.dead&&b.phase===2&&Math.hypot(b.x+38-x,b.y+38-y)<80&&g.lineOfSight(x,y,b.x+38,b.y+38))b.hp-=9;
@@ -94,16 +94,16 @@ export class PeterKit {
  }
  punchAttack(){
   const g=this.g,a=g.aimAngle,x=g.player.x+10,y=g.player.y+16;this.punch=.18;g.fireTimer=.28;g.lastCooldown=.28;g.shotCount++;g.player.vx=Math.cos(a)*360;g.wallLock=.12;g.invuln=Math.max(g.invuln,.16);g.makeNoise(x,y,470);
-  for(const e of g.enemies){const dx=e.x+10-x,dy=e.y+15-y,d=Math.hypot(dx,dy);if(!e.dead&&d<110&&(dx*Math.cos(a)+dy*Math.sin(a))>d*.25&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,7,Math.cos(a)*390,true);}
+  for(const e of g.enemies){const dx=e.x+10-x,dy=e.y+15-y,d=Math.hypot(dx,dy);if(!e.dead&&e.hacked<=0&&d<110&&(dx*Math.cos(a)+dy*Math.sin(a))>d*.25&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,7,Math.cos(a)*390,true);}
   this.smash(x+Math.cos(a)*65,y+Math.sin(a)*65,34);
-  for(const b of g.barrels)if(!b.dead&&Math.hypot(b.x-x,b.y-y)<100)b.fuse=.05;
+  for(const b of g.barrels)if(!b.dead&&Math.hypot(b.x-x,b.y-y)<100){b.owner=g.id;b.fuse=.05;}
   const boss=g.boss;if(boss.active&&!boss.dead&&boss.phase===2&&Math.hypot(boss.x+38-x,boss.y+38-y)<145)boss.hp-=9;
   g.rings.push({x:x+Math.cos(a)*55,y:y+Math.sin(a)*55,r:0,max:38,life:.16,color:'#ffbd82'});g.shake=4;g.audio.tone(95,.16,'sawtooth',.06,35);
  }
  transform(){
   if(this.moltCooldown>0)return;const g=this.g;g.barks.request('molt');this.molt=5;this.moltCooldown=16;this.stock=6;g.fireTimer=0;
   g.emit(g.player.x+10,g.player.y+16,24,['#617d9e','#90a8bb','#d9ac87'],240,6,.7);g.makeNoise(g.player.x,g.player.y,650);g.shake=6;g.audio.blast();
-  for(const e of g.enemies)if(!e.dead&&Math.hypot(e.x-g.player.x,e.y-g.player.y)<80)this.hit(e,3,Math.sign(e.x-g.player.x)*330,true);
+  for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&Math.hypot(e.x-g.player.x,e.y-g.player.y)<80)this.hit(e,3,Math.sign(e.x-g.player.x)*330,true);
  }
  command(){
   const g=this.g;if(this.commandCooldown>0)return;this.commandCooldown=.2;this.terminalTime=0;

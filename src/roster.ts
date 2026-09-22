@@ -43,5 +43,6 @@ export function showRoster(g:Game){
    select(buttons[i].dataset.bro as Bro);buttons[i].focus();
   }else if(e.code==='Enter'||e.code==='Space'){e.stopPropagation();if(e.target===overlay){e.preventDefault();if(!e.repeat)g.start();}}
  };
+ g.coop.roster();
  select(g.character);overlay.tabIndex=-1;overlay.focus({preventScroll:true});
 }
