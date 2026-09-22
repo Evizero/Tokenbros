@@ -29,7 +29,7 @@ See [co-op architecture and verification](docs/coop-plan.md) for the host-author
 
 ## Game menus
 
-The game fills the browser window. **Options** on the roster, lobby or Escape menu provides sound, fullscreen, screen shake and the selected character’s controls. Escape closes Options first; solo stays paused, while co-op continues for your friend. Narrow screens scroll the roster inside the game, without an outer webpage.
+The game fills the browser window. During desktop play, a compact control legend stays along the bottom and follows the selected character and mode. **Options** on the roster, lobby or Escape menu provides sound, fullscreen, screen shake and the selected character’s controls. Escape closes Options first; solo stays paused, while co-op continues for your friend. Narrow screens scroll the roster inside the game, without an outer webpage.
 
 ## The refinery
 
