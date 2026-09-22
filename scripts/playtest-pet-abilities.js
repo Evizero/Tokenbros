@@ -1,0 +1,22 @@
+async(page)=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/src/main.ts*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.__qa=game;'});});await page.reload();
+ const result=await page.evaluate(()=>{
+  const g=window.__qa;cancelAnimationFrame(g.frame);const assert=(v,m)=>{if(!v)throw Error(m);};
+  function clean(){g.selectCharacter('peter');g.start();g.finishIntro();g.effects=false;g.pointer.active=false;g.face=1;g.aimAngle=0;g.player.x=100;g.player.y=828;g.enemies=[];g.barrels=[];g.world.blocks.fill(null);for(let x=0;x<204;x++)g.world.set(x,43,3);g.aimPoint=()=>({x:450,y:840});g.boss.active=false;}
+  function pet(type,x,y){g.thinking=type;g.peterKit.throwCooldown=0;g.peterKit.throw();const p=g.peterKit.pets.at(-1);Object.assign(p,{x,y,age:1,state:'follow',cool:0,vx:0,vy:0});return p;}
+  function enemy(x,y=830,hp=20){const e=g.spawnEnemy(x,y,'gunner');e.hp=hp;g.enemies.push(e);return e;}
+  function tick(t){for(let i=0;i<Math.ceil(t*120);i++){g.time+=1/120;g.peterKit.update(1/120);}}
+  clean();let p=pet(2,220,850);const a=enemy(540),b=enemy(565);g.peterKit.command();assert(!g.peterKit.focus,'Fixture needs enemy outside exact mark radius');tick(3.5);assert(a.hp<20,'Pack did not seek enemy in area beyond original defensive range');a.dead=true;const before=b.hp;tick(1.5);assert(b.hp<before,'Pack did not reacquire second area enemy');assert(g.peterKit.pets.includes(p),'Crusher expired');
+  clean();p=pet(0,250,850);const close=enemy(265),splash=enemy(287),far=enemy(340);g.aimPoint=()=>({x:275,y:845});g.peterKit.command();tick(.01);assert(p.fuse>0&&close.hp===20,'Pincher should telegraph before damage');tick(.5);assert(!g.peterKit.pets.includes(p),'Pincher did not sacrifice itself');assert(close.hp===15&&splash.hp===15&&far.hp===20,'Pincher blast is not small bounded AOE');
+  clean();p=pet(1,250,805);const target=enemy(360,795);g.aimPoint=()=>({x:370,y:810});g.peterKit.command();tick(.04);assert(p.charge>0&&p.dash===0&&target.hp===20,'Skipper charge missing or hit too early');tick(.09);assert(p.dash>0,'Skipper failed to launch');while(p.dash>0)tick(1/120);assert(target.hp===16,'Skipper should hit exactly once per dash');assert(Math.abs(p.x-440)<10&&p.cool>1,'Skipper dash not bounded to 190px');assert(g.peterKit.pets.includes(p),'Skipper consumed like ammunition');
+  clean();p=pet(1,250,805);enemy(400,795);g.aimPoint=()=>({x:410,y:810});g.peterKit.command();tick(.1);for(let y=38;y<43;y++)g.world.set(15,y,3);tick(.7);assert(p.x<=286&&p.dash===0,'Skipper tunneled through wall added during charge');
+  clean();p=pet(2,250,850);const armor=enemy(270);g.aimPoint=()=>({x:280,y:845});g.peterKit.command();tick(.2);assert(armor.hp===14&&armor.shield===0,'Crusher did not melee break armor');
+  clean();const front=enemy(140),rear=enemy(65);g.thinking=0;const stock=g.peterKit.stock;g.shoot();assert(front.hp===18&&rear.hp===20,'Held claw failed directional melee');assert(g.peterKit.pets.length===0&&g.peterKit.stock===stock&&g.peterKit.molt===0,'Normal melee deployed/spent/molt dependency');assert(g.peterKit.punch>0&&g.peterKit.commandPoint,'Click must both animate claw and command');
+  clean();const covered=enemy(150);g.world.set(7,42,3);g.shoot();assert(covered.hp===20,'Hand melee passed through cover');
+  clean();g.boss.active=true;g.boss.phase=2;g.boss.dead=false;g.boss.x=130;g.boss.y=805;g.boss.hp=100;g.shoot();assert(g.boss.hp===98,'Held claw cannot damage exposed boss');
+  // Actual level screenshot with charge telegraph, order area, and all three companions.
+  g.start();g.finishIntro();g.effects=false;g.player.x=150;g.player.y=828;g.invuln=0;g.cam=0;g.camY=440;g.enemies=[];g.barrels=[];g.aimPoint=()=>({x:330,y:840});enemy(330,830);pet(0,215,850);p=pet(1,250,825);pet(2,175,850);g.peterKit.command();tick(.12);g.thinking=1;g.hud();document.querySelector('.toast').innerHTML='';g.render();
+  return {hunt:'area search and reacquisition',pincher:'short fuse, bounded splash, consumed',skipper:'telegraphed 190px dash, one hit, terrain collision, survives',crusher:'close combat armor break',heldClaw:'directional base melee, cover respected, command retained'};
+ });
+ await page.screenshot({path:'output/playwright/pet-abilities-v12.png'});if(errors.length)throw Error(errors.join('\n'));await page.unroute('**/src/main.ts*');await page.reload();return {result,errors};
+}

@@ -1,0 +1,21 @@
+{
+  "name": "tokenbros",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --experimental-strip-types --test src/*.test.ts",
+    "build:pages": "npm run build -- --base=/Tokenbros/"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vite": "^6.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.6.0"
+  }
+}

@@ -1,0 +1,14 @@
+async(page)=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/src/main.ts*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.__qa=game;'});});await page.reload();
+ const result=await page.evaluate(()=>{
+ const g=window.__qa;cancelAnimationFrame(g.frame);const assert=(v,m)=>{if(!v)throw Error(m);};
+ g.selectCharacter('tibo');g.start();g.finishIntro();g.effects=false;g.invuln=99;g.player.x=250;g.player.y=828;g.enemies=[];g.barrels=[];g.rescues=[];g.alarms=[];g.relays=[];g.pointer.active=false;g.world.blocks.fill(null);for(let x=0;x<204;x++)g.world.set(x,43,3);g.usage=125;
+ const tick=t=>{for(let i=0;i<Math.ceil(t*120);i++)g.update(1/120);};
+ function feedback(){const words=[],bars=[],c=g.c,fill=c.fillRect,txt=c.fillText;c.fillRect=function(x,y,w,h){bars.push({w,h,color:c.fillStyle});return fill.call(c,x,y,w,h);};c.fillText=function(...args){words.push(args[0]);return txt.apply(c,args);};try{g.drawUsageFeedback();}finally{c.fillRect=fill;c.fillText=txt;}return {words,width:bars.find(b=>b.h===4&&b.color==='#d5ff60')?.w};}
+ g.press('KeyF');g.release('KeyF');assert(g.refillFeedback===0&&g.usage===125,'Refill appeared before button landed');let limit=0;while(!g.refillFeedback&&limit++<480)tick(1/120);assert(g.usage===1000&&g.refillFrom===125&&g.refillFeedback>2.1,'Impact did not trigger refill');const initial=feedback();assert(initial.words.includes('REFILLING')&&initial.width<12,'Refill starts at wrong amount');tick(.18);const middle=feedback();assert(middle.width>initial.width&&middle.width<68,'Bar did not animate');tick(1.2);const full=feedback();assert(full.width===68&&full.words.includes('RELOADED'),'Refill did not visibly complete');g.shoot();assert(g.usage===992&&g.burstSpend===8,'Animation blocked or gave free shots');assert(feedback().words.includes('−8 TOK'),'Shooting during refill hid the new firing run');tick(.9);assert(g.refillFeedback===0,'Popup does not expire');
+ g.performReset(700,200);g.respawn();assert(g.refillFeedback===0,'Respawn retained stale refill');
+ // Capture original map, refill mid-animation, and the selector without edge accents.
+ g.start();g.finishIntro();g.effects=false;g.invuln=0;g.player.x=250;g.player.y=828;g.enemies=[];g.barrels=[];g.cam=0;g.camY=440;g.usage=80;g.performReset(700,200);g.refillFeedback=1.52;g.setThinking(1);g.modeBurst=0;document.querySelector('.toast').innerHTML='';g.hud();g.render();
+ return {reset:'appears on physical impact; bar animates from old balance to full; RELOADED then fades',duringFire:'paid shots and stacking counter continue',lifecycle:'respawn clears feedback'};
+ });await page.screenshot({path:'output/playwright/refill-selector-v16.png'});if(errors.length)throw Error(errors.join('\n'));await page.unroute('**/src/main.ts*');await page.reload();return {result,errors};
+}

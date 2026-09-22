@@ -1,0 +1,14 @@
+async(page)=>{
+ await page.route('**/src/main.ts*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.__qa=game;'});});await page.setViewportSize({width:1280,height:850});await page.reload();
+ try{
+ await page.locator('[data-bro="pidalf"]').click();await page.locator('#start').click();await page.evaluate(()=>{cancelAnimationFrame(window.__qa.frame);document.getAnimations().forEach(a=>a.finish());});await page.screenshot({path:'output/playwright/pidalf-intro-alpha-v29.png'});await page.locator('.skip-intro').click();
+ await page.evaluate(async()=>{const {pidalf}=await import('/src/pidalf-art.ts');const canvas=document.createElement('canvas');canvas.id='pose-test';canvas.width=1200;canvas.height=640;canvas.style.cssText='position:fixed;inset:0;width:1200px;height:640px;z-index:9999;background:#202832;image-rendering:pixelated';document.body.append(canvas);const c=canvas.getContext('2d');c.fillStyle='#202832';c.fillRect(0,0,1200,640);const poses=[['GRAB →',1,0,true],['GRAB ←',-1,0,true],['WINDUP',1,.23,false],['CONTACT',1,.38,false],['RECOVER',1,.75,false],['STAFF LIFT',1,0,false]];poses.forEach(([label,face,slap,hold],i)=>{c.fillStyle='#e7d4a9';c.font='16px monospace';c.fillText(label,i*200+25,36);pidalf(c,i*200+85,150,face,0,false,0,slap,hold,0,4,1,i===5?.25:0);});[.05,.3,.55,.82,1.02,1.18].forEach((cast,i)=>{c.fillStyle='#e7d4a9';c.font='16px monospace';c.fillText(['REACH','DRAW BACK','SQUEEZE','FIST','CRUNCH','SETTLE'][i],i*200+25,340);pidalf(c,i*200+85,460,1,1,false,0,0,true,cast,4,1,0);});});
+ await page.locator('#pose-test').screenshot({path:'output/playwright/pidalf-pose-strip-v29.png'});
+ await page.evaluate(()=>document.querySelector('#pose-test').remove());
+ await page.evaluate(()=>{const g=window.__qa;g.start();g.finishIntro();g.barks.clear();g.audio.setMuted(true);g.effects=false;g.world.blocks.fill(null);for(let x=0;x<100;x++)for(let y=43;y<50;y++)g.world.set(x,y,3);g.enemies=[g.spawnEnemy(340,830,'gunner')];g.barrels=[];g.relays=[];g.rescues=[];g.alarms=[];g.boss.active=false;g.player.x=170;g.player.y=828;g.invuln=0;g.pointer.active=true;window.__aim={x:350,y:845};g.aimPoint=()=>window.__aim;g.updateAim=()=>{const dx=window.__aim.x-g.player.x-10,dy=window.__aim.y-g.player.y-17;g.face=dx<0?-1:1;g.aimAngle=Math.atan2(dy,dx);g.aim=Math.atan2(dy,dx*g.face);};g.press('KeyE');window.__aim={x:375,y:730};for(let i=0;i<55;i++)g.update(1/120);g.cam=0;g.camY=440;g.render();g.hud();});
+ await page.screenshot({path:'output/playwright/pidalf-levitation-v29.png'});
+ await page.evaluate(()=>{const g=window.__qa;g.shoot();for(let i=0;i<48;i++)g.update(1/120);g.cam=0;g.camY=440;g.render();g.hud();});
+ await page.screenshot({path:'output/playwright/pidalf-squeeze-v29.png'});
+
+ }finally{await page.unroute('**/src/main.ts*');await page.reload();}
+}

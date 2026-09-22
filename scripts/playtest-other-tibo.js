@@ -1,0 +1,19 @@
+async(page)=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/src/main.ts*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.__qa=game;'});});await page.reload();
+ const result=await page.evaluate(()=>{
+ const g=window.__qa;cancelAnimationFrame(g.frame);const assert=(v,m)=>{if(!v)throw Error(m);};
+ function clean(){g.selectCharacter('tibo');g.start();g.finishIntro();g.effects=false;g.invuln=0;g.pointer.active=false;g.face=1;g.aimAngle=0;g.player.x=100;g.player.y=828;g.enemies=[];g.barrels=[];g.rescues=[];g.relays=[];g.alarms=[];g.bullets=[];g.world.blocks.fill(null);for(let x=0;x<204;x++)g.world.set(x,43,3);g.aimPoint=()=>({x:320,y:844});g.boss.active=false;}
+ function enemy(x,y=830){const e=g.spawnEnemy(x,y,'shield');e.cool=99;e.hp=10;g.enemies.push(e);return e;}
+ function tick(t,full=false){for(let i=0;i<Math.ceil(t*120);i++){if(full)g.update(1/120);else{g.time+=1/120;g.otherTibo.update(1/120);}}}
+ clean();const e=enemy(285);g.press('KeyE');g.release('KeyE');assert(g.otherTibo.active&&g.otherTibo.cooldown===4.5,'E failed to summon');assert(g.usage===1000,'E spent tokens');const b=g.otherTibo.active;tick(.15);assert(b.x>150&&g.player.x===100,'Double failed to jump independently');tick(.25);assert(e.hp===7&&e.shield===0&&e.vx>600&&e.vy<0&&e.flung>0&&b.bark>0,'Double failed to grab, strip and fling');const thrown=e.x;tick(.15,true);assert(e.x>thrown+65,'Thrown enemy did not actually travel');assert(!g.otherTibo.activate(),'Cooldown permits clone spam');
+ clean();g.aimPoint=()=>({x:900,y:650});g.otherTibo.activate();tick(.5);const far=g.otherTibo.active;assert(Math.hypot(far.x-98,far.y-824)<380&&far.x>350,'Aimed leap range is wrong');tick(1.4);assert(!g.otherTibo.active,'Double persists indefinitely');
+ clean();const blocked=enemy(310);for(let y=30;y<43;y++)g.world.set(11,y,3);g.otherTibo.activate();tick(.7);assert(g.otherTibo.active.x<=196&&blocked.hp===10,'Double crossed solid wall or grabbed through it');
+ clean();g.aimPoint=()=>({x:260,y:844});g.otherTibo.activate();tick(.5);const guard=g.otherTibo.active;assert(guard.phase==='guard','Empty-location summon did not stay as bodyguard');g.player.x=100;
+ function shot(hostile=true){const b={x:guard.x+60,y:guard.y+18,vx:-600,vy:0,hostile,life:1,power:1,pierce:0,boost:false,hit:new Set()};g.bullets.push(b);return b;}
+ let friendly=shot(false);g.updateBullets(.12);assert(guard.blocks===3&&friendly.life>0,'Bodyguard blocked friendly fire');for(let i=0;i<3;i++){shot();g.updateBullets(.12);}assert(!g.otherTibo.active&&g.health===3,'Bodyguard failed three-shot protection/break limit');shot();g.updateBullets(.4);assert(g.health===2,'Expired bodyguard keeps blocking');
+ clean();g.otherTibo.activate();g.pause();const life=g.otherTibo.active.life;g.update(.5);assert(g.otherTibo.active.life===life,'Pause consumed summon duration');g.resume();g.die();assert(!g.otherTibo.active,'Double survived death');g.respawn();assert(g.otherTibo.cooldown===0,'Respawn failed cleanup');
+ // Representative original map: the happier double tosses a robot away from the tired gunner.
+ g.start();g.finishIntro();g.effects=false;g.invuln=0;g.player.x=200;g.player.y=828;g.enemies=[];g.barrels=[];g.cam=0;g.camY=440;enemy(335);g.aimPoint=()=>({x:350,y:844});g.otherTibo.activate();tick(.3);document.querySelector('.toast').innerHTML='';g.hud();g.render();
+ return {summon:'independent 360px aimed leap, terrain collision, 4.5s cooldown, no token cost',throw:'grabs, strips armor, deals 3 and flings with collision physics',guard:'stationary bodyguard on a miss, blocks 3 hostile bullets, friendly pass-through, 1.8s lifetime',lifecycle:'pause/death/respawn correct'};
+ });await page.screenshot({path:'output/playwright/other-tibo-v18.png'});if(errors.length)throw Error(errors.join('\n'));await page.unroute('**/src/main.ts*');await page.reload();return {result,errors};
+}

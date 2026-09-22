@@ -1,0 +1,263 @@
+{
+  "tibo": {
+    "spawn": [
+      "All right. Burn those tokens.",
+      "Your limits are my problem."
+    ],
+    "death": [
+      "Okay. That needs a reset.",
+      "I may have overcommitted."
+    ],
+    "respawn": [
+      "Fresh session. Same problem.",
+      "Reset propagated."
+    ],
+    "multikill": [
+      "That's efficient batching.",
+      "Now that's throughput."
+    ],
+    "lowHealth": [
+      "Running on fumes."
+    ],
+    "empty": [
+      "Who set these limits?",
+      "Out of tokens. Naturally."
+    ],
+    "reset": [
+      "Everybody gets a reset!",
+      "Quota restored. You're welcome."
+    ],
+    "double": [
+      "Take this one, night shift."
+    ],
+    "catch": [
+      "Good. I need myself back."
+    ],
+    "absorb": [
+      "Thanks for the free tokens."
+    ],
+    "tower": [
+      "More stairs. Still no compute."
+    ],
+    "cable": [
+      "Express delivery."
+    ],
+    "uplink": [
+      "Back online. Keep moving."
+    ],
+    "rescue": [
+      "Your limits have been lifted."
+    ],
+    "boss": [
+      "So you're the rate limiter."
+    ],
+    "victory": [
+      "No limits. For about five minutes.",
+      "All systems reset. Sweet dreams."
+    ]
+  },
+  "peter": {
+    "spawn": [
+      "Came back with backup.",
+      "Let's get cracking."
+    ],
+    "death": [
+      "I should have brought more lobsters.",
+      "Claws. We need to talk."
+    ],
+    "respawn": [
+      "New shell. Same attitude.",
+      "Retirement can wait."
+    ],
+    "multikill": [
+      "Good claws. Very good claws.",
+      "It's lobsters all the way down."
+    ],
+    "lowHealth": [
+      "A little help, claws?"
+    ],
+    "summon": [
+      "Go on. Make a mess.",
+      "Small claw. Big responsibilities."
+    ],
+    "molt": [
+      "Fine. I'll do it myself.",
+      "Time to lose the shell."
+    ],
+    "prism": [
+      "Everybody behind me."
+    ],
+    "tower": [
+      "Claws. Take the scenic route."
+    ],
+    "cable": [
+      "This is technically a migration."
+    ],
+    "uplink": [
+      "Your machine. Our rules."
+    ],
+    "rescue": [
+      "You're part of the pack now."
+    ],
+    "boss": [
+      "That's a very large chew toy."
+    ],
+    "victory": [
+      "The world is your lobster.",
+      "Good work. Snacks for everyone."
+    ]
+  },
+  "dimillian": {
+    "spawn": [
+      "Bonjour, bugs.",
+      "New build. Same chaos."
+    ],
+    "death": [
+      "That worked on my machine.",
+      "Bon. We fix it live."
+    ],
+    "respawn": [
+      "Hot reload. Much better.",
+      "One more build."
+    ],
+    "multikill": [
+      "Now that's good game feel.",
+      "Fixed three bugs at once."
+    ],
+    "lowHealth": [
+      "The health bar needs a redesign."
+    ],
+    "finisher": [
+      "Freshly baked.",
+      "Parry this pastry."
+    ],
+    "sheep": [
+      "Much better as a sheep."
+    ],
+    "paired": [
+      "Paired. You're with me now."
+    ],
+    "duelistSpecial": [
+      "One very large bug fix."
+    ],
+    "mageSpecial": [
+      "I added a little particle effect."
+    ],
+    "pilotSpecial": [
+      "Shipping at full speed."
+    ],
+    "tower": [
+      "Who designed these stairs?"
+    ],
+    "cable": [
+      "Smooth transition."
+    ],
+    "uplink": [
+      "Connected. Let's ship it."
+    ],
+    "rescue": [
+      "Welcome to the beta."
+    ],
+    "boss": [
+      "That's going in the bug tracker."
+    ],
+    "victory": [
+      "C'est fini. Ship it.",
+      "No bugs. Only features."
+    ]
+  },
+  "pidalf": {
+    "spawn": [
+      "you don’t need all that.",
+      "right. let’s simplify."
+    ],
+    "death": [
+      "that one’s on me."
+    ],
+    "respawn": [
+      "one more iteration."
+    ],
+    "multikill": [
+      "less is more."
+    ],
+    "lowHealth": [
+      "poor architecture."
+    ],
+    "tower": [
+      "unnecessary layers."
+    ],
+    "cable": [
+      "one dependency."
+    ],
+    "uplink": [
+      "reviewed."
+    ],
+    "rescue": [
+      "you’re welcome. read the code."
+    ],
+    "boss": [
+      "that’s a lot of slop."
+    ],
+    "victory": [
+      "finally. something simple."
+    ],
+    "shockwave": [
+      "SLOP!",
+      "delete the nonsense.",
+      "too much abstraction.",
+      "back to basics."
+    ],
+    "repel": [
+      "You shall not pass code review!",
+      "You shall not file a PR!",
+      "You shall not merge!"
+    ]
+  },
+  "marcus": {
+    "spawn": [
+      "Steady as she goes...",
+      "One more credit."
+    ],
+    "death": [
+      "Continue?",
+      "That needs another sample."
+    ],
+    "respawn": [
+      "New sample. Same me."
+    ],
+    "multikill": [
+      "Same rock. More data.",
+      "Another angle."
+    ],
+    "lowHealth": [
+      "One heart left."
+    ],
+    "catch": [
+      "Second breakfast. Second hit.",
+      "Back in the bag."
+    ],
+    "recall": [
+      "Return to sender."
+    ],
+    "batch": [
+      "More samples!"
+    ],
+    "uplink": [
+      "Pipeline connected."
+    ],
+    "rescue": [
+      "Player two unlocked."
+    ],
+    "boss": [
+      "Big sprite. Big target."
+    ],
+    "victory": [
+      "High score. Time for breakfast."
+    ],
+    "lcdLaunch": [
+      "Three frames. All I need.",
+      "Mind the landing.",
+      "Portable violence."
+    ]
+  }
+}

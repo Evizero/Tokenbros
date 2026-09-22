@@ -1,0 +1,13 @@
+# Iterations 022–023 — Dimillian and live play refinements
+
+User approved the third character with a purple accent. Subsequent feedback during implementation superseded the initial proposed kit: baguette becomes a sword combo, spaceship flight is unrestricted, mage attacks are chargeable fireballs, E varies by form, and Q uses regenerating health with three different geometries.
+
+The definitive current control/tuning table is in [Dimillian's character bible](characters/dimillian.md#current-implemented-kit). Historical brainstorming stays below that section to preserve why the concept evolved; it is not the implementation contract.
+
+Implementation: `src/dimillian.ts` contains the kit; `src/dimillian-art.ts` contains code-native sprites and sheep/bunker seated art. `src/game.ts` integrates input, movement, enemy statuses, collision, HUD, lifecycle and mission interaction. Title selection and pause cycling now include all three characters. The intro portrait is a project-local generated PNG with the exact prompt and source-photo provenance in [image-generation notes](research/dimillian-image-generation.md).
+
+Visual direction: purple hot-reload frame, recognizable face and phone, fantasy mage outfit, and compact ivory/violet ship based on the user's reference. Sword swings use distinct active arcs, light hit confirmation and a heavy third-hit launch. Mage has an orange fireball with a pale hot core and flame trail. Q visually distinguishes an enlarged iPhone hut, following circular bubble, and forward ship barrier. Enemy polymorph has an actual woolly sheep sprite.
+
+Validation: production build and all 30 deterministic tests pass. `playtest-dimillian.js` checks sword hit gating/misses/launch vectors, charged-vs-small fireballs, unlimited hover and terrain, all shield geometries and shared HP/recharge/break lock, ally protection, bunker restrictions with working Remote, three E abilities, three F abilities, shared cooldown/form lock, uplinks, pause and death/respawn. `playtest-dimillian-effects.js` also runs the combo through real enemy physics: steps 0/1/2, total 10.5 damage, surviving robot moved from x244/y830 to x328/y744. `playtest-dimillian-ui.js` checks actual pointer down/up, wheel, key presets, movement, Q release, F lock and roster cycling, with a narrow-window visual check. Zero page errors in the feature and UI runs.
+
+Earlier in this integration, existing Tibo shield/catch, Peter pet-power, and wall-climb browser regressions also passed. Screenshots were inspected for all three forms, title/intro, and the final bunker, bubble, directional shield, fireball and sheep in `output/playwright/`. No full-mission balance or subjective game-feel acceptance is claimed. All browser automation used the isolated QA session.
