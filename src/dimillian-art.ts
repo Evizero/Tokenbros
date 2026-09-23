@@ -1,4 +1,4 @@
-import { rect,text } from './art';
+import { rect,text,withHeadTilt } from './art';
 export const DIM_COLORS=['#e3b77d','#cc9fff','#99e5ed'];
 export type MageMotion={strength?:number;teleport?:number;arrival?:number;departure?:number;stowed?:boolean;polymorph?:number};
 export type ShipMotion={forward:number;reverse:number;up:number;down:number;kick:number;surge?:number;sonic?:boolean;flash?:number;flight?:number;heading?:number};
@@ -21,10 +21,10 @@ export function mageStaffTip(x:number,y:number,face:number,angle:number,charge=0
 }
 export const DIM_FORMS=['DUELIST','MAGE','PILOT'];
 // All three prefabs keep the same recognizable pilot: tied hair, beard, glasses.
-function head(c:CanvasRenderingContext2D,y=0){
+function head(c:CanvasRenderingContext2D,y=0,gaze=0){
  rect(c,-7,y+1,14,12,'#d6a681');rect(c,-8,y-2,15,5,'#74604e');rect(c,-11,y,5,6,'#685143');rect(c,-14,y+3,5,4,'#7c6450');
  rect(c,-7,y+9,14,6,'#806147');rect(c,2,y+10,5,2,'#eed4b2');rect(c,6,y+6,4,3,'#e6b992');
- rect(c,-6,y+4,6,5,'#31303b');rect(c,2,y+4,6,5,'#31303b');rect(c,0,y+5,2,1,'#c6bacd');rect(c,-5,y+5,4,2,'#b7d6d4');rect(c,3,y+5,4,2,'#c6dfde');rect(c,9,y+9,3,2,'#454054');
+ rect(c,-6,y+4,6,5,'#31303b');rect(c,2,y+4,6,5,'#31303b');rect(c,0,y+5,2,1,'#c6bacd');rect(c,-5,y+5,4,2,'#b7d6d4');rect(c,3,y+5,4,2,'#c6dfde');rect(c,9,y+9,3,2,'#454054');rect(c,-3,y+5+gaze,1,1,'#343240');rect(c,5,y+5+gaze,1,1,'#343240');
 }
 // The same black glass, pill camera and home indicator at hand and bunker scale.
 export function iphone(c:CanvasRenderingContext2D,x:number,y:number,w=8,h=13){
@@ -95,7 +95,7 @@ export function dimillian(c:CanvasRenderingContext2D,x:number,y:number,face:numb
   c.fillStyle='#d6c6a7';c.beginPath();c.moveTo(-20,-7);c.lineTo(29,0);c.lineTo(16,8);c.lineTo(-23,10);c.closePath();c.fill();
   rect(c,-16,-7,25,5,'#f6e4c1');rect(c,-20,8,31,3,'#9485a2');rect(c,-6,-8,14,8,'#28737b');rect(c,-4,-8,9,2,'#9ed8d8');rect(c,-25,1,6,8,'#595264');
   rect(c,-12,13,20,5,'#6d5a83');rect(c,-9,14,15,2,'#c8b5da');
-  c.restore();c.save();c.translate(flight*3,flight*11);c.scale(1,1-flight*.2);rect(c,-7,9,13,12,'#80719c');head(c,-5);c.restore();
+  c.restore();c.save();c.translate(flight*3,flight*11);c.scale(1,1-flight*.2);rect(c,-7,9,13,12,'#80719c');withHeadTilt(c,0,7,angle-heading,(gaze)=>head(c,-5,gaze));c.restore();
   if(flight>0){c.save();c.globalAlpha=flight*.6;c.fillStyle='#9be5ec';c.beginPath();c.ellipse(0,12,13,10,0,Math.PI,Math.PI*2);c.fill();c.strokeStyle='#e9faff';c.lineWidth=1;c.stroke();c.restore();}
   c.save();c.translate(5,21);c.rotate(angle-heading);for(const yy of [-7,6]){rect(c,1,yy,19,4,'#ddd1b9');rect(c,13,yy,8,2,'#8bacc2');if(attack>0)rect(c,22,yy-2,8+attack*25,6,'#b5f7ff');}c.restore();
   if(jets.sonic){
@@ -119,14 +119,14 @@ export function dimillian(c:CanvasRenderingContext2D,x:number,y:number,face:numb
    rect(c,-9,12,6,9,'#644780');rect(c,-3,15,3,15,'#ad8ac7');rect(c,-11+sway,29,23-sway,2,'#cfb47c');rect(c,-9,21,19,3,'#b69667');rect(c,0,21,4,4,'#eed3a0');rect(c,-9,25,2,4,'#382749');
 
   }else{rect(c,-8,12,17,14,'#68547f');rect(c,-8,12,6,9,'#887199');rect(c,-1,14,6,2,'#bda4d1');}
-  c.save();c.translate(-pose.twist*.35,-Math.abs(pose.twist)*.3);head(c);
+  c.save();c.translate(-pose.twist*.35,-Math.abs(pose.twist)*.3);withHeadTilt(c,0,12,angle-pose.lean,(gaze)=>{head(c,0,gaze);
   if(kind===1){
    // A bent point, broad brim and gold band leave his glasses and beard exposed.
    const tip=Math.round(Math.sin(time*(moving?10:2))*(moving?2:.5)-casting.robe*.6);
    c.fillStyle='#49315f';c.beginPath();c.moveTo(-10,-2);c.lineTo(-5,-12);c.lineTo(2+tip,-24);c.lineTo(7+tip,-20);c.lineTo(4+tip,-18);c.lineTo(10,-2);c.closePath();c.fill();
    c.fillStyle='#9a75bd';c.beginPath();c.moveTo(-3,-6);c.lineTo(2+tip,-24);c.lineTo(4+tip,-19);c.lineTo(6,-5);c.closePath();c.fill();
    rect(c,-9,-5,18,3,'#c7a66f');rect(c,1,-5,4,3,'#f4d697');rect(c,-14,-2,29,3,'#5d3c7c');rect(c,-12,-2,25,1,'#c09cdb');
-  }c.restore();
+  }});c.restore();
   if(kind===1){
    // The free hand gathers the charge, then opens toward the target on release.
    c.save();c.translate(-7,15);c.rotate(casting.freeArm);rect(c,-6,0,7,9,'#785294');rect(c,-6,7,5,6,'#d8ad87');rect(c,-8,10,2,4,'#efc6a0');c.restore();

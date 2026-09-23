@@ -2,6 +2,14 @@ import { World, TILE, COLS, ROWS } from './world';
 export const W=960,H=540;
 export const palette={acid:'#d5ff60',ink:'#131619',orange:'#ffad48',red:'#fa6b4a'};
 export function rect(c:CanvasRenderingContext2D,x:number,y:number,w:number,h:number,color:string) {c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
+// The neck stays planted while the face, hair and headwear turn together.
+// Aim is already relative to the character's facing direction.
+export function withHeadTilt(c:CanvasRenderingContext2D,x:number,y:number,aim:number,draw:(gaze:number)=>void){
+  // Eyes cover small aim changes first; the neck only follows larger glances.
+  const pitch=Math.sign(aim)*Math.min(Math.PI/7,Math.max(0,Math.abs(aim)-.22)*.34);
+  const gaze=Math.max(-1,Math.min(1,(aim-pitch)/.4));
+  c.save();c.translate(x,y);c.rotate(pitch);c.translate(-x,-y);draw(gaze);c.restore();
+}
 export function text(c:CanvasRenderingContext2D,s:string,x:number,y:number,color='#c9ced5',size=10,align:CanvasTextAlign='left') {c.fillStyle=color;c.font=`bold ${size}px monospace`;c.textAlign=align;c.fillText(s,Math.round(x),Math.round(y));c.textAlign='left';}
 const hash=(x:number)=>{const a=Math.sin(x*127.1+311.7)*43758.5453;return a-Math.floor(a);};
 function pine(c:CanvasRenderingContext2D,x:number,base:number,h:number,color:string) {
@@ -117,10 +125,12 @@ export function tibo(c:CanvasRenderingContext2D,x:number,y:number,face:number,ti
   rect(c,-8,31,19,3,'#061a1488');rect(c,-6,23,5,8+step,'#121d21');rect(c,3,23,5,8-step,'#243033');rect(c,-7,30+step,8,3,'#728379');rect(c,2,30-step,9,3,'#9ba699');
   rect(c,-8,12+bob,17,13,'#111c1f');rect(c,-9,11+bob,7,9,'#344147');rect(c,-6,12+bob,13,2,'#3f4a49');rect(c,-3,14+bob,2,9,'#52605b');rect(c,4,13+bob,1,7,'#a0aca1');
   rect(c,-12,14+bob,5,10,boost?'#c8f47b':'#576d43');rect(c,-12,15+bob,2,7,boost?'#efffb3':'#9db46c');
-  rect(c,-5,2+bob,12,11,'#c99371');rect(c,-6,5+bob,3,5,'#ae795c');rect(c,3,9+bob,6,3,'#926e5a');rect(c,6,6+bob,3,3,'#ddb08b');rect(c,4,5+bob,2,2,'#182a24');
+  withHeadTilt(c,0,12+bob,angle,(gaze)=>{
+  rect(c,-5,2+bob,12,11,'#c99371');rect(c,-6,5+bob,3,5,'#ae795c');rect(c,3,9+bob,6,3,'#926e5a');rect(c,6,6+bob,3,3,'#ddb08b');rect(c,4,5+bob+gaze,2,2,'#182a24');
   rect(c,-6,bob,12,4,'#48372f');rect(c,-7,3+bob,4,5,'#5e4335');rect(c,-4,bob,7,2,'#78523b');
   if(boost){rect(c,-4,-2+bob,3,3,'#5d412e');rect(c,1,-1+bob,4,2,'#79543b');rect(c,3,9+bob,5,2,'#f1e5ca');}
   else {rect(c,-2,2+bob,4,4,'#684a39');rect(c,3,2+bob,2,4,'#644433');rect(c,-7,6+bob,3,5,'#4e3b31');rect(c,1,11+bob,6,1,'#745848');rect(c,3,4+bob,3,1,'#4b352c');}
+  });
   if(brawl){
     c.save();c.translate(5,17+bob);c.rotate(brawl===1?-.3:brawl===2?-1:brawl===3?-.55:0);
     const reach=brawl===1||brawl===3?20:brawl===2?13:9;

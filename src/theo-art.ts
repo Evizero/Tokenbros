@@ -1,4 +1,4 @@
-import { rect } from './art';
+import { rect,withHeadTilt } from './art';
 import type { TheoKit } from './theo';
 export const THEO_COLOR='#78d9ff';
 const ink='#101923',skin='#e5b19a';
@@ -24,13 +24,13 @@ function limb(c:CanvasRenderingContext2D,points:number[][],color:string,width:nu
   for(let j=0;j<=steps;j++){const u=j/steps;rect(c,Math.round(ax+(bx-ax)*u-width/2),Math.round(ay+(by-ay)*u-width/2),width,width,color);}
  }
 }
-function head(c:CanvasRenderingContext2D,x:number,y:number){
+function head(c:CanvasRenderingContext2D,x:number,y:number,gaze=0){
  // Same head scale and block shading as the other bros; fringe and earring
  // carry the likeness rather than extra portrait-sized facial detail.
  x=Math.round(x);y=Math.round(y);
  rect(c,x-5,y-5,12,11,'#d5a18a');rect(c,x-6,y-2,3,5,'#ae7d69');
  rect(c,x-3,y-4,9,7,'#e9b99d');rect(c,x+5,y-1,4,3,'#efc4a6');
- rect(c,x+1,y+4,6,2,'#bc8673');rect(c,x+3,y-2,2,2,'#25313b');
+ rect(c,x+1,y+4,6,2,'#bc8673');rect(c,x+3,y-2+gaze,2,2,'#25313b');
  rect(c,x+1,y+3,5,1,'#946457');
  rect(c,x-6,y-8,14,4,'#29262d');rect(c,x-3,y-10,8,3,'#393137');
  rect(c,x-7,y-5,4,5,'#30282e');rect(c,x-3,y-5,4,3,'#29262d');
@@ -88,7 +88,7 @@ export function theo(c:CanvasRenderingContext2D,x:number,y:number,face:number,ti
  rect(c,shoulderX-2,shoulderY-1,6,2,'#ba8b76');
  // Tiny cyan tee print echoes the deck without turning his clothes neon.
  rect(c,shoulderX+1,shoulderY+6,4,1,'#77b2ca');rect(c,shoulderX+3,shoulderY+7,2,2,'#58819c');
- c.save();c.translate(Math.round(shoulderX+1),Math.round(shoulderY-5-attack-toss*2));c.scale(riding?face*k.rideFace:1,1);head(c,0,0);c.restore();
+ c.save();c.translate(Math.round(shoulderX+1),Math.round(shoulderY-5-attack-toss*2));c.scale(riding?face*k.rideFace:1,1);withHeadTilt(c,0,5,k.g.aim,(gaze)=>head(c,0,0,gaze));c.restore();
  let handX=riding?13:10,handY=shoulderY+(riding?11:14),deckAngle=-.95;
  const localAim=Math.atan2(Math.sin(k.attackAngle),Math.cos(k.attackAngle)*face);
  if(k.attack>0&&k.attackKind!==3){
@@ -99,16 +99,16 @@ export function theo(c:CanvasRenderingContext2D,x:number,y:number,face:number,ti
  if(k.catchPose>0&&k.attack<=0){handX=17;handY=shoulderY-4+Math.sin(k.catchPose*12)*4;}
  if(boxing){
   handX=shoulderX+(cross?7:12);handY=shoulderY+(cross?-1:5);
-  if(boxingAttack&&!cross){handX+=attack*(hook?19:23);handY+=hook?Math.sin(progress*Math.PI*2)*9-attack*8:-attack*3;}
+  if(boxingAttack&&!cross){handX+=attack*(hook?12:15);handY+=hook?Math.sin(progress*Math.PI*2)*9-attack*8:-attack*3;}
  }
  if(toss>0){const a=Math.atan2(Math.sin(k.shieldAim),Math.cos(k.shieldAim)*face);handX=11+Math.cos(a)*toss*23;handY=shoulderY+8+Math.sin(a)*toss*23;}
  if(k.throwPose>0){const reach=Math.sin(k.throwPose/.32*Math.PI);handX=14+reach*14;handY=shoulderY+15-reach*8;}
  if(blend>0&&blend<1){handX+=(7-handX)*Math.sin(blend*Math.PI);handY+=(0-handY)*Math.sin(blend*Math.PI)*.55;}
  const nearArm=()=>{limb(c,[[shoulderX+7,shoulderY+7],[boxing?(cross?shoulderX+16:handX-8):handX*.7,boxing?handY+7:shoulderY+12],[handX,handY]],skin,4);rect(c,handX-2,handY-2,boxing?5:4,boxing?5:4,'#f1c4aa');};
  if(boxing){
-  const reach=cross?attack:0,fx=shoulderX-4+reach*40,fy=shoulderY+5+reach*2;
+  const reach=cross?attack:0,fx=shoulderX-4+reach*25,fy=shoulderY+5+reach*2;
   const rearArm=()=>{
-   limb(c,[[shoulderX-7,shoulderY+5],[shoulderX-11+reach*32,shoulderY+13-reach*5],[fx,fy]],'#c69378',4);
+   limb(c,[[shoulderX-7,shoulderY+5],[shoulderX-11+reach*20,shoulderY+13-reach*5],[fx,fy]],'#c69378',4);
    rect(c,fx-2,fy-3,6,6,'#dfaf92');rect(c,fx-1,fy-3,4,1,'#f1c4aa');
   };
   if(cross){nearArm();rearArm();}else{rearArm();nearArm();}
@@ -121,7 +121,7 @@ export function theo(c:CanvasRenderingContext2D,x:number,y:number,face:number,ti
  }
  if(boxingAttack&&attack>.5){
   c.save();c.globalAlpha=(attack-.5)*.6;c.strokeStyle='#e9d9bd';c.lineWidth=1;
-  const xx=cross?shoulderX-4+attack*40:handX,yy=cross?shoulderY+5+attack*2:handY;
+  const xx=cross?shoulderX-4+attack*25:handX,yy=cross?shoulderY+5+attack*2:handY;
   c.beginPath();c.moveTo(xx-9,yy+(hook?8:2));c.lineTo(xx-3,yy+1);c.stroke();c.restore();
  }
  if(attack>.5&&k.attached){c.globalAlpha=(attack-.5)*.45;c.strokeStyle='#d7f8ff';c.lineWidth=4;c.beginPath();c.arc(8,-25,38+heavy*7,localAim-1.5,localAim+1.1);c.stroke();}

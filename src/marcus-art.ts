@@ -1,4 +1,4 @@
-import { rect } from './art';
+import { rect,withHeadTilt } from './art';
 export const MARCUS_COLOR='#70e1ef';
 export const AUGMENT_NAMES=['ROTATE','LCD','ZOOM','PAC-MAN'];
 export const AUGMENT_COLORS=['#70e1ef','#adceff','#ffe0a1','#ffe16a'];
@@ -22,10 +22,12 @@ export function marcus(c:CanvasRenderingContext2D,x:number,y:number,face:number,
  rect(c,-7,5,6,8+step,'#3d4550');rect(c,2,5,6,8-step,'#56606a');rect(c,-9,12+step,10,3,'#473d35');rect(c,1,12-step,11,3,'#6f5740');
  rect(c,-8,-7,17,17,'#263843');rect(c,-7,-7,5,14,'#415563');rect(c,0,-6,6,13,'#e8d9b6');rect(c,6,-7,4,16,'#192b35');
  rect(c,-8,-4,17,2,'#ae8356');rect(c,-10,3,8,8,'#93633d');rect(c,-10,3,8,2,'#d4a774');rect(c,-9,4,2,4,MARCUS_COLOR);
+ withHeadTilt(c,0,-6,aim,(gaze)=>{
  // Tousled dark hair and exposed, lightly stubbled face.
  rect(c,-6,-18,13,12,'#d7ac8d');rect(c,-7,-17,3,7,'#b88971');rect(c,6,-13,4,3,'#e7ba94');
  rect(c,-7,-20,14,4,'#403d37');rect(c,-5,-23,7,4,'#565047');rect(c,1,-22,6,3,'#373b37');rect(c,-7,-17,3,4,'#51483d');rect(c,-3,-17,7,1,'#8a7660');
- rect(c,3,-14,2,2,'#23343a');rect(c,-3,-9,10,3,'#97785e');rect(c,2,-9,5,1,'#ead4b5');
+ rect(c,3,-14+gaze,2,2,'#23343a');rect(c,-3,-9,10,3,'#97785e');rect(c,2,-9,5,1,'#ead4b5');
+ });
  c.save();c.translate(5,-2);c.rotate(charge>0&&mode===2?aim*(1-charge)-charge*1.15:aim);const reach=15+recoil*3-catching*4+(mode===2?charge*18:0);
  rect(c,0,-1,reach,4,'#c69a78');rect(c,0,-2,6,5,'#435969');
  const fork=mode===2?11+charge*7:mode===1?8:6;

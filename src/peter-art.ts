@@ -1,4 +1,4 @@
-import { rect,text } from './art';
+import { rect,text,withHeadTilt } from './art';
 export const CLAW_COLORS=['#ff8457','#78dbea','#e5bd68'];
 export function claw(c:CanvasRenderingContext2D,x:number,y:number,type:number,time:number,face=1,scale=1,strike=0,windup=0){
  c.save();c.translate(Math.round(x),Math.round(y));c.scale(face*scale,scale);if(type===2)c.scale(1+strike*.22-windup*.12,1-strike*.2+windup*.14);const color=CLAW_COLORS[type],step=Math.sin(time*22)*2;
@@ -18,9 +18,11 @@ export function peter(c:CanvasRenderingContext2D,x:number,y:number,face:number,t
  rect(c,-7,23,6,8+step,'#233544');rect(c,3,23,6,8-step,'#314651');rect(c,-8,30+step,9,3,'#d3d8c0');rect(c,2,30-step,10,3,'#b8c7bc');
  if(molt){rect(c,-13,12,28,13,'#c99271');rect(c,-14,10,11,11,'#e0ad88');rect(c,7,10,12,11,'#e0ad88');rect(c,-8,14,17,4,'#edbb95');rect(c,-1,13,2,12,'#976449');rect(c,-6,21,14,2,'#a77050');rect(c,-12,9,5,7,'#667e98');rect(c,11,9,4,6,'#667e98');}
  else{rect(c,-9,12,19,13,'#607e9d');rect(c,-10,12,7,9,'#8aa0b4');rect(c,-5,13,13,3,'#9baec0');rect(c,6,17,2,3,'#a67653');}
+ withHeadTilt(c,0,12,angle,(gaze)=>{
  rect(c,-5,1,13,11,'#d1a27e');rect(c,-7,4,3,6,'#b88866');rect(c,6,6,4,3,'#e6b48e');
  rect(c,-6,-2,13,4,'#433a34');rect(c,-4,-4,10,3,'#52443b');rect(c,-7,2,3,3,'#8c7965');rect(c,-3,9,10,4,'#675044');rect(c,2,9,5,1,'#ead5ae');
- rect(c,-4,4,13,1,'#19282b');rect(c,-4,4,5,4,'#263d42');rect(c,3,4,6,4,'#263d42');rect(c,-3,5,3,2,'#a8c9c3');rect(c,4,5,3,2,'#b7d1c8');
+ rect(c,-4,4,13,1,'#19282b');rect(c,-4,4,5,4,'#263d42');rect(c,3,4,6,4,'#263d42');rect(c,-3,5,3,2,'#a8c9c3');rect(c,4,5,3,2,'#b7d1c8');rect(c,-1,5+gaze,1,1,'#23343a');rect(c,6,5+gaze,1,1,'#23343a');
+ });
  c.save();c.translate(7,17);c.rotate(angle);rect(c,-3,-1,molt?14:9,molt?7:4,'#d5a27c');
  if(molt){const reach=punch>0?23:9;rect(c,reach,-5,12,12,'#e6b58d');rect(c,reach+2,-5,9,3,'#f2cea6');}
  else{const reach=punch>0?(kind===2?32:kind===0?24:12):15;rect(c,4,-1,reach-3,4,'#d5a27c');claw(c,reach,-3,kind,time+(punch>0?.15:0),1,(kind===2?.9:.7)+(punch>0&&kind!==1?.25:0),kind===2?punch/.17:0);if(kind===1&&punch>.05){rect(c,reach+11,-6,10,5,'#bdf6ff');rect(c,reach+18,-4,6,2,'#78dbea');}}c.restore();c.restore();

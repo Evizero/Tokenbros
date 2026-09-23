@@ -169,7 +169,7 @@ export class TheoKit {
   for(const e of g.enemies)if(!e.dead&&e.x+e.w>b.x-rx&&e.x<b.x+rx&&e.y+e.h>b.y-ry&&e.y<b.y+ry)this.hitBoard(e);
  }
  melee(){
-  const g=this.g,a=this.attackAngle,bare=this.attackKind===3,hook=bare&&this.punchStep===2,range=bare?(hook?42:36):61+this.strikePower*19;
+  const g=this.g,a=this.attackAngle,bare=this.attackKind===3,hook=bare&&this.punchStep===2,range=bare?(hook?34:30):61+this.strikePower*19;
   const punchDamage=hook?3:2,punchKnock=hook?330:this.punchStep===1?160:110;
   const x=this.strikeOrigin.x,y=this.strikeOrigin.y;let connected=false;
   for(const e of g.enemies){if(e.dead||e.hacked>0||g.claimedByOther(e))continue;const dx=e.x+e.w/2-x,dy=e.y+e.h/2-y;

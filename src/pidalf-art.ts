@@ -1,4 +1,4 @@
-import { rect,text } from './art';
+import { rect,text,withHeadTilt } from './art';
 export const PI_COLOR='#efc47f';
 export const levitationBob=(time:number)=>Math.sin(time*3.4)*2.5;
 // The hand, shoulders, feet and cloak share one pose curve: anticipation,
@@ -34,9 +34,11 @@ export function pidalf(c:CanvasRenderingContext2D,x:number,y:number,face:number,
  const tail=Math.sin(time*6)*2+hit*7+slam*12+swish*8+drawBack*5-crunch*7;
  c.fillStyle='#303740';c.beginPath();c.moveTo(-9,-10);c.lineTo(-17-tail,16);c.lineTo(-1,12);c.lineTo(13,15);c.lineTo(10,-10);c.fill();
  rect(c,-9,-7,18,19,'#555b61');rect(c,-9,-5,8,20,'#353e48');rect(c,-7,-7,3,18,'#49535c');rect(c,1,-6,8,18,'#969b91');rect(c,2,-3,5,13,'#a5a698');rect(c,8,-5,2,16,'#737c78');rect(c,-7,6,15,3,'#282c33');rect(c,0,6,3,3,PI_COLOR);
+ withHeadTilt(c,0,-6,angle,(gaze)=>{
  // Tied-back hair and short beard leave the round glasses legible.
  rect(c,-9,-23,17,8,'#514f4d');rect(c,-11,-19,6,10,'#8b8880');rect(c,-13,-15,5,6,'#5f605e');rect(c,-7,-21,15,15,'#d5ad8b');rect(c,-8,-23,15,5,'#666762');rect(c,-6,-24,10,2,'#aba79b');rect(c,-6,-9,12,5,'#777873');rect(c,-3,-8,6,2,'#bcb3a0');rect(c,7,-13,2,3,'#dfb997');rect(c,0,-9,5,1,'#e8d4b8');rect(c,-8,-15,3,5,'#ba9479');
- c.strokeStyle='#222a32';c.lineWidth=1.5;for(const xx of [-3,5]){c.beginPath();c.arc(xx,-15,3.3,0,Math.PI*2);c.stroke();}rect(c,-8,-17,2,1,'#252a30');rect(c,0,-16,2,1,'#252a30');rect(c,-2,-15,1,1,'#343a3b');rect(c,6,-15,1,1,'#343a3b');
+ c.strokeStyle='#222a32';c.lineWidth=1.5;for(const xx of [-3,5]){c.beginPath();c.arc(xx,-15,3.3,0,Math.PI*2);c.stroke();}rect(c,-8,-17,2,1,'#252a30');rect(c,0,-16,2,1,'#252a30');rect(c,-2,-15+gaze,1,1,'#343a3b');rect(c,6,-15+gaze,1,1,'#343a3b');
+ });
 
  c.save();if(swat>0){c.translate(9,-2);c.rotate(angle+.6+swish*1.5);c.translate(12,-4);}else{c.translate(ward>0?charge*12:0,-lift);c.rotate(ward>0?-.16*(1-slam):0);}
  // Staff rises with both hands, then drives into the ground ahead of his stance.
