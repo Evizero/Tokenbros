@@ -103,7 +103,7 @@ die(){
   o.innerHTML='<div class="death-card"><div class="result-title">BRO DOWN</div><p>BACK AT THE CHECKPOINT</p><div class="respawn-track"><i></i></div></div>';o.removeAttribute('hidden');
 }
 respawn(){super.respawn();if(!this.preview&&$('#overlay').classList.contains('death-screen'))$('#overlay').setAttribute('hidden','');}
-notify(a:string,b=''){if(this.preview)return;super.notify(a,b);const e=$('.toast'),banner=document.createElement('div'),title=document.createElement('strong'),detail=document.createElement('small');banner.className='event-banner';title.textContent=a;detail.textContent=b;banner.append(title);if(b)banner.append(detail);e.replaceChildren(banner);this.toastTimer=3.2;}
+notify(a:string,b=''){if(this.preview)return;super.notify(a,b);const e=$('.toast'),banner=document.createElement('div'),title=document.createElement('strong'),detail=document.createElement('small');banner.className='event-banner';title.textContent=a;detail.textContent=b;banner.append(title);if(b)banner.append(detail);e.replaceChildren(banner);this.toastTimer=1.65;}
 win(){
     this.state='won';this.barks.request('victory');this.keys.clear();this.pointer.down=false;this.pendingShot=0;this.audio.pickup();$('.touch').classList.remove('active');
     const seconds=Math.floor(this.elapsed),clock=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;
