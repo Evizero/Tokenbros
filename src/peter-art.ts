@@ -24,7 +24,7 @@ export function peter(c:CanvasRenderingContext2D,x:number,y:number,face:number,t
  if(duck)c.translate(0,5);
  rect(c,-5,1,13,11,'#d1a27e');rect(c,-7,4,3,6,'#b88866');rect(c,6,6,4,3,'#e6b48e');
  rect(c,-6,-2,13,4,'#433a34');rect(c,-4,-4,10,3,'#52443b');rect(c,-7,2,3,3,'#8c7965');rect(c,-3,9,10,4,'#675044');rect(c,2,9,5,1,'#ead5ae');
- rect(c,-4,4,13,1,'#19282b');rect(c,-4,4,5,5,'#263d42');rect(c,3,4,6,5,'#263d42');rect(c,-3,5,3,3,'#a8c9c3');rect(c,4,5,3,3,'#b7d1c8');rect(c,-2,6+gaze,1,1,'#23343a');rect(c,5,6+gaze,1,1,'#23343a');
+ rect(c,-4,4,13,1,'#19282b');rect(c,-4,4,5,5,'#263d42');rect(c,3,4,6,5,'#263d42');rect(c,-3,5,3,3,'#a8c9c3');rect(c,4,5,3,3,'#b7d1c8');rect(c,-1,6+gaze,1,1,'#23343a');rect(c,6,6+gaze,1,1,'#23343a');
  });
  c.save();c.translate(7,17);c.rotate(angle);rect(c,-3,-1,molt?14:9,molt?7:4,'#d5a27c');
  if(molt){const reach=punch>0?23:9;rect(c,reach,-5,12,12,'#e6b58d');rect(c,reach+2,-5,9,3,'#f2cea6');}
