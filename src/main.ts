@@ -79,7 +79,8 @@ document
 options.addEventListener("close", () => {
   document.querySelector(".control-ribbon")!.append(controls);
   const rosterOptions=document.querySelector<HTMLButtonElement>(".roster-options");
-  (rosterOptions?.offsetParent ? rosterOptions : optionsButton).focus();
+  const panelOptions=document.querySelector<HTMLButtonElement>("#panel-options");
+  (rosterOptions?.offsetParent ? rosterOptions : panelOptions?.offsetParent ? panelOptions : optionsButton).focus();
 });
 window.addEventListener(
   "keydown",

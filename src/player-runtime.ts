@@ -58,7 +58,7 @@ export class PlayerRuntime {
   rosterPreview: { destroy(): void } | null = null;
   otherTibo = new OtherTibo(this);
   defense = new Defense(this);
-  character: "tibo" | "peter" | "dimillian" | "pidalf" | "marcus" | "theo" = "dimillian";
+  character: "tibo" | "peter" | "dimillian" | "pidalf" | "marcus" | "theo" = "tibo";
   peterKit = new PeterKit(this);
   dimillianKit = new DimillianKit(this);
   vertical = new VerticalAbility(this);
