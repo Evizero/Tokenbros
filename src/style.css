@@ -264,3 +264,16 @@ html,body,#app{width:100%;height:100%;overflow:hidden;background:#101214}
 
 .stage:has(>.overlay.death-screen:not([hidden]))>.game-options{display:none}
 .game-menu,.death-screen{justify-content:center}
+
+/* Center-screen event stings: brief, character-colored and clear of input. */
+.stage>.toast,.stage:has(>.overlay[hidden])>.toast{top:calc(50% - min(6dvh,3.375vw));bottom:auto;left:50%;width:min(92%,760px);transform:translate(-50%,-50%);white-space:normal;z-index:4}
+.event-banner{position:relative;padding:20px 26px 22px;background:linear-gradient(90deg,transparent,#101820e8 23%,#101820ee 50%,#101820e8 77%,transparent);animation:event-sting 3.2s both;transform-origin:center}
+.event-banner::before,.event-banner::after{content:'';position:absolute;left:12%;right:12%;height:2px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--acid),#f3ffe7,var(--acid),transparent);box-shadow:0 0 16px color-mix(in srgb,var(--acid) 35%,transparent)}
+.event-banner::before{top:0;animation:event-streak .38s cubic-bezier(.16,1,.3,1) both}.event-banner::after{bottom:0;opacity:.5;animation:event-streak .45s .05s cubic-bezier(.16,1,.3,1) both}
+.toast .event-banner strong{display:block;font:900 italic clamp(32px,4.8cqw,64px)/1 'Barlow Condensed',Impact,sans-serif;letter-spacing:1.5px;color:var(--acid);text-shadow:2px 3px #111922,0 0 20px color-mix(in srgb,var(--acid) 25%,transparent);animation:event-title .32s cubic-bezier(.16,1,.3,1) both}
+.toast .event-banner small{display:block;max-width:620px;margin:10px auto 0;font-size:clamp(8px,.85cqw,11px);line-height:1.65;letter-spacing:1px;color:#dce5ee;white-space:normal;text-shadow:0 2px 2px #000}
+@keyframes event-sting{0%{opacity:0;transform:scale(.8) translateY(12px)}7%{opacity:1;transform:scale(1.04) translateY(0)}12%,83%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.98) translateY(-10px)}}
+@keyframes event-title{from{transform:scale(1.18);filter:brightness(1.8)}to{transform:scale(1);filter:brightness(1)}}
+@keyframes event-streak{from{transform:scaleX(.1);opacity:0}to{transform:scaleX(1);opacity:1}}
+@media(max-width:650px){.event-banner{padding:16px 16px 18px}.toast .event-banner strong{font-size:32px}.toast .event-banner small{font-size:8px;letter-spacing:.4px}}
+@media(prefers-reduced-motion:reduce){.event-banner,.event-banner::before,.event-banner::after,.toast .event-banner strong{animation:none}}
