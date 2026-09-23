@@ -3,6 +3,13 @@ import { stageDemo, type DemoScene } from './showcase-scenes';
 
 type Clip = { id: string; title: string; mode: number; tip: string; duration?: number };
 export const SHOWCASES: Record<Game['character'], readonly Clip[]> = {
+ theo: [
+  {id:'deck-run',title:'E · THROW / CATCH',mode:0,tip:'Kick a bot into a ride, then recall through the survivors. Catch and keep moving forward; clean catches build speed.',duration:6.8},
+  {id:'deck-ram',title:'MOVE · FULL SEND',mode:0,tip:'Keep pushing to build speed. The cyan rush marks ram speed: ride through light bots and keep your line.',duration:5},
+  {id:'deck-grip',title:'LMB · DECK COMBO',mode:0,tip:'Swing on foot. Land two hits to earn a heavy third swing. Without the board, keep fighting with weaker punches.',duration:5.8},
+  {id:'deck-parry',title:'Q · SHIELD TOSS',mode:0,tip:'Throw the board broadside into incoming fire. Shots shove it; the board protects anyone behind it. E brings it back.',duration:5},
+  {id:'deck-flip',title:'SPACE · KICKFLIP',mode:0,tip:'Jump, then press Space again to kick the deck downward and pop higher. Recall or land on it to catch it.',duration:6.6},
+ ],
  tibo: [
   {id:'reset',title:'F · HARD RESET',mode:1,tip:'Spend your quota, then throw RESET into the fight. The slam refills you and blasts nearby bots.'},
   {id:'tokens',title:'LMB · TOKEN FIRE',mode:0,tip:'Strafe while firing. Scroll up for heavier shots that burn more tokens.'},
@@ -114,6 +121,16 @@ export class Showcase {
   const enemy=g.enemies.find(e=>!e.dead&&e.hacked<=0&&!e.sheep);
   this.target=enemy?{x:enemy.x+10,y:enemy.y+15}:{x:450,y:820};
   switch(id){
+   case 'deck-run':
+    this.move('KeyD',.2,.65);this.target={x:360,y:841};this.tap('KeyE',.68,'E · THROW THE DECK');this.tap('KeyE',1.45,'E · RECALL');this.move('KeyD',2.1,2.45);break;
+   case 'deck-ram':
+    this.move('KeyD',.2,1.15);break;
+   case 'deck-grip':
+    this.move('KeyD',.4,1.4);this.attack(.35,1.7,'LMB · HIT / HIT / FINISHER');break;
+   case 'deck-parry':
+    this.target={x:390,y:838};this.tap('KeyQ',.4,'Q · THROW SHIELD');this.volley(.45);this.volley(.6);this.tap('KeyE',1.2,'E · RECALL');break;
+   case 'deck-flip':
+    this.move('KeyD',.15,1.7);this.tap('Space',.55,'SPACE · OLLIE');this.tap('Space',.8,'SPACE · KICKFLIP');this.tap('KeyE',2,'E · CATCH DECK');break;
    case 'boots':
     this.hold('Space',.3,1.25,'HOLD SPACE · RISE');this.move('KeyD',.8,1.5);break;
    case 'levitate':
@@ -218,6 +235,11 @@ export class Showcase {
   p.maxKills=Math.max(p.maxKills,g.kills);
   const kills=g.kills,broken=g.world.destroyed;
   const results:Record<string,string>={
+   'deck-run':g.theoKit.carries>0&&g.theoKit.catches>0?'DECK HIT / CAUGHT':'',
+   'deck-ram':g.theoKit.rams>=2?'FULL SEND':'',
+   'deck-grip':g.theoKit.finishers>0?'DECK FINISHER':'',
+   'deck-parry':g.theoKit.blocks>0?'VOLLEY BLOCKED':'',
+   'deck-flip':g.theoKit.launches>0&&g.theoKit.catches>0?'KICKFLIP / CATCH':'',
    boots:g.player.grounded&&g.player.x>300&&g.player.y<700?'LEDGE REACHED WITH TOKEN THRUST':'',
    levitate:g.player.grounded&&g.player.x>300&&g.player.y<700?'LEVITATED ONTO THE LEDGE':'',
    grapple:g.vertical.grapple?.attached&&g.player.y<740?'CLAW LATCHED · PULLED UP TO THE LEDGE':'',

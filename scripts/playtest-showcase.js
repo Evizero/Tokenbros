@@ -7,7 +7,7 @@ async(page)=>{
  assert(await page.locator('#showcase-payoff, #showcase-action').count()===0,'Reel should have no commentary overlay');
  const demos=[];
  try {
- for(const bro of ['tibo','peter','dimillian','pidalf','marcus']){
+ for(const bro of ['tibo','peter','dimillian','pidalf','marcus','theo']){
   await page.locator(`[data-bro="${bro}"]`).click();
   const count=await page.locator('[data-clip]').count();
   for(let phase=0;phase<count;phase++){

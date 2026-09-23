@@ -12,10 +12,10 @@ import {
 import { showRoster } from "./roster";
 import { clamp, COLS, TILE, LEVEL_HEIGHT } from "./world";
 import { W, H, text } from "./art";
-const PROTOCOL = 1,
+const PROTOCOL = 2,
   BUILD =
     typeof __COOP_BUILD__ === "undefined" ? "development" : __COOP_BUILD__,
-  characters = ["tibo", "peter", "dimillian", "pidalf", "marcus"];
+  characters = ["tibo", "peter", "dimillian", "pidalf", "marcus", "theo"];
 const escapeHTML = (s: string) =>
   s.replace(
     /[&<>"']/g,

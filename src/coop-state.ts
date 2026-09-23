@@ -24,6 +24,7 @@ const kits = (a: PlayerRuntime) => ({
   dimillianKit: a.dimillianKit,
   pidalfKit: a.pidalfKit,
   marcusKit: a.marcusKit,
+  theoKit: a.theoKit,
   barks: a.barks,
 });
 function actorState(a: PlayerRuntime) {

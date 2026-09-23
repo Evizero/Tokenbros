@@ -259,5 +259,41 @@
       "Mind the landing.",
       "Portable violence."
     ]
+  },
+  "theo": {
+    "spawn": [
+      "Only skateboards.",
+      "Rolling into production."
+    ],
+    "death": [
+      "Nobody clip that.",
+      "Okay. One more take."
+    ],
+    "respawn": [
+      "Run that back."
+    ],
+    "multikill": [
+      "That one stays in the edit.",
+      "Clean line."
+    ],
+    "recall": [
+      "Board. Here."
+    ],
+    "catch": [
+      "Still counts.",
+      "Keep it rolling."
+    ],
+    "lowHealth": [
+      "Sketchy landing."
+    ],
+    "victory": [
+      "That’s a keeper."
+    ],
+    "rescue": [
+      "Grab a board."
+    ],
+    "boss": [
+      "That thing has terrible wheels."
+    ]
   }
 }

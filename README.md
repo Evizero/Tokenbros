@@ -2,7 +2,7 @@
 
 [Play in your browser](https://evizero.github.io/Tokenbros/)
 
-A playable browser run-and-gun prototype starring Tibo, Peter Steinberger, Dimillian, Pidalf and Marcus Bloice. Climb the Rate-Limit Refinery, override its uplinks, cross by cable, rescue developers, and take out the Rate Limiter.
+A playable browser run-and-gun prototype starring Tibo, Peter Steinberger, Dimillian, Pidalf, Marcus Bloice and Theo Browne. Climb the Rate-Limit Refinery, override its uplinks, cross by cable, rescue developers, and take out the Rate Limiter.
 
 ## Run
 
@@ -19,7 +19,7 @@ Open the local URL printed by Vite. `npm run build` validates TypeScript and cre
 2. Choose your character and **Host co-op**, then **Copy invite**.
 3. Your friend opens the link, picks a character and clicks **Join friend**. The mission starts for both of you.
 
-All five characters and duplicate picks work. Each browser has its own camera and HUD. Friendly attacks pass through teammates; shields protect anyone behind them or inside the mage bubble. Health, resources and deaths are individual, with shared checkpoints. A nearby Tibo reset also refills another Tibo. The teammate marker helps you find each other across the refinery.
+All six characters and duplicate picks work. Each browser has its own camera and HUD. Friendly attacks pass through teammates; shields protect anyone behind them or inside the mage bubble. Health, resources and deaths are individual, with shared checkpoints. A nearby Tibo reset also refills another Tibo. The teammate marker helps you find each other across the refinery.
 
 Escape opens a local menu while the fight continues. Keep the host tab open and visible: browsers can throttle background tabs. Either player leaving ends the room; create a fresh invite to play again. Refresh both pages after a deployment if you get a version mismatch.
 
@@ -71,6 +71,16 @@ See [iteration 029](docs/iteration-029.md) for details and [portrait provenance]
 - **F — Molt:** tear the shirt and enter five seconds of exaggerated muscular melee. Click becomes a short aimed lunge/punch that breaks armor and cover. Existing pets keep fighting, and E can still throw more claws during Molt. Sixteen seconds between activations, including the active five seconds; ordinary claws remain available afterward.
 
 The ripped form is a fictional action-game exaggeration from the user's reference photo. Peter's normal form keeps a blue shirt, glasses, short undercut, and beard. No conventional gun.
+
+## Theo: one physical deck
+
+Walk with the board in hand. A/D builds speed until Theo drops it and mounts automatically; slow down to pick it back up. At high skating speed a cyan rush signals ram damage. Left-click on foot swings a strong board combo: connect twice to earn a heavier third hit. Without the deck, left-click chains a left jab, right cross and heavier left hook, with lower damage than the board combo. Clicking while riding leaves the skating line uninterrupted.
+
+**E throws / recalls.** When the board is away, Theo uses normal responsive running: release the movement key to stop, or reverse to turn immediately. Light bots ride the deck into the next collision; armored bots are shoved. Recall passes through walls, damages bots, and catches in your movement direction without reversing you. Successful catches build a small speed bonus.
+
+**Q throws the board broadside as physical cover.** It absorbs bullets, recoils from their momentum, falls and bounces, and does modest contact damage. Anyone behind it benefits. There is no ability cooldown; retrieve the same board to throw again.
+
+**Space jumps; a fresh airborne press kicks the board down and gives a powerful upward pop.** The board keeps your forward velocity, so you can land on it again. A quick tap still gives the full kickflip boost. There are no manual scroll stances or F ability. The roster has five gameplay previews showing the current controls.
 
 ## Shared controls and Tibo kit
 

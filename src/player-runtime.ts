@@ -1,3 +1,5 @@
+import { TheoKit } from './theo';
+import { THEO_COLOR } from './theo-art';
 import { VerticalAbility } from "./vertical";
 import { MarcusKit } from "./marcus";
 import { marcus, MARCUS_COLOR } from "./marcus-art";
@@ -56,12 +58,13 @@ export class PlayerRuntime {
   rosterPreview: { destroy(): void } | null = null;
   otherTibo = new OtherTibo(this);
   defense = new Defense(this);
-  character: "tibo" | "peter" | "dimillian" | "pidalf" | "marcus" = "dimillian";
+  character: "tibo" | "peter" | "dimillian" | "pidalf" | "marcus" | "theo" = "dimillian";
   peterKit = new PeterKit(this);
   dimillianKit = new DimillianKit(this);
   vertical = new VerticalAbility(this);
   pidalfKit = new PidalfKit(this);
   marcusKit = new MarcusKit(this);
+  theoKit = new TheoKit(this);
   debris = new Debris();
   impactSound = 0;
   audio = new AudioFX();
@@ -240,7 +243,7 @@ export class PlayerRuntime {
     return this.peers.filter((p) => p.state === "playing");
   }
   get accent() {
-    return this.character === "marcus"
+    return this.character === "theo" ? THEO_COLOR : this.character === "marcus"
       ? MARCUS_COLOR
       : this.character === "pidalf"
         ? PI_COLOR
@@ -374,9 +377,11 @@ export class PlayerRuntime {
     )
       this.setThinking(Number(key.at(-1)) - 1);
     if (key === "Space" && this.state === "playing") {
-      if (!this.vertical.press()) this.jumpBuffer = 0.12;
+      if (this.character === "theo") { if (!this.theoKit.jump()) this.jumpBuffer = 0.12; }
+      else if (!this.vertical.press()) this.jumpBuffer = 0.12;
     }
     if ((key === "KeyF" || key === "KeyK") && this.state === "playing") {
+      if (this.character === "theo") return;
       if (this.character === "marcus") this.marcusKit.ultimate();
       else if (this.character === "pidalf") this.pidalfKit.compact();
       else if (this.character === "dimillian") this.dimillianKit.ultimate();
@@ -384,6 +389,7 @@ export class PlayerRuntime {
       else this.reset();
     }
     if (key === "KeyE" && this.state === "playing") {
+      if (this.character === "theo") { if (!this.overrideNearbyUplink()) this.theoKit.secondary(); return; }
       if (this.character === "marcus") {
         if (!this.overrideNearbyUplink()) this.marcusKit.recall();
         return;
@@ -400,6 +406,7 @@ export class PlayerRuntime {
       } else this.otherTibo.activate();
     }
     if (key === "KeyQ" && this.state === "playing") {
+      if (this.character === "theo") { this.theoKit.defend(); return; }
       if (this.character === "marcus") {
         this.marcusKit.dodge();
         return;
@@ -423,7 +430,7 @@ export class PlayerRuntime {
       this.defense.release();
       if (this.dimillianKit.form !== 0) this.dimillianKit.releaseDefense();
     }
-    if (key === "Space" && !grappling && !this.marcusKit.lcd.flight && this.player.vy < -180) this.player.vy = -180;
+    if (key === "Space" && !grappling && !this.marcusKit.lcd.flight && !(this.character === "theo" && this.theoKit.flip > 0) && this.player.vy < -180) this.player.vy = -180;
   }
   emit(
     x: number,
@@ -623,6 +630,7 @@ export class PlayerRuntime {
     if (this.state !== "playing") return;
     this.vertical.clear();
     this.marcusKit.clear();
+    this.theoKit.clear();
     this.pidalfKit.clear();
     this.resetProp = null;
     this.defense.active = null;
@@ -671,6 +679,7 @@ export class PlayerRuntime {
     this.pidalfKit.clear();
     this.pidalfKit = new PidalfKit(this);
     this.marcusKit = new MarcusKit(this);
+    this.theoKit.clear();this.theoKit = new TheoKit(this);
     this.wall = 0;
     this.wallGrip = 0;
     this.wallGrace = 0;
@@ -838,6 +847,7 @@ export class PlayerRuntime {
     this.openUplinks(x, y);
   }
   setThinking(level: number) {
+    if (this.character === "theo") return;
     if (this.character === "dimillian" && this.dimillianKit.special > 0) {
       this.dimillianKit.feedback("FINISH THE MOVE");
       return;
@@ -1185,7 +1195,7 @@ export class PlayerRuntime {
         a !== this &&
         (a.dimillianKit.paired === e ||
           a.pidalfKit.controls(e) ||
-          a.marcusKit.pacman.controls(e)),
+          a.marcusKit.pacman.controls(e) || a.theoKit.controls(e)),
     );
   }
   lineOfSight(x: number, y: number, tx: number, ty: number) {
@@ -1298,6 +1308,7 @@ export class PlayerRuntime {
           if (
             (actor.character === "dimillian" &&
               actor.dimillianKit.intercept(b, from)) ||
+            (actor.character === "theo" && actor.theoKit.intercept(b, from)) ||
             actor.defense.intercept(b, from) ||
             (actor.character === "peter" && actor.peterKit.deflect(b)) ||
             (actor.character === "tibo" && actor.otherTibo.block(b))
@@ -1642,7 +1653,8 @@ export class PlayerRuntime {
       ) &&
       (this.invuln <= 0 || Math.floor(this.time * 18) % 2 === 0)
     ) {
-      if (this.character === "marcus") {
+      if (this.character === "theo") this.theoKit.drawHero();
+      else if (this.character === "marcus") {
         if (!this.marcusKit.lcd.drawHero())
           marcus(
             c,
@@ -1753,6 +1765,7 @@ export class PlayerRuntime {
         );
     }
     if (this.character === "marcus") this.marcusKit.draw();
+    if (this.character === "theo") this.theoKit.draw();
     if (this.character === "pidalf") this.pidalfKit.draw();
     if (this.character === "peter") this.peterKit.draw();
     if (this.character === "tibo") this.otherTibo.draw();
@@ -1858,6 +1871,7 @@ export class PlayerRuntime {
       }
     } else this.resetRecovery = RESET_RECOVERY;
     if (this.character === "marcus") this.marcusKit.update(dt);
+    if (this.character === "theo") this.theoKit.update(dt);
     if (this.character === "pidalf") this.pidalfKit.update(dt);
     this.defense.update(dt);
     this.updateReset(dt);
@@ -1866,6 +1880,7 @@ export class PlayerRuntime {
     if (this.character === "dimillian") this.dimillianKit.update(dt);
     this.vertical.update(dt);
     this.movePlayer(dt);
+    if (this.character === "theo") this.theoKit.afterMove(dt);
     const p = this.player;
     if (
       this.character === "peter" &&
@@ -1878,7 +1893,9 @@ export class PlayerRuntime {
       this.peterKit.throw();
     const firing =
       this.pointer.down || this.keys.has("KeyJ") || this.pendingShot > 0;
-    if (this.character === "marcus") {
+    if (this.character === "theo") {
+      this.theoKit.fireInput(dt, firing);this.pendingShot=0;
+    } else if (this.character === "marcus") {
       this.marcusKit.fireInput(dt, firing);
       this.pendingShot = 0;
     } else if (this.character === "dimillian") {
@@ -1938,7 +1955,7 @@ export class PlayerRuntime {
       }
       if (p.grounded) this.coyote = 0.09;
       else this.coyote -= dt;
-      if (this.wallLock <= 0 && !this.vertical.grapple?.attached) {
+      if (this.wallLock <= 0 && !this.vertical.grapple?.attached && !(this.character === "theo" && this.theoKit.horizontal(dt, dir))) {
         const target =
             dir *
             (this.keys.has("ShiftLeft") || this.keys.has("ShiftRight")
@@ -2089,7 +2106,7 @@ export class PlayerRuntime {
       if (e.dead) continue;
       if (
         this.peers.some(
-          (a) => a.marcusKit.pacman.controls(e) || a.pidalfKit.controls(e),
+          (a) => a.marcusKit.pacman.controls(e) || a.pidalfKit.controls(e) || a.theoKit.controls(e),
         )
       )
         continue;

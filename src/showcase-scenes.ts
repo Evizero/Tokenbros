@@ -19,6 +19,16 @@ export function stageDemo(g: Game, id: string): DemoScene {
  const mark=(x:number,label:string)=>marks.push({x,label});
  let setup='';
  switch(id){
+  case 'deck-run':
+   bot(350,'gunner',5);bot(430,'gunner',5);wall(25,3);break;
+  case 'deck-ram':
+   bot(465,'gunner',4);bot(515,'gunner',4);break;
+  case 'deck-grip':
+   g.player.x=245;bot(295,'gunner',6);bot(360,'gunner',6);bot(430,'shield',12);wall(24,3);break;
+  case 'deck-parry':
+   bot(390,'turret',4);break;
+  case 'deck-flip':
+   bot(240,'gunner',4);bot(370,'gunner',4);break;
   case 'boots':case 'levitate':case 'grapple':
    for(let x=16;x<23;x++)g.world.set(x,34,3);mark(380,'UPPER LEDGE');setup='REACH THE UPPER LEDGE.';break;
   case 'reset':
