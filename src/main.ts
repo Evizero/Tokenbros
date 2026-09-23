@@ -10,22 +10,22 @@ app.innerHTML = `
 <div class="touch"><div><button data-key="ArrowLeft" aria-label="Move left">←</button><button data-key="ArrowRight" aria-label="Move right">→</button></div><div><button data-key="ArrowUp" aria-label="Aim up or grab cable">↑</button><button data-key="Space" aria-label="Jump">JUMP</button><button data-key="KeyJ" aria-label="Fire">J</button><button data-key="KeyE" aria-label="Summon the other Tibo">E</button><button data-key="KeyQ" aria-label="Defend">Q</button><button data-key="KeyF" aria-label="Reset">F</button></div></div>
 <div class="control-ribbon" aria-label="Game controls"><div class="controls"><span><kbd>W A S D</kbd> MOVE / CLIMB</span><span><kbd>SHIFT</kbd> QUIET WALK</span><span><kbd>SPACE</kbd> <b id="control-jump">JUMP</b></span><span><kbd>MOUSE</kbd> <b id="control-fire">ATTACK / COMMAND</b></span><span><kbd>SCROLL ↑↓</kbd> <b id="control-scroll">CLAW TYPE</b></span><span><kbd>F</kbd> <b id="control-f">MOLT</b></span><span><kbd>E</kbd> <b id="control-e">THROW CLAW</b></span><span><kbd>Q</kbd> <b id="control-q">PRISM SHIELD</b></span><span><kbd>ESC</kbd> PAUSE</span></div></div>
 <button id="open-options" class="game-options">OPTIONS <span>☰</span></button>
-<dialog id="options" aria-labelledby="options-title"><div class="options-heading"><div><div class="roster-kicker">TOKENBROS</div><h2 id="options-title">FIELD OPTIONS</h2></div><button id="close-options" class="text-btn">BACK ↩</button></div><div class="options-switches"><button id="sound">SOUND ON</button><button id="fullscreen">FULLSCREEN</button><button id="effects">SCREEN SHAKE: ON</button></div><h3>YOUR CONTROLS</h3><div id="options-controls"></div><p class="options-note">ESC TO RETURN · Co-op keeps running while menus are open.</p></dialog></section>`;
+<dialog id="options" aria-labelledby="options-title"><div class="options-heading"><div><div class="roster-kicker">TOKENBROS</div><h2 id="options-title">OPTIONS</h2></div><button id="close-options" class="text-btn">BACK ↩</button></div><div class="options-switches"><button id="sound" type="button" role="switch" aria-checked="true"><span>SOUND</span><b>ON</b></button><button id="effects" type="button" role="switch" aria-checked="true"><span>SCREEN SHAKE</span><b>ON</b></button><button id="fullscreen" type="button"><span>DISPLAY</span><b>FULLSCREEN ↗</b></button></div><h3>YOUR CONTROLS</h3><div id="options-controls"></div><p class="options-note">ESC TO RETURN · Co-op keeps running while menus are open.</p></dialog></section>`;
 const game = new Game(document.querySelector("#game")!);
 showRoster(game);
-document.querySelector("#effects")!.textContent =
-  `SCREEN SHAKE: ${game.effects ? "ON" : "OFF"}`;
+function syncOptions(){
+  for(const [id,on] of [["sound",!game.audio.muted],["effects",game.effects]] as const){
+    const button=document.querySelector<HTMLButtonElement>(`#${id}`)!;
+    button.setAttribute("aria-checked",String(on));
+    button.querySelector("b")!.textContent=on?"ON":"OFF";
+  }
+}
+syncOptions();
 document.querySelector("#sound")!.addEventListener("click", () => {
-  game.audio.start();
-  game.audio.setMuted(!game.audio.muted);
-  document.querySelector("#sound")!.textContent = game.audio.muted
-    ? "SOUND OFF"
-    : "SOUND ON";
+  game.audio.start();game.audio.setMuted(!game.audio.muted);syncOptions();
 });
 document.querySelector("#effects")!.addEventListener("click", () => {
-  game.effects = !game.effects;
-  document.querySelector("#effects")!.textContent =
-    `SCREEN SHAKE: ${game.effects ? "ON" : "OFF"}`;
+  game.effects=!game.effects;syncOptions();
 });
 document.querySelector("#fullscreen")!.addEventListener("click", async () => {
   try {
@@ -78,7 +78,8 @@ document
   .addEventListener("click", () => options.close());
 options.addEventListener("close", () => {
   document.querySelector(".control-ribbon")!.append(controls);
-  optionsButton.focus();
+  const rosterOptions=document.querySelector<HTMLButtonElement>(".roster-options");
+  (rosterOptions?.offsetParent ? rosterOptions : optionsButton).focus();
 });
 window.addEventListener(
   "keydown",
@@ -93,6 +94,6 @@ window.addEventListener(
   true,
 );
 document.addEventListener("fullscreenchange", () => {
-  document.querySelector("#fullscreen")!.textContent =
-    document.fullscreenElement ? "EXIT FULLSCREEN" : "FULLSCREEN";
+  document.querySelector("#fullscreen b")!.textContent =
+    document.fullscreenElement ? "WINDOWED ↙" : "FULLSCREEN ↗";
 });

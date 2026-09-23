@@ -42,7 +42,7 @@
 .roster-kicker{color:#8c939f;letter-spacing:2.5px;font-size:8px;margin-bottom:9px}
 .roster-heading h1{font-size:clamp(38px,5.8cqw,74px);letter-spacing:-.025em;line-height:.82;margin:0;color:#eef0ee}
 .roster-heading h1 span{display:inline;color:#eef0ee}
-.roster-prompt{text-align:right}.roster-prompt h2{margin:0 0 5px;font:700 21px 'Barlow Condensed',Impact,sans-serif;letter-spacing:1px;color:#dcdfe5}.roster-prompt>span{font-size:7px;letter-spacing:1.5px;color:#777f8d}
+
 .roster-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;flex:1;min-height:230px}
 .bro-card{isolation:isolate;position:relative;overflow:hidden;text-align:left;min-width:0;border:1px solid #42454e;background:#24272e;color:#e8e9ed;padding:0;transition:border-color .18s,background .18s,transform .18s;animation:roster-enter .42s both;animation-delay:calc(var(--slot)*65ms)}
 .bro-card::after{content:'';position:absolute;inset:auto 0 0;height:3px;background:var(--bro-color);transform:scaleX(0);transform-origin:left;transition:transform .2s}
@@ -61,13 +61,13 @@
 .bro-caption strong{font:900 clamp(24px,4cqw,58px)/.95 'Barlow Condensed',Impact,sans-serif;letter-spacing:.4px}
 .bro-style{font-size:8px;letter-spacing:1.8px;color:#a5acb8;margin-top:9px}
 .roster-deploy{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-shrink:0}
-.roster-detail{min-width:0}.roster-detail p{margin:0 0 10px;font-size:10px;color:#d1d4dd;line-height:1.6}
-#bro-kit{display:flex;gap:16px;flex-wrap:wrap;font-size:8px;color:#9ba3b0}#bro-kit span{display:flex;gap:5px;align-items:center}#bro-kit kbd{border-color:#4b4655;color:var(--acid);font-size:8px}
+
+
 .roster-deploy .primary{min-width:215px;box-shadow:none;padding:17px 20px;font-size:10px}.roster-deploy .primary:hover{transform:translateY(-2px);box-shadow:0 3px 0 #45414c}
-.roster-bottom{border-top:1px solid #353941;padding-top:11px;display:flex;justify-content:space-between;gap:12px;color:#767e8c;font-size:7px;letter-spacing:1px;flex-shrink:0}
+
 @keyframes roster-enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:850px){.stage.roster-open{height:calc(100svh - 170px);min-height:460px}.roster-screen{padding:20px;gap:16px}.roster-heading h1{font-size:7cqw}.roster-deploy .primary{min-width:180px}.roster-detail p{font-size:9px}#bro-kit{gap:8px;font-size:7px}.bro-caption{padding:40px 12px 15px}.bro-caption strong{font-size:4.5cqw}}
-@media(max-width:560px){.roster-screen{padding:18px 12px 12px;gap:16px}.roster-heading{align-items:flex-start;flex-direction:column;gap:14px}.roster-heading h1{font-size:42px}.roster-prompt{display:flex;align-items:baseline;justify-content:space-between;width:100%;text-align:left}.roster-prompt h2{font-size:16px}.roster-prompt>span{font-size:6px;letter-spacing:.5px}.roster-grid{gap:7px;min-height:200px}.bro-art{inset:6% -22% 14%}.bro-caption{padding:40px 7px 15px}.bro-caption strong{font-size:clamp(17px,5.4cqw,29px)}.bro-role{font-size:5px;letter-spacing:.4px}.bro-style{font-size:6px;letter-spacing:.5px}.bro-number{left:8px;top:9px;font-size:8px}.bro-selected{right:6px;top:8px;font-size:0}.bro-selected b{font-size:13px}.roster-deploy{flex-direction:column;align-items:stretch;gap:14px}.roster-deploy .primary{width:100%;padding:15px 18px}.roster-detail p{font-size:9px;margin-bottom:8px}#bro-kit{justify-content:space-between;gap:5px;font-size:7px}.roster-bottom{font-size:6px;letter-spacing:.3px}.stage.roster-open{min-height:540px;height:calc(100svh - 140px)}.roster-open+.bottom-line{display:none}}
+@media(max-width:850px){.stage.roster-open{height:calc(100svh - 170px);min-height:460px}.roster-screen{padding:20px;gap:16px}.roster-heading h1{font-size:7cqw}.roster-deploy .primary{min-width:180px}.bro-caption{padding:40px 12px 15px}.bro-caption strong{font-size:4.5cqw}}
+@media(max-width:560px){.roster-screen{padding:18px 12px 12px;gap:16px}.roster-heading{align-items:flex-start;flex-direction:column;gap:14px}.roster-heading h1{font-size:42px}.roster-grid{gap:7px;min-height:200px}.bro-art{inset:6% -22% 14%}.bro-caption{padding:40px 7px 15px}.bro-caption strong{font-size:clamp(17px,5.4cqw,29px)}.bro-role{font-size:5px;letter-spacing:.4px}.bro-style{font-size:6px;letter-spacing:.5px}.bro-number{left:8px;top:9px;font-size:8px}.bro-selected{right:6px;top:8px;font-size:0}.bro-selected b{font-size:13px}.roster-deploy{flex-direction:column;align-items:stretch;gap:14px}.roster-deploy .primary{width:100%;padding:15px 18px}.stage.roster-open{min-height:540px;height:calc(100svh - 140px)}.roster-open+.bottom-line{display:none}}
 .stage.roster-open:fullscreen{width:100%;height:100svh;max-height:none;min-height:0}
 .roster-screen:focus{outline:none}
 @media(max-width:560px){.bro-art{inset:5% -22% 10%}.bro-art img{object-fit:cover;object-position:50% 30%}.bro-card[data-bro=dimillian] .bro-art img{object-position:60% 30%}}
@@ -106,9 +106,9 @@
 #showcase-clips button span{display:inline-block;font:6px 'IBM Plex Mono',monospace;color:#636e7f;margin-right:6px}
 #showcase-clips button[aria-pressed=true]{color:var(--acid);border-color:var(--acid)}
 #showcase-caption{margin:10px 0 0;min-height:16px;font-size:8px;line-height:1.5;color:#a6afbd}
-.roster-deploy{border-top:1px solid #343944;padding-top:15px}.roster-bottom{border:0;padding-top:0}
+.roster-deploy{border-top:1px solid #343944;padding-top:15px}
 @media(max-width:950px){.roster-screen{padding:20px;gap:15px}.roster-body{gap:18px;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}.roster-grid{gap:7px}.roster-grid .bro-caption{padding:28px 7px 11px}.roster-grid .bro-caption strong{font-size:2.6cqw}.roster-grid .bro-locked .bro-caption strong{font-size:1.7cqw}.roster-grid .bro-role{font-size:5px;letter-spacing:.2px}.roster-grid .bro-style{font-size:5px}.roster-heading h1{font-size:46px}.showcase-tag{font-size:6px;letter-spacing:.5px}}
-@media(max-width:650px){.stage.roster-open{height:auto;min-height:0;max-height:none}.stage.roster-open>canvas#game{display:none}.roster-screen{position:relative;padding:18px 14px 14px;gap:18px}.roster-heading{gap:13px}.roster-heading h1{font-size:40px}.roster-body{display:flex;flex-direction:column;gap:22px;min-height:0}.roster-grid{flex:none;height:320px;gap:8px}.roster-grid .bro-caption strong{font-size:21px}.roster-grid .bro-locked .bro-caption strong{font-size:15px}.roster-grid .bro-role{font-size:5px;letter-spacing:.4px}.roster-grid .bro-style{font-size:6px}.roster-grid .bro-art{inset:2% -9% 0}.roster-grid .bro-art img{object-position:50% 20%}.unknown-bro{font-size:46px}.showcase-viewport{flex:none;height:220px}.showcase-heading{padding-bottom:10px}#showcase-name{font-size:36px}#showcase-clips button{font-size:15px}#showcase-caption{font-size:8px}.roster-deploy{align-items:stretch;flex-direction:column;gap:14px}.roster-deploy .primary{width:100%}.roster-bottom{font-size:6px;letter-spacing:.2px}.roster-open+.bottom-line{display:none}}
+@media(max-width:650px){.stage.roster-open{height:auto;min-height:0;max-height:none}.stage.roster-open>canvas#game{display:none}.roster-screen{position:relative;padding:18px 14px 14px;gap:18px}.roster-heading{gap:13px}.roster-heading h1{font-size:40px}.roster-body{display:flex;flex-direction:column;gap:22px;min-height:0}.roster-grid{flex:none;height:320px;gap:8px}.roster-grid .bro-caption strong{font-size:21px}.roster-grid .bro-locked .bro-caption strong{font-size:15px}.roster-grid .bro-role{font-size:5px;letter-spacing:.4px}.roster-grid .bro-style{font-size:6px}.roster-grid .bro-art{inset:2% -9% 0}.roster-grid .bro-art img{object-position:50% 20%}.unknown-bro{font-size:46px}.showcase-viewport{flex:none;height:220px}.showcase-heading{padding-bottom:10px}#showcase-name{font-size:36px}#showcase-clips button{font-size:15px}#showcase-caption{font-size:8px}.roster-deploy{align-items:stretch;flex-direction:column;gap:14px}.roster-deploy .primary{width:100%}.roster-open+.bottom-line{display:none}}
 .stage.roster-open:fullscreen{width:100%;height:100svh;min-height:0;max-height:none;overflow:auto}
 @media(prefers-reduced-motion:reduce){.showcase-tag::before{box-shadow:none}}
 /* Keep the showcase cinematic even in a short window: name over the scene,
@@ -148,7 +148,7 @@ html,body,#app{width:100%;height:100%;overflow:hidden;background:#101214}
 .game-options span{font-size:16px;color:var(--acid)}
 .game-options:hover{color:var(--acid)}
 .stage:has(>.overlay:not([hidden]):not(.intro-overlay))>.game-options{display:flex}
-.roster-bottom{padding-right:140px}
+
 #options{color:#e5e8ec;background:#15191ff5;border:0;width:min(760px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:clamp(24px,5vw,48px);overflow:auto;box-shadow:0 20px 100px #0008}
 #options[open]{animation:arrive .18s ease-out}
 #options::backdrop{background:#090c12c9;backdrop-filter:blur(7px)}
@@ -164,7 +164,7 @@ html,body,#app{width:100%;height:100%;overflow:hidden;background:#101214}
 #options kbd{font-size:10px;white-space:nowrap;min-width:45px;padding:5px 7px}
 .options-note{margin:32px 0 0;font-size:9px;color:#86909e;line-height:1.8}
 @media(max-width:850px){.hud{top:calc(var(--play-top) + 12px);left:calc(var(--play-side) + 12px);right:calc(var(--play-side) + 12px)}}
-@media(max-width:650px){.roster-screen{position:absolute;padding:20px 14px 58px;overflow:auto}.roster-body{flex:none;min-height:0}.roster-bottom{padding-right:0}.game-options{right:14px;bottom:10px;background:#15181ef2;padding:9px 14px}.briefing{width:100%;max-height:90%;overflow:auto}.options-switches{gap:8px 18px;margin:24px 0}#options .controls{grid-template-columns:1fr;gap:15px}.options-note{margin-top:24px}}
+@media(max-width:650px){.roster-screen{position:absolute;padding:20px 14px 58px;overflow:auto}.roster-body{flex:none;min-height:0}.game-options{right:14px;bottom:10px;background:#15181ef2;padding:9px 14px}.briefing{width:100%;max-height:90%;overflow:auto}.options-switches{gap:8px 18px;margin:24px 0}#options .controls{grid-template-columns:1fr;gap:15px}.options-note{margin-top:24px}}
 @media(prefers-reduced-motion:reduce){#options[open]{animation:none}}
 .stage canvas#game:focus{outline:none}
 
@@ -197,6 +197,47 @@ html,body,#app{width:100%;height:100%;overflow:hidden;background:#101214}
 }
 
 :root[data-character="theo"]{--acid:#78d9ff;--accent:#78d9ff;--accent-soft:#b9ecff}
-.roster-grid .bro-card[data-bro=theo] .bro-art img{object-position:50% 8%;transform:scale(1.1);transform-origin:50% 12%}
-[data-character="theo"] .reveal-portrait{height:115%;bottom:-12%;left:4%;width:38%;image-rendering:pixelated}
+.roster-grid .bro-card[data-bro=theo] .bro-art img{object-position:50% 12%}
+[data-character="theo"] .reveal-portrait{height:105%;bottom:-5%;left:4%;width:40%;image-rendering:pixelated}
 [data-character="theo"] .reveal-band{box-shadow:0 0 25px #78d9ff33}
+
+/* Selection screen: the cards and live demo carry the explanation. */
+.roster-screen{padding-bottom:clamp(20px,3vw,42px)}
+.roster-heading{flex-direction:row;align-items:center;justify-content:space-between}
+.roster-options{display:flex;align-items:center;gap:12px;border:0;background:none;color:#c2c9d3;padding:12px 0 12px 18px;font:10px monospace;letter-spacing:2px}
+.roster-options span{font-size:17px;color:var(--acid)}
+.roster-options:hover{color:var(--acid)}
+.stage.roster-open>.game-options{display:none!important}
+.roster-deploy{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;border:0;padding-top:8px}
+.roster-deploy #start{grid-column:2;grid-row:1;justify-self:center;width:auto;min-width:250px;padding:19px 28px}
+.roster-deploy .coop-button{grid-column:3;grid-row:1;justify-self:end;background:none;border:0;color:#a6b1bd;font-size:10px;padding:14px 0;letter-spacing:1px}
+.roster-deploy .coop-button:hover{color:var(--acid)}
+.coop-status:empty{display:none}
+@media(max-width:650px){
+ .roster-screen{padding:20px 14px 24px}
+ .roster-options{font-size:9px;letter-spacing:1px;gap:8px}
+ .roster-deploy{grid-template-columns:1fr;gap:8px}
+ .roster-deploy #start{grid-column:1;grid-row:1;width:min(100%,320px);min-width:0}
+ .roster-deploy .coop-button{grid-column:1;grid-row:2;justify-self:center;padding:12px}
+}
+
+/* Physical menu switches, a bold launch action, and a character-tinted reel. */
+.options-switches{display:grid;gap:0;margin:26px 0;padding:0;border:0}
+.options-switches button{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:62px;padding:14px 8px;border-bottom:1px solid #343d49;text-align:left;letter-spacing:1.5px}
+.options-switches button:hover{background:#ffffff05}
+.options-switches button b{display:flex;align-items:center;justify-content:center;gap:10px;min-width:102px;padding:10px 14px;background:#282f39;color:#97a3b3;font-size:10px;letter-spacing:1px}
+.options-switches button[role=switch] b::before{content:'';width:7px;height:7px;background:#687483}
+.options-switches button[aria-checked=true] b{color:var(--acid);background:color-mix(in srgb,var(--acid) 12%,#1b2129)}
+.options-switches button[aria-checked=true] b::before{background:var(--acid);box-shadow:0 0 10px color-mix(in srgb,var(--acid) 35%,transparent)}
+#fullscreen b{color:#e8edf3}
+.roster-deploy #start{width:clamp(320px,38vw,520px);padding:18px 32px;font:800 28px/1 'Barlow Condensed',Impact,sans-serif;letter-spacing:2px;box-shadow:0 5px 0 color-mix(in srgb,var(--acid) 45%,#16212b);transition:background .2s,box-shadow .2s,transform .15s}
+.roster-deploy #start:hover{transform:translateY(-2px);box-shadow:0 7px 0 color-mix(in srgb,var(--acid) 45%,#16212b),0 0 32px color-mix(in srgb,var(--acid) 18%,transparent)}
+.roster-deploy #start:active{transform:translateY(3px);box-shadow:0 2px 0 color-mix(in srgb,var(--acid) 45%,#16212b)}
+.bro-showcase .showcase-viewport{border-color:color-mix(in srgb,var(--acid) 65%,#333b49);box-shadow:0 0 26px color-mix(in srgb,var(--acid) 9%,transparent);transition:border-color .18s,box-shadow .18s}
+.bro-showcase .showcase-viewport::after{height:95px;background:linear-gradient(color-mix(in srgb,var(--acid) 28%,#10141deb),#10141d00)}
+#showcase-name{color:color-mix(in srgb,var(--acid) 40%,white)}
+.bro-showcase .showcase-inputs{background:linear-gradient(transparent,color-mix(in srgb,var(--acid) 15%,#10141aef))}
+.bro-showcase #showcase-clips{border-bottom-color:color-mix(in srgb,var(--acid) 40%,#373c47)}
+.bro-showcase .showcase-progress{height:3px}
+@media(max-width:650px){.roster-deploy #start{width:100%;padding:21px 20px;font-size:27px}.options-switches button{font-size:10px;gap:12px;padding-inline:0}.options-switches button b{min-width:92px}}
+@media(prefers-reduced-motion:reduce){.roster-deploy #start,.bro-showcase .showcase-viewport{transition:none}}

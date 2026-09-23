@@ -141,8 +141,8 @@ export class CoopSession {
     caption.setAttribute("role", "status");
     caption.textContent = room
       ? "INVITE RECEIVED · SELECT YOUR BRO, THEN JOIN"
-      : "2 BROS · INDEPENDENT CAMERAS · NO FRIENDLY FIRE";
-    document.querySelector(".roster-bottom")?.before(caption);
+      : "";
+    bottom.before(caption);
   }
   private message(message: string) {
     this.status = message;
@@ -267,7 +267,7 @@ export class CoopSession {
       showRoster(this.g);
     };
     row.append(input, cancel);
-    document.querySelector(".roster-bottom")?.before(row);
+    document.querySelector(".roster-deploy")?.before(row);
   }
   private async copyInvite() {
     try {

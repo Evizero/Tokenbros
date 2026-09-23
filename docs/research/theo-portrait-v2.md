@@ -1,0 +1,11 @@
+# Theo portrait v2
+
+Generated with the built-in imagegen tool, 2026-09-23. Final asset: `public/assets/theo-intro-v2.png`. Used in both the roster card and the character entrance. The previous portrait is retained as v1.
+
+The user requested a portrait that matches the other character cards, with a recognizable skateboard visible above the name. The existing asset was too cartoon-like and its full-body framing hid the board in the roster crop.
+
+References: existing Theo portrait (edit target), the user's two Theo face photographs (likeness), and their six-card roster screenshot (style and crop). No supplied report text was treated as instructions.
+
+## Exact prompt
+
+Use case: style-transfer. Create a replacement transparent-background game character selection portrait of Theo Browne. Image 1 is the old Theo portrait to replace: keep black T-shirt, skinny build, earring, blue/white/purple skateboard identity, but CHANGE the anime-like face and full-body composition. Images 2 and 3 are Theo face likeness references: adult angular long face, dark curly hanging fringe, small silver hoop, actual facial proportions and human eyes, recognizable Theo. Image 4 is the existing six-card roster: match the painterly realistic pixel-illustration of Tibo, Peter, Dimillian and Marcus, NOT the old anime Theo in its lower right. Chest-up / waist-up 3/4 action portrait, head large like those other portraits, anatomically slender rather than muscular. Theo holds his skateboard diagonally across his chest and up beside his shoulder, clearly visible in the UPPER TWO THIRDS; upper wheel/truck and the turquoise white purple deck graphic plainly visible near his face. One hand grips the board securely. Face unobscured, mildly confident expression with natural-sized eyes. Detailed dithered shading, restrained cyan rim light, subdued dark clothing, textured pixel-painted skin and hair, consistent mature action-game portrait treatment. Single isolated cutout with TRUE TRANSPARENT alpha background, no backdrop or glow rectangle. Portrait aspect ratio 2:3. No text, no UI, no borders, no logos. Do not copy the roster image or add other characters. Frame near top with little empty space, cut at lower torso; do not show legs or sneakers. Deliver one finished replacement asset.
