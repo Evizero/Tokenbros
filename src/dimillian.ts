@@ -34,7 +34,7 @@ export class DimillianKit {
  changeForm(kind:number){
   if(this.special>0||kind===this.form)return;
   this.form=kind;this.resetFlight();this.g.vertical.cancel();this.cancelLightning();this.swing=null;this.combo=0;this.comboHits=0;this.shield=null;this.disconnect();if(kind===2&&this.g.player.grounded)this.g.player.vy=-85;this.transform=.38;this.g.jumpBuffer=0;this.g.wallGrip=0;
-  this.g.emit(this.g.player.x+10,this.g.player.y+16,14,['#c6a0ff','#eee0ff','#706086'],100,3,.32);
+  this.g.emit(this.g.player.x+10,this.g.bodyY,14,['#c6a0ff','#eee0ff','#706086'],100,3,.32);
   this.g.audio.tone(220+kind*190,.13,'triangle',.04,800); // Attack/Q/F timers deliberately survive hot reload.
  }
  feedback(label:string){this.message=label;this.messageLife=.8;}
@@ -68,7 +68,7 @@ export class DimillianKit {
   s.prior=s.angle;s.angle=s.start+(s.end-s.start)*(progress*progress*(3-2*progress));
   if(s.age>=s.windup&&old<s.windup+s.active){
    if(old<s.windup){g.audio.noise(.11,s.heavy?.07:.035,1100);g.audio.tone(s.heavy?100:170,.12,'triangle',.04,45);}
-   const prior=s.start+(s.end-s.start)*(previous*previous*(3-2*previous)),x=g.player.x+10,y=g.player.y+16;
+   const prior=s.start+(s.end-s.start)*(previous*previous*(3-2*previous)),x=g.player.x+10,y=g.bodyY;
    const contact=(tx:number,ty:number,padding=16)=>{const dx=tx-x,dy=ty-y,d=Math.hypot(dx,dy),angle=Math.atan2(dy,dx);let relative=Math.atan2(Math.sin(angle-prior),Math.cos(angle-prior))*s.direction;return d<s.radius+padding&&relative>=-.28&&relative<=Math.abs(s.angle-prior)+.28;};
    const velocity=(tx:number,ty:number)=>{const a=Math.atan2(ty-y,tx-x),dx=-Math.sin(a)*s.direction*.8+Math.cos(s.aim)*.65,dy=Math.cos(a)*s.direction*.8+Math.sin(s.aim)*.65;return {vx:dx*s.force,vy:dy*s.force};};
    for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&!s.hits.has(e)&&contact(e.x+10,e.y+15)&&g.lineOfSight(x,y,e.x+10,e.y+15)){s.hits.add(e);const v=velocity(e.x+10,e.y+15);this.hit(e,s.power,v.vx,s.heavy,s.heavy?v.vy:-60);s.connected=true;if(!e.dead){e.flungBy=g.id;e.flung=s.heavy?.65:.12;e.stun=s.heavy?.6:.17;}if(s.step===2){this.feedback('VOILÀ!');g.barks.request('finisher');}g.emit(e.x+10,e.y+15,15,['#ffe3a9','#d49b5e','#af7846'],210,4,.45);}
@@ -84,7 +84,7 @@ export class DimillianKit {
      const tx=x+Math.cos(a)*r,ty=y+Math.sin(a)*r;
      // Horizontal dueling should chip walls, not excavate the floor under
      // both fighters. Aim down deliberately (or use Grand Slam) to dig.
-     if(s.step<3&&Math.sin(s.aim)<.5&&ty>=g.player.y+32)continue;
+     if(s.step<3&&Math.sin(s.aim)<.5&&ty>=g.player.y+g.player.h)continue;
      const tile=g.world.at(tx,ty);if(!tile)continue;
      if(!s.hits.has(tile)){
       s.hits.add(tile);const gone=g.world.damage(tx,ty,s.heavy?8:2);wallHit=true;
@@ -106,7 +106,7 @@ export class DimillianKit {
   g.fireTimer=.13;g.lastCooldown=g.fireTimer;g.shotCount++;this.attack=.08;g.makeNoise(x,y,400);g.audio.tone(560,.06,'triangle',.03,130);
  }
  cancelLightning(){this.charge=0;this.lightning=[];this.chargeSound=0;this.fullChargeFlash=0;this.dischargeFlash=0;}
- staffTip(){const g=this.g;return mageStaffTip(g.player.x,g.player.y,g.face,g.aim,this.charge/1.15,this.attack,{strength:this.dischargeStrength,teleport:g.vertical.blinkReady?1:0,arrival:g.vertical.blinkArrival,polymorph:this.sheepGesture});}
+ staffTip(){const g=this.g;return mageStaffTip(g.player.x,g.player.y-(g.crouched?7:0),g.face,g.aim,this.charge/1.15,this.attack,{strength:this.dischargeStrength,teleport:g.vertical.blinkReady?1:0,arrival:g.vertical.blinkArrival,polymorph:this.sheepGesture});}
  cast(){
   const strength=clamp(this.charge/1.15,0,1);this.dischargeStrength=strength;this.attack=.18+strength*.12;this.charge=0;
   const g=this.g,origin=this.staffTip(),aim=g.aimPoint();
@@ -188,13 +188,13 @@ export class DimillianKit {
  defend(){
   const g=this.g;if(this.shieldBroken||this.shieldHP<=0||g.state!=='playing'||this.form===0&&!g.player.grounded)return false;
   if(this.shield)return true;
-  this.shield={x:g.player.x+10,y:g.player.y+16,kind:this.form,life:999,age:0,hits:Math.ceil(this.shieldHP/20),angle:g.aimAngle,flash:0,pushed:new Set()};
+  this.shield={x:g.player.x+10,y:g.bodyY,kind:this.form,life:999,age:0,hits:Math.ceil(this.shieldHP/20),angle:g.aimAngle,flash:0,pushed:new Set()};
   if(this.form===0){this.swing=null;this.combo=0;g.player.vx=0;g.player.vy=0;}g.audio.tone(380,.12,'triangle',.035,640);return true;
  }
  bubbleRadius(age=this.shield?.age??0){const t=clamp(age/.18,0,1);return 56*(1-(1-t)*(1-t));}
  expandBubble(){
   const g=this.g,s=this.shield;if(!s||s.kind!==1)return;
-  const x=g.player.x+10,y=g.player.y+16,r=this.bubbleRadius();
+  const x=g.player.x+10,y=g.bodyY,r=this.bubbleRadius();
   const push=(body:{x:number;y:number;w:number;h:number;vx:number;vy:number;grounded:boolean},force:number)=>{
    const dx=body.x+body.w/2-x,dy=body.y+body.h/2-y,d=Math.hypot(dx,dy);
    if(s.pushed.has(body)||d>r+Math.min(body.w,body.h)/2||!g.lineOfSight(x,y,body.x+body.w/2,body.y+body.h/2))return false;
@@ -224,7 +224,7 @@ export class DimillianKit {
  deflectSwing(b:Game['bullets'][number]){
   const s=this.swing,g=this.g;
   if(this.form!==0||!s||!b.hostile||b.life<=0||s.age<s.windup||s.age>=s.windup+s.active)return false;
-  const x=g.player.x+10,y=g.player.y+16,dx=b.x-x,dy=b.y-y,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx);
+  const x=g.player.x+10,y=g.bodyY,dx=b.x-x,dy=b.y-y,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx);
   const relative=Math.atan2(Math.sin(a-s.prior),Math.cos(a-s.prior))*s.direction;
   if(d<10||d>s.radius+5||relative<-.2||relative>Math.abs(s.angle-s.prior)+.2||dx*b.vx+dy*b.vy>=0||!g.lineOfSight(x,y,b.x,b.y))return false;
   const v=reflect(b.vx,b.vy,a);b.vx=v.vx;b.vy=v.vy;b.hostile=false;b.owner=this.g.id;b.hit.clear();b.power=Math.max(2,b.power);b.tier=Math.max(1,b.tier??0);b.life=Math.max(.7,b.life);b.color='#ffe0a1';
@@ -234,7 +234,7 @@ export class DimillianKit {
  }
  intercept(b:Game['bullets'][number],from:{x:number;y:number}){
   if(this.deflectSwing(b))return true;
-  const s=this.shield,g=this.g;if(!s||!b.hostile||b.life<=0)return false;const x=g.player.x+10,y=g.player.y+16,r=this.bubbleRadius();
+  const s=this.shield,g=this.g;if(!s||!b.hostile||b.life<=0)return false;const x=g.player.x+10,y=g.bodyY,r=this.bubbleRadius();
   if(s.kind===1){
    if(Math.hypot(from.x-x,from.y-y)<r)return false;
    // Swept segment/circle contact catches fast shots that cross the entire bubble.
@@ -276,7 +276,7 @@ export class DimillianKit {
    g.emit(x+Math.cos(a)*20,y+Math.sin(a)*20,18,['#fff1c6','#ffb566','#befaff'],180,3,.3);
    g.makeNoise(x,y,900);g.shake=Math.max(g.shake,4);g.audio.noise(.2,.07,650);g.audio.tone(100,.28,'sawtooth',.045,45);
   }
-  if(this.form===1){const p=g.aimPoint(),x=g.player.x+10,y=g.player.y+16,dx=p.x-x,dy=p.y-y,d=Math.max(1,Math.hypot(dx,dy)),k=Math.min(1,440/d);const tx=x+dx*k,ty=y+dy*k;this.meteor={x:tx,y:Math.max(-40,ty-360),targetY:ty,life:1.2};}
+  if(this.form===1){const p=g.aimPoint(),x=g.player.x+10,y=g.bodyY,dx=p.x-x,dy=p.y-y,d=Math.max(1,Math.hypot(dx,dy)),k=Math.min(1,440/d);const tx=x+dx*k,ty=y+dy*k;this.meteor={x:tx,y:Math.max(-40,ty-360),targetY:ty,life:1.2};}
   g.barks.request((['duelistSpecial','mageSpecial','pilotSpecial'] as const)[this.form]);this.feedback(this.fName);g.audio.tone(130,.3,'sawtooth',.055,640);return true;
  }
  secondary(){
@@ -284,7 +284,7 @@ export class DimillianKit {
   const g=this.g;if(this.eCooldown>0||g.state!=='playing')return false;
   if(this.form===0)return this.pair();
   if(this.form===2){this.bombs.push({x:g.player.x+10,y:g.player.y+30,vy:30,life:5});this.eCooldown=2.8;g.audio.tone(210,.11,'triangle',.035,90);return true;}
-  g.updateAim();const p=g.aimPoint(),e=g.enemies.filter(e=>!e.dead&&!g.claimedByOther(e)&&e.hacked<=0&&!e.sheep&&Math.hypot(e.x+10-p.x,e.y+15-p.y)<44&&Math.hypot(e.x-g.player.x,e.y-g.player.y)<400&&g.lineOfSight(g.player.x+10,g.player.y+16,e.x+10,e.y+15)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
+  g.updateAim();const p=g.aimPoint(),e=g.enemies.filter(e=>!e.dead&&!g.claimedByOther(e)&&e.hacked<=0&&!e.sheep&&Math.hypot(e.x+10-p.x,e.y+15-p.y)<44&&Math.hypot(e.x-g.player.x,e.y-g.player.y)<400&&g.lineOfSight(g.player.x+10,g.bodyY,e.x+10,e.y+15)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
   if(!e){this.feedback('AIM AT A BOT');return false;}
   this.sheepGesture=.4;const tip=this.staffTip();this.eCooldown=5.5;
   this.polymorph={target:e,x:tip.x,y:tip.y,fromX:tip.x,fromY:tip.y,age:0,duration:.16+Math.hypot(e.x+10-tip.x,e.y+15-tip.y)/1600,impact:false,trail:[]};
@@ -381,6 +381,7 @@ export class DimillianKit {
  }
  resetFlight(){this.forwardRun=0;this.forwardFace=0;this.sonic=false;this.sonicFlash=0;this.rocketFlight=false;this.flightBlend=0;this.flightSpeed=0;this.ramSpent=false;this.ramHits.clear();}
  fly(dt:number,dir:number,predicting=false){
+  if(this.g.crouched){const g=this.g,p=g.player;this.forwardRun=0;this.rocketFlight=false;this.flightBlend=0;p.vx+=clamp(dir*90-p.vx,-2900*dt,2900*dt);p.vy=Math.min(180,p.vy+800*dt);g.world.move(p,dt);return;}
   const g=this.g,p=g.player;g.climb=null;g.zip=false;g.wallGrip=0;g.wallGrace=0;g.jumpBuffer=0;g.coyote=0;
   const up=g.keys.has('Space')||g.keys.has('KeyW')||g.keys.has('ArrowUp'),down=g.keys.has('KeyS')||g.keys.has('ArrowDown');
   const vy=(down?1:0)-(up?1:0),diagonal=dir&&vy?Math.SQRT1_2:1,oldX=p.vx,oldY=p.vy;

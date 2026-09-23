@@ -10,6 +10,12 @@ export function withHeadTilt(c:CanvasRenderingContext2D,x:number,y:number,aim:nu
   const gaze=Math.max(-1,Math.min(1,(aim-pitch)/.4));
   c.save();c.translate(x,y);c.rotate(pitch);c.translate(-x,-y);draw(gaze);c.restore();
 }
+// Folded rear knee and forward planted foot, with a short crouch-walk shuffle.
+export function crouchLegs(c:CanvasRenderingContext2D,time:number,moving:boolean,back:string,front:string,shoe:string){
+ const step=moving?Math.sin(time*13)*2:0;
+ rect(c,-8,12,10,4,back);rect(c,-9,14,5,4,back);rect(c,-10,17,10,2,shoe);
+ rect(c,2,11,11+step,4,front);rect(c,9+step,13,4,5,front);rect(c,7+step,17,9,2,shoe);
+}
 export function text(c:CanvasRenderingContext2D,s:string,x:number,y:number,color='#c9ced5',size=10,align:CanvasTextAlign='left') {c.fillStyle=color;c.font=`bold ${size}px monospace`;c.textAlign=align;c.fillText(s,Math.round(x),Math.round(y));c.textAlign='left';}
 const hash=(x:number)=>{const a=Math.sin(x*127.1+311.7)*43758.5453;return a-Math.floor(a);};
 function pine(c:CanvasRenderingContext2D,x:number,base:number,h:number,color:string) {
@@ -119,13 +125,17 @@ export function terrain(c:CanvasRenderingContext2D,world:World,cam:number) {
     }
   }
 }
-export function tibo(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,boost:boolean,shoot:number,angle:number,scale=1,tier=0,dry=0,brawl=0) {
+export function tibo(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,boost:boolean,shoot:number,angle:number,scale=1,tier=0,dry=0,brawl=0,duck=false) {
   c.save();c.translate(Math.round(x+10*scale),Math.round(y));c.scale(face*scale,scale);
   const step=moving?Math.sin(time*23)*3:0,bob=moving?Math.abs(step)*.35:Math.sin(time*3)*.35;
-  rect(c,-8,31,19,3,'#061a1488');rect(c,-6,23,5,8+step,'#121d21');rect(c,3,23,5,8-step,'#243033');rect(c,-7,30+step,8,3,'#728379');rect(c,2,30-step,9,3,'#9ba699');
+  if(duck)crouchLegs(c,time,moving,'#121d21','#243033','#9ba699');
+  else {  rect(c,-8,31,19,3,'#061a1488');rect(c,-6,23,5,8+step,'#121d21');rect(c,3,23,5,8-step,'#243033');rect(c,-7,30+step,8,3,'#728379');rect(c,2,30-step,9,3,'#9ba699');
+  }
+  if(duck)c.translate(0,-7);
   rect(c,-8,12+bob,17,13,'#111c1f');rect(c,-9,11+bob,7,9,'#344147');rect(c,-6,12+bob,13,2,'#3f4a49');rect(c,-3,14+bob,2,9,'#52605b');rect(c,4,13+bob,1,7,'#a0aca1');
   rect(c,-12,14+bob,5,10,boost?'#c8f47b':'#576d43');rect(c,-12,15+bob,2,7,boost?'#efffb3':'#9db46c');
   withHeadTilt(c,0,12+bob,angle,(gaze)=>{
+  if(duck)c.translate(0,5);
   rect(c,-5,2+bob,12,11,'#c99371');rect(c,-6,5+bob,3,5,'#ae795c');rect(c,3,9+bob,6,3,'#926e5a');rect(c,6,6+bob,3,3,'#ddb08b');rect(c,4,5+bob+gaze,2,2,'#182a24');
   rect(c,-6,bob,12,4,'#48372f');rect(c,-7,3+bob,4,5,'#5e4335');rect(c,-4,bob,7,2,'#78523b');
   if(boost){rect(c,-4,-2+bob,3,3,'#5d412e');rect(c,1,-1+bob,4,2,'#79543b');rect(c,3,9+bob,5,2,'#f1e5ca');}

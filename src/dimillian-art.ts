@@ -1,4 +1,4 @@
-import { rect,text,withHeadTilt } from './art';
+import { rect,text,withHeadTilt,crouchLegs } from './art';
 export const DIM_COLORS=['#e3b77d','#cc9fff','#99e5ed'];
 export type MageMotion={strength?:number;teleport?:number;arrival?:number;departure?:number;stowed?:boolean;polymorph?:number};
 export type ShipMotion={forward:number;reverse:number;up:number;down:number;kick:number;surge?:number;sonic?:boolean;flash?:number;flight?:number;heading?:number};
@@ -73,7 +73,7 @@ export function swordPose(s?:SwordPose){
  const heavy=s.step>=2,drive=(-wind*.6+hit*1.6)*recover;
  return {lunge:drive*(heavy?8:5),crouch:(wind*(heavy?4:2)-hit*(heavy?5:2))*recover,lean:drive*(heavy?.32:.23),stride:wind*(heavy?7:5)*recover,twist:Math.sin(t*Math.PI)*(s.step===1?-1:1)*3*recover};
 }
-export function dimillian(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,kind:number,angle:number,attack=0,charge=0,thrust=false,launch=false,scale=1,batAngle?:number,batLength=29,swing?:SwordPose,mageMotion:MageMotion={},shipMotion?:ShipMotion){
+export function dimillian(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,kind:number,angle:number,attack=0,charge=0,thrust=false,launch=false,scale=1,batAngle?:number,batLength=29,swing?:SwordPose,mageMotion:MageMotion={},shipMotion?:ShipMotion,duck=false){
  const casting=magePose(angle,charge,attack,mageMotion);
  c.save();c.translate(Math.round(x+10*scale),Math.round(y));c.scale(face*scale,scale);
  if(kind===1){c.translate(0,16);c.scale(casting.scaleX,casting.scaleY);c.translate(0,-16);}
@@ -81,6 +81,7 @@ export function dimillian(c:CanvasRenderingContext2D,x:number,y:number,face:numb
  if(kind===2){
   const jets=shipMotion??{forward:thrust?.8:0,reverse:0,up:0,down:0,kick:launch?.2:0},kick=jets.kick/.28;
   const surge=jets.surge??0,flight=jets.flight??0,heading=jets.heading??0;
+  if(duck)c.translate(0,-14);
   c.translate(0,21);c.rotate(heading);c.translate(0,-21);
   c.translate(-Math.cos(angle)*kick*5,Math.sin(time*3)*(1.4-surge)-Math.sin(angle)*kick*4);
   if(surge>.2){c.save();c.strokeStyle='#b0e9ff';c.lineWidth=1;for(let i=0;i<5;i++){const phase=(time*(1.8+surge*3)+i*.21)%1;c.globalAlpha=(1-phase)*surge*.45;const xx=7-phase*95,yy=-7+i*11;c.beginPath();c.moveTo(xx,yy);c.lineTo(xx-8-surge*16,yy);c.stroke();}c.restore();}
@@ -95,7 +96,7 @@ export function dimillian(c:CanvasRenderingContext2D,x:number,y:number,face:numb
   c.fillStyle='#d6c6a7';c.beginPath();c.moveTo(-20,-7);c.lineTo(29,0);c.lineTo(16,8);c.lineTo(-23,10);c.closePath();c.fill();
   rect(c,-16,-7,25,5,'#f6e4c1');rect(c,-20,8,31,3,'#9485a2');rect(c,-6,-8,14,8,'#28737b');rect(c,-4,-8,9,2,'#9ed8d8');rect(c,-25,1,6,8,'#595264');
   rect(c,-12,13,20,5,'#6d5a83');rect(c,-9,14,15,2,'#c8b5da');
-  c.restore();c.save();c.translate(flight*3,flight*11);c.scale(1,1-flight*.2);rect(c,-7,9,13,12,'#80719c');withHeadTilt(c,0,7,angle-heading,(gaze)=>head(c,-5,gaze));c.restore();
+  c.restore();c.save();c.translate(flight*3,flight*11+(duck?8:0));c.scale(1,1-flight*.2);rect(c,-7,9,13,12,'#80719c');withHeadTilt(c,0,7,angle-heading,(gaze)=>head(c,-5,gaze));c.restore();
   if(flight>0){c.save();c.globalAlpha=flight*.6;c.fillStyle='#9be5ec';c.beginPath();c.ellipse(0,12,13,10,0,Math.PI,Math.PI*2);c.fill();c.strokeStyle='#e9faff';c.lineWidth=1;c.stroke();c.restore();}
   c.save();c.translate(5,21);c.rotate(angle-heading);for(const yy of [-7,6]){rect(c,1,yy,19,4,'#ddd1b9');rect(c,13,yy,8,2,'#8bacc2');if(attack>0)rect(c,22,yy-2,8+attack*25,6,'#b5f7ff');}c.restore();
   if(jets.sonic){
@@ -106,20 +107,22 @@ export function dimillian(c:CanvasRenderingContext2D,x:number,y:number,face:numb
   }
  }else{
   const pose=kind===1?casting:swordPose(kind===0?swing:undefined);
-  if(kind===0&&swing||kind===1&&(charge>0||attack>0||mageMotion.teleport||mageMotion.arrival||mageMotion.polymorph)){
+  if(duck)crouchLegs(c,time,moving,'#39424e','#4c5061','#c8c9ce');
+  else if(kind===0&&swing||kind===1&&(charge>0||attack>0||mageMotion.teleport||mageMotion.arrival||mageMotion.polymorph)){
    // Bent rear knee and planted leading boot make the weight transfer visible.
    rect(c,-7-pose.stride*.5,24+pose.crouch,7,5,'#39424e');rect(c,-8-pose.stride,27,5,5,'#39424e');rect(c,-10-pose.stride,30,10,3,'#c8c9ce');
    rect(c,2+pose.lunge*.5,24+pose.crouch,6+pose.stride*.5,5,'#4c5061');rect(c,5+pose.stride,27,5,5,'#4c5061');rect(c,4+pose.stride,30,11,3,'#b4b6c2');
   }else{rect(c,-6,24,5,7+step,'#39424e');rect(c,3,24,5,7-step,'#4c5061');rect(c,-8,30+step,9,3,'#c8c9ce');rect(c,2,30-step,9,3,'#b4b6c2');}
+  if(duck)c.translate(0,-7);
   c.save();c.translate(pose.lunge,24+pose.crouch);c.rotate(pose.lean);c.translate(0,-24);
   if(kind===1){
    const sway=Math.round(Math.sin(time*(moving?15:3))*(moving?3:1)-casting.robe);
-   c.fillStyle='#49315f';c.beginPath();c.moveTo(-9,11);c.lineTo(8,11);c.lineTo(13,31);c.lineTo(-14+sway,32);c.lineTo(-11,22);c.closePath();c.fill();
-   c.fillStyle='#8060a3';c.beginPath();c.moveTo(-4,12);c.lineTo(6,12);c.lineTo(10,30);c.lineTo(-5+sway,30);c.closePath();c.fill();
-   rect(c,-9,12,6,9,'#644780');rect(c,-3,15,3,15,'#ad8ac7');rect(c,-11+sway,29,23-sway,2,'#cfb47c');rect(c,-9,21,19,3,'#b69667');rect(c,0,21,4,4,'#eed3a0');rect(c,-9,25,2,4,'#382749');
+   c.fillStyle='#49315f';c.beginPath();c.moveTo(-9,11);c.lineTo(8,11);c.lineTo(13,duck?25:31);c.lineTo(-14+sway,duck?25:32);c.lineTo(-11,22);c.closePath();c.fill();
+   c.fillStyle='#8060a3';c.beginPath();c.moveTo(-4,12);c.lineTo(6,12);c.lineTo(10,duck?24:30);c.lineTo(-5+sway,duck?24:30);c.closePath();c.fill();
+   rect(c,-9,12,6,9,'#644780');rect(c,-3,15,3,15,'#ad8ac7');rect(c,-11+sway,duck?23:29,23-sway,2,'#cfb47c');rect(c,-9,21,19,3,'#b69667');rect(c,0,21,4,4,'#eed3a0');rect(c,-9,duck?22:25,2,duck?2:4,'#382749');
 
   }else{rect(c,-8,12,17,14,'#68547f');rect(c,-8,12,6,9,'#887199');rect(c,-1,14,6,2,'#bda4d1');}
-  c.save();c.translate(-pose.twist*.35,-Math.abs(pose.twist)*.3);withHeadTilt(c,0,12,angle-pose.lean,(gaze)=>{head(c,0,gaze);
+  c.save();c.translate(-pose.twist*.35,-Math.abs(pose.twist)*.3);withHeadTilt(c,0,12,angle-pose.lean,(gaze)=>{if(duck)c.translate(0,5);head(c,0,gaze);
   if(kind===1){
    // A bent point, broad brim and gold band leave his glasses and beard exposed.
    const tip=Math.round(Math.sin(time*(moving?10:2))*(moving?2:.5)-casting.robe*.6);
@@ -139,7 +142,7 @@ export function dimillian(c:CanvasRenderingContext2D,x:number,y:number,face:numb
   }
   c.save();c.translate(kind===1?casting.handX:7,kind===1?casting.handY:18);c.rotate(kind===0?bladeAngle-pose.lean:casting.staffAngle);rect(c,-2,-2,10,5,'#d8ad87');
   if(kind===0){rect(c,6,-3,8,6,'#d8ad87');if(!mageMotion.stowed)baguette(c,batLength,batLength>90?13:7);}
-  else{rect(c,7,-20,4,40,'#b18e60');rect(c,5,-22,8,6,'#e4d09a');rect(c,6,-25,6,5,'#bdeef8');
+  else{rect(c,7,-20,4,duck?26:40,'#b18e60');rect(c,5,-22,8,6,'#e4d09a');rect(c,6,-25,6,5,'#bdeef8');
    const r=4+charge*6,pulse=1+Math.sin(time*41)*.15;
    c.save();c.translate(9,-23);c.globalAlpha=.16+charge*.2;c.fillStyle='#a778ff';c.beginPath();c.arc(0,0,r*1.9*pulse,0,Math.PI*2);c.fill();
    c.globalAlpha=1;c.fillStyle=attack>0?'#ffffff':'#d9f7ff';c.beginPath();c.arc(0,0,2+charge*2,0,Math.PI*2);c.fill();

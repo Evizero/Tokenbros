@@ -1,4 +1,4 @@
-import { rect,text,withHeadTilt } from './art';
+import { rect,text,withHeadTilt,crouchLegs } from './art';
 export const CLAW_COLORS=['#ff8457','#78dbea','#e5bd68'];
 export function claw(c:CanvasRenderingContext2D,x:number,y:number,type:number,time:number,face=1,scale=1,strike=0,windup=0){
  c.save();c.translate(Math.round(x),Math.round(y));c.scale(face*scale,scale);if(type===2)c.scale(1+strike*.22-windup*.12,1-strike*.2+windup*.14);const color=CLAW_COLORS[type],step=Math.sin(time*22)*2;
@@ -13,12 +13,15 @@ export function claw(c:CanvasRenderingContext2D,x:number,y:number,type:number,ti
  if(type===2){rect(c,-5,-7,10,3,'#f4d990');rect(c,-2,-8,3,3,'#566c62');}
  c.restore();
 }
-export function peter(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,molt:boolean,punch:number,angle:number,scale=1,kind=0){
+export function peter(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,molt:boolean,punch:number,angle:number,scale=1,kind=0,duck=false){
  c.save();c.translate(Math.round(x+10*scale),Math.round(y));c.scale(face*scale,scale);const step=moving?Math.sin(time*23)*3:0;
- rect(c,-7,23,6,8+step,'#233544');rect(c,3,23,6,8-step,'#314651');rect(c,-8,30+step,9,3,'#d3d8c0');rect(c,2,30-step,10,3,'#b8c7bc');
+ if(duck)crouchLegs(c,time,moving,'#233544','#314651','#d3d8c0');
+ else {rect(c,-7,23,6,8+step,'#233544');rect(c,3,23,6,8-step,'#314651');rect(c,-8,30+step,9,3,'#d3d8c0');rect(c,2,30-step,10,3,'#b8c7bc');}
+ if(duck)c.translate(0,-7);
  if(molt){rect(c,-13,12,28,13,'#c99271');rect(c,-14,10,11,11,'#e0ad88');rect(c,7,10,12,11,'#e0ad88');rect(c,-8,14,17,4,'#edbb95');rect(c,-1,13,2,12,'#976449');rect(c,-6,21,14,2,'#a77050');rect(c,-12,9,5,7,'#667e98');rect(c,11,9,4,6,'#667e98');}
  else{rect(c,-9,12,19,13,'#607e9d');rect(c,-10,12,7,9,'#8aa0b4');rect(c,-5,13,13,3,'#9baec0');rect(c,6,17,2,3,'#a67653');}
  withHeadTilt(c,0,12,angle,(gaze)=>{
+ if(duck)c.translate(0,5);
  rect(c,-5,1,13,11,'#d1a27e');rect(c,-7,4,3,6,'#b88866');rect(c,6,6,4,3,'#e6b48e');
  rect(c,-6,-2,13,4,'#433a34');rect(c,-4,-4,10,3,'#52443b');rect(c,-7,2,3,3,'#8c7965');rect(c,-3,9,10,4,'#675044');rect(c,2,9,5,1,'#ead5ae');
  rect(c,-4,4,13,1,'#19282b');rect(c,-4,4,5,4,'#263d42');rect(c,3,4,6,4,'#263d42');rect(c,-3,5,3,2,'#a8c9c3');rect(c,4,5,3,2,'#b7d1c8');rect(c,-1,5+gaze,1,1,'#23343a');rect(c,6,5+gaze,1,1,'#23343a');

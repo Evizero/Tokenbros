@@ -18,15 +18,14 @@ export class TheoKit {
  catches=0;launches=0;carries=0;crashes=0;hits=0;rollSound=0;
  get name(){return this.riding?'RIDING':this.attached?'IN HAND':this.board.state==='return'?'RETURNING':'DECK OUT';}
  get attached(){return this.board.state==='attached';}
- get riding(){return this.attached&&this.mounted&&this.g.climb===null&&!this.g.zip&&!this.g.wallGrip;}
+ get riding(){return this.attached&&!this.g.crouched&&this.mounted&&this.g.climb===null&&!this.g.zip&&!this.g.wallGrip;}
  constructor(public g:Game){}
  controls(e:Enemy){return this.passenger===e;}
  clear(){this.releasePassenger(0,-100);this.board.state='attached';this.board.kind='ride';this.mounted=false;this.mountBlend=0;this.combo=0;this.comboLife=0;this.throwPose=0;this.board.hit.clear();this.board.trail=[];this.attack=0;this.punchCombo=0;this.punchLife=0;this.shieldPose=0;this.airUsed=false;this.wasFiring=false;this.flipRun=false;this.line=0;this.lineLife=0;this.rush=0;this.rushFlash=0;this.rammed.clear();this.sync();}
- sync(){const p=this.g.player,b=this.board;if(!this.attached)return;b.x=p.x+10;b.y=p.y+27;b.vx=p.vx;b.vy=p.vy;b.grounded=p.grounded;}
+ sync(){const p=this.g.player,b=this.board;if(!this.attached)return;b.x=p.x+10;b.y=p.y+p.h-5;b.vx=p.vx;b.vy=p.vy;b.grounded=p.grounded;}
  horizontal(dt:number,dir:number){
   const g=this.g,p=g.player;if(g.climb!==null||g.zip)return false;
-  const quiet=g.keys.has('ShiftLeft')||g.keys.has('ShiftRight');
-  if(quiet){p.vx+=clamp(dir*90-p.vx,-1800*dt,1800*dt);return true;}
+  if(g.crouched){p.vx+=clamp(dir*90-p.vx,-1800*dt,1800*dt);return true;}
   if(this.riding){
    if(dir){this.rideFace=dir;const accel=p.vx*dir<0?1750:680;p.vx+=clamp(dir*(470+this.line*25)-p.vx,-accel*dt,accel*dt);}
    else p.vx*=Math.exp(-(p.grounded?1.8:.12)*dt);
@@ -93,7 +92,7 @@ export class TheoKit {
    else if(travel&&b.vx*travel>=0)p.vx=travel*Math.min(545,Math.max(Math.abs(p.vx),Math.abs(b.vx))+(earned?45:0));
    this.rideFace=travel||this.rideFace;g.wallLock=.12;
   }
-  b.state='attached';b.kind='ride';this.mounted=Math.abs(p.vx)>=230;this.mountBlend=this.mounted?1:0;b.trail=[];this.releasePassenger(p.vx,-220);this.catchPose=.48;this.punchLife=0;this.punchCombo=0;if(this.attackKind===3)this.attack=0;this.shieldPose=0;this.catches++;this.flipRun=false;
+  b.state='attached';b.kind='ride';this.mounted=!g.crouched&&Math.abs(p.vx)>=230;this.mountBlend=this.mounted?1:0;b.trail=[];this.releasePassenger(p.vx,-220);this.catchPose=.48;this.punchLife=0;this.punchCombo=0;if(this.attackKind===3)this.attack=0;this.shieldPose=0;this.catches++;this.flipRun=false;
   g.emit(p.x+10,p.y+26,earned?22:12,[THEO_COLOR,'#ffffff','#d4c8a4'],earned?190:110,2,.3);
   g.rings.push({x:p.x+10,y:p.y+22,r:3,max:earned?40:25,life:.2,color:THEO_COLOR});g.audio.tone(450+this.line*80,.06,'square',.025,700);g.audio.tone(850+this.line*100,.11,'triangle',.03,1300);g.barks.request('catch');this.sync();
  }
@@ -239,7 +238,7 @@ export class TheoKit {
   if(this.g.state!=='playing')return;
   const g=this.g,p=g.player,speed=Math.abs(p.vx);
   const dirInput=Number(g.keys.has('KeyD')||g.keys.has('ArrowRight'))-Number(g.keys.has('KeyA')||g.keys.has('ArrowLeft'));
-  if(!this.attached||g.climb!==null||g.zip||g.wallGrip)this.mounted=false;
+  if(!this.attached||g.crouched||g.climb!==null||g.zip||g.wallGrip)this.mounted=false;
   else if(this.mounted&&p.grounded&&speed<135)this.mounted=false;
   else if(!this.mounted&&p.grounded&&speed>=245&&dirInput&&this.attack<=0&&!this.wasFiring){this.mounted=true;this.mounts++;this.rideFace=Math.sign(p.vx)||g.face;g.audio.tone(150,.075,'triangle',.02,80);}
   this.mountBlend=clamp(this.mountBlend+(this.mounted?1:-1)*dt/0.22,0,1);

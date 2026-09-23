@@ -1,4 +1,4 @@
-import { rect,withHeadTilt } from './art';
+import { rect,withHeadTilt,crouchLegs } from './art';
 export const MARCUS_COLOR='#70e1ef';
 export const AUGMENT_NAMES=['ROTATE','LCD','ZOOM','PAC-MAN'];
 export const AUGMENT_COLORS=['#70e1ef','#adceff','#ffe0a1','#ffe16a'];
@@ -14,15 +14,18 @@ export function cartridgeArt(c:CanvasRenderingContext2D,x:number,y:number,mode:n
  rect(c,-2,1,4,2,'#263942');rect(c,-3,2,6,1,'#263942');rect(c,-2,4,1,1,'#263942');rect(c,1,4,1,1,'#263942');
  rect(c,-3,7,6,2,'#526260');for(let i=-2;i<=2;i+=2)rect(c,i,7,1,1,'#e5c577');c.restore();
 }
-export function marcus(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,aim:number,mode:number,launch=0,catching=0,flip=0,scale=1,charge=0){
+export function marcus(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,aim:number,mode:number,launch=0,catching=0,flip=0,scale=1,charge=0,duck=false){
  c.save();c.translate(Math.round(x+10*scale),Math.round(y+17*scale));c.scale(face*scale,scale);
  const wind=charge>0?charge:launch>0&&launch<.1?launch/.1:0,recoil=launch>=.1?Math.max(0,1-(launch-.1)/.24):0;
  if(flip>0){c.rotate((1-flip/.3)*Math.PI*2);c.scale(1,.85);}else c.rotate(-wind*.28+recoil*.12-catching*.25);
  const step=moving?Math.sin(time*23)*3:0;
- rect(c,-7,5,6,8+step,'#3d4550');rect(c,2,5,6,8-step,'#56606a');rect(c,-9,12+step,10,3,'#473d35');rect(c,1,12-step,11,3,'#6f5740');
+ if(duck){c.save();c.translate(0,-17);crouchLegs(c,time,moving,'#3d4550','#56606a','#6f5740');c.restore();}
+ else {rect(c,-7,5,6,8+step,'#3d4550');rect(c,2,5,6,8-step,'#56606a');rect(c,-9,12+step,10,3,'#473d35');rect(c,1,12-step,11,3,'#6f5740');}
+ if(duck)c.translate(0,-7);
  rect(c,-8,-7,17,17,'#263843');rect(c,-7,-7,5,14,'#415563');rect(c,0,-6,6,13,'#e8d9b6');rect(c,6,-7,4,16,'#192b35');
  rect(c,-8,-4,17,2,'#ae8356');rect(c,-10,3,8,8,'#93633d');rect(c,-10,3,8,2,'#d4a774');rect(c,-9,4,2,4,MARCUS_COLOR);
  withHeadTilt(c,0,-6,aim,(gaze)=>{
+ if(duck)c.translate(0,8);
  // Tousled dark hair and exposed, lightly stubbled face.
  rect(c,-6,-18,13,12,'#d7ac8d');rect(c,-7,-17,3,7,'#b88971');rect(c,6,-13,4,3,'#e7ba94');
  rect(c,-7,-20,14,4,'#403d37');rect(c,-5,-23,7,4,'#565047');rect(c,1,-22,6,3,'#373b37');rect(c,-7,-17,3,4,'#51483d');rect(c,-3,-17,7,1,'#8a7660');

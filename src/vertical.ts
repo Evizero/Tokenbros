@@ -49,6 +49,7 @@ export class VerticalAbility {
   for(const portal of this.portals)portal.life-=dt;this.portals=this.portals.filter(p=>p.life>0);
   if(p.grounded){this.lift=2.6;this.dimAirUsed=false;this.blinkArmed=false;this.blinkReady=false;}
   const wasActive=this.active;this.active=false;
+  if(g.crouched){this.cancel();return;}
   if(!g.keys.has('Space')){this.held=0;this.grapple=null;return;}
   this.held+=dt;
   if(g.character==='dimillian'){

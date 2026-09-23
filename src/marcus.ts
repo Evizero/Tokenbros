@@ -36,10 +36,10 @@ export class MarcusKit {
  }
  releaseShot(p:NonNullable<MarcusKit['pending']>){
   const g=this.g,group=++this.serial,spread=p.mode===1?[-.16,.16]:[0],speed=[650,590,430][p.mode]+p.scale*25;
-  const spawn=(offset:number,echo:boolean)=>{const a=p.angle+offset;this.discs.push({x:g.player.x+10,y:g.player.y+16,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,mode:p.mode,r:p.mode===2?11+p.scale*2:5+p.scale,power:([4,2.8,8][p.mode])*(echo?.5:1),age:0,life:p.mode===0?CARTRIDGE_OUTBOUND_TIME+6:3.1,back:false,hit:new Set(),group,echo,bounces:0,trail:[]});};
+  const spawn=(offset:number,echo:boolean)=>{const a=p.angle+offset;this.discs.push({x:g.player.x+10,y:g.bodyY,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,mode:p.mode,r:p.mode===2?11+p.scale*2:5+p.scale,power:([4,2.8,8][p.mode])*(echo?.5:1),age:0,life:p.mode===0?CARTRIDGE_OUTBOUND_TIME+6:3.1,back:false,hit:new Set(),group,echo,bounces:0,trail:[]});};
   for(const a of spread)spawn(a,false);if(this.batch>0)for(const a of [-.33,-.23,.23,.33])spawn(a,true);
-  g.shotCount++;g.makeNoise(g.player.x+10,g.player.y+16,430);g.audio.tone(p.mode===2?100:440,.12,'triangle',.045,p.mode===2?45:170);g.audio.noise(.045,.025,1700);
-  g.emit(g.player.x+10+Math.cos(p.angle)*20,g.player.y+16+Math.sin(p.angle)*20,6,[AUGMENT_COLORS[p.mode],'#fff3ce'],80,2,.18);
+  g.shotCount++;g.makeNoise(g.player.x+10,g.bodyY,430);g.audio.tone(p.mode===2?100:440,.12,'triangle',.045,p.mode===2?45:170);g.audio.noise(.045,.025,1700);
+  g.emit(g.player.x+10+Math.cos(p.angle)*20,g.bodyY+Math.sin(p.angle)*20,6,[AUGMENT_COLORS[p.mode],'#fff3ce'],80,2,.18);
  }
  returnDisc(d:Disc){if(d.back)return;d.back=true;d.hit.clear();d.age=0;if(d.mode===0)d.life=6;}
  recall(){const recalled=this.invader.recall(),chomp=this.pacman.recall();if(!recalled&&!chomp&&!this.discs.some(d=>!d.back))return;for(const d of this.discs)this.returnDisc(d);this.g.audio.tone(720,.16,'sine',.04,280);this.g.barks.request('recall');}
@@ -48,7 +48,7 @@ export class MarcusKit {
   this.flipDir=g.keys.has('KeyA')||g.keys.has('ArrowLeft')?-1:g.keys.has('KeyD')||g.keys.has('ArrowRight')?1:g.face;
   this.invader.cancel();this.pending=null;this.launch=0;g.climb=null;g.zip=false;g.audio.noise(.12,.025,2200);g.emit(g.player.x+10,g.player.y+28,9,[MARCUS_COLOR,'#b9cace'],120,2,.3);
  }
- ultimate(){if(this.batchCooldown>0)return;this.batch=4.5;this.batchCooldown=16;const g=this.g;g.barks.request('batch');g.rings.push({x:g.player.x+10,y:g.player.y+16,r:6,max:68,life:.4,color:MARCUS_COLOR});g.audio.tone(280,.16,'square',.035,900);}
+ ultimate(){if(this.batchCooldown>0)return;this.batch=4.5;this.batchCooldown=16;const g=this.g;g.barks.request('batch');g.rings.push({x:g.player.x+10,y:g.bodyY,r:6,max:68,life:.4,color:MARCUS_COLOR});g.audio.tone(280,.16,'square',.035,900);}
  solid(x:number,y:number,r:number){const w=this.g.world;return !!(w.at(x,y)||w.at(x-r,y)||w.at(x+r,y)||w.at(x,y-r)||w.at(x,y+r));}
  catchDisc(d:Disc){
   d.life=0;if(d.echo)return;const g=this.g;this.catches++;this.catchPose=1;this.catchFlash=.6;
@@ -70,7 +70,7 @@ export class MarcusKit {
   if(this.launch>0){this.launch+=dt;if(this.pending&&this.launch>=.1){const p=this.pending;this.pending=null;this.releaseShot(p);}if(this.launch>.34)this.launch=0;}
   for(const d of this.discs){
    d.age+=dt;d.life-=dt;if(!d.back&&(d.age>(d.mode===0?CARTRIDGE_OUTBOUND_TIME:d.mode===2?.85:.72)||d.mode===0&&d.bounces>=CARTRIDGE_BOUNCES))this.returnDisc(d);
-   if(d.back){const dx=g.player.x+10-d.x,dy=g.player.y+16-d.y,len=Math.hypot(dx,dy);if(len<18&&g.lineOfSight(d.x,d.y,g.player.x+10,g.player.y+16)){this.catchDisc(d);continue;}
+   if(d.back){const dx=g.player.x+10-d.x,dy=g.bodyY-d.y,len=Math.hypot(dx,dy);if(len<18&&g.lineOfSight(d.x,d.y,g.player.x+10,g.bodyY)){this.catchDisc(d);continue;}
     const speed=d.mode===2?650:840,k=Math.min(1,dt*12);d.vx+=(dx/Math.max(1,len)*speed-d.vx)*k;d.vy+=(dy/Math.max(1,len)*speed-d.vy)*k;
    }
    d.trail.push({x:d.x,y:d.y});if(d.trail.length>10)d.trail.shift();

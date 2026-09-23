@@ -9,7 +9,7 @@ async (page) => {
     Object.assign(g.player,{x:210,y:828,vx:0,vy:0});g.cam=0;g.camY=460;g.barrels=[];g.bullets=[];g.invuln=100;g.keys.clear();g.pointer.down=false;g.pendingShot=0;g.footstep=0;
   });
   await setup();await page.waitForTimeout(400);const behind=await state();if(behind.enemyStates[0].awareness.state!=='patrol')throw Error('Guard saw through its back');
-  await page.keyboard.down('ShiftLeft');await page.keyboard.down('KeyD');await page.waitForTimeout(650);await page.keyboard.up('KeyD');await page.keyboard.up('ShiftLeft');await page.waitForTimeout(70);const sneak=await state();if(sneak.enemyStates[0].awareness.state!=='patrol')throw Error('Quiet approach alerted guard');
+  await page.keyboard.down('ControlLeft');await page.keyboard.down('KeyD');await page.waitForTimeout(650);await page.keyboard.up('KeyD');await page.keyboard.up('ControlLeft');await page.waitForTimeout(70);const sneak=await state();if(sneak.enemyStates[0].awareness.state!=='patrol')throw Error('Crouched approach alerted guard');
   await page.keyboard.down('KeyD');await page.waitForTimeout(110);await page.keyboard.up('KeyD');const heard=await state();if(heard.enemyStates[0].awareness.state==='patrol')throw Error('Close running was inaudible');
   await setup();await page.evaluate(()=>{const g=window.__awarenessQA,e=g.enemies[0];e.look=Math.PI;e.face=-1;e.patrol=-1;});
   await page.waitForTimeout(120);const glimpse=await state();if(glimpse.enemyStates[0].awareness.state==='combat')throw Error('No spotting grace');

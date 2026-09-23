@@ -16,7 +16,7 @@ export class PeterKit {
   const g=this.g;if(this.throwCooldown>0)return;
   if(this.stock<1){this.throwCooldown=.2;return;}
   if(this.pets.length>=4){this.throwCooldown=.4;return;}
-  this.stock--;const a=g.aimAngle,k=this.kind,x=g.player.x+10,y=g.player.y+16;
+  this.stock--;const a=g.aimAngle,k=this.kind,x=g.player.x+10,y=g.bodyY;
   const maxHp=k===2?8:5;
   const p:Pet={id:++this.serial,x:x-7,y:y-5,w:14,h:10,vx:Math.cos(a)*620,vy:Math.sin(a)*480-230,grounded:false,type:k,age:0,cool:.12,hop:0,hp:maxHp,maxHp,state:'deploy',stuck:0,bite:0,hurt:0,charge:0,chargeDuration:.45,firstDash:true,slam:0,dash:0,fuse:0,attackAngle:0,dashHits:new Set()};
   g.barks.request('summon');this.pets.push(p);this.throwCooldown=.45;g.muzzle=.1;g.makeNoise(x,y,100);g.audio.tone(k===2?180:540,.1,'triangle',.04,250);
@@ -30,7 +30,7 @@ export class PeterKit {
  }
  smash(x:number,y:number,r:number){const g=this.g;for(let dx=-r;dx<=r;dx+=12)for(let dy=-r;dy<=r;dy+=12)if(dx*dx+dy*dy<r*r){const b=g.world.damage(x+dx,y+dy,5);if(b)g.emit(x+dx,y+dy,3,['#a4b17f','#e5bd68'],90,4);}}
  handAttack(){
-  const g=this.g,a=g.aimAngle,x=g.player.x+10,y=g.player.y+16,k=this.kind;
+  const g=this.g,a=g.aimAngle,x=g.player.x+10,y=g.bodyY,k=this.kind;
   this.punch=k===2?.17:.1;g.fireTimer=[.55,.22,.42][k];g.lastCooldown=g.fireTimer;g.shotCount++;
   if(k===1){
     g.bullets.push({owner:g.id,x:x+Math.cos(a)*18,y:y+Math.sin(a)*18,vx:Math.cos(a)*680,vy:Math.sin(a)*680,life:.7,hostile:false,power:1.5,pierce:0,boost:false,tier:0,color:CLAW_COLORS[1],hit:new Set()});
@@ -93,7 +93,7 @@ export class PeterKit {
   g.audio.noise(.12,.055,1100);g.audio.tone(95,.15,'triangle',.06,35);
  }
  punchAttack(){
-  const g=this.g,a=g.aimAngle,x=g.player.x+10,y=g.player.y+16;this.punch=.18;g.fireTimer=.28;g.lastCooldown=.28;g.shotCount++;g.player.vx=Math.cos(a)*360;g.wallLock=.12;g.invuln=Math.max(g.invuln,.16);g.makeNoise(x,y,470);
+  const g=this.g,a=g.aimAngle,x=g.player.x+10,y=g.bodyY;this.punch=.18;g.fireTimer=.28;g.lastCooldown=.28;g.shotCount++;g.player.vx=Math.cos(a)*360;g.wallLock=.12;g.invuln=Math.max(g.invuln,.16);g.makeNoise(x,y,470);
   for(const e of g.enemies){const dx=e.x+10-x,dy=e.y+15-y,d=Math.hypot(dx,dy);if(!e.dead&&e.hacked<=0&&d<110&&(dx*Math.cos(a)+dy*Math.sin(a))>d*.25&&g.lineOfSight(x,y,e.x+10,e.y+15))this.hit(e,7,Math.cos(a)*390,true);}
   this.smash(x+Math.cos(a)*65,y+Math.sin(a)*65,34);
   for(const b of g.barrels)if(!b.dead&&Math.hypot(b.x-x,b.y-y)<100){b.owner=g.id;b.fuse=.05;}
@@ -102,14 +102,14 @@ export class PeterKit {
  }
  transform(){
   if(this.moltCooldown>0)return;const g=this.g;g.barks.request('molt');this.molt=5;this.moltCooldown=16;this.stock=6;g.fireTimer=0;
-  g.emit(g.player.x+10,g.player.y+16,24,['#617d9e','#90a8bb','#d9ac87'],240,6,.7);g.makeNoise(g.player.x,g.player.y,650);g.shake=6;g.audio.blast();
+  g.emit(g.player.x+10,g.bodyY,24,['#617d9e','#90a8bb','#d9ac87'],240,6,.7);g.makeNoise(g.player.x,g.player.y,650);g.shake=6;g.audio.blast();
   for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&Math.hypot(e.x-g.player.x,e.y-g.player.y)<80)this.hit(e,3,Math.sign(e.x-g.player.x)*330,true);
  }
  command(){
   const g=this.g;if(this.commandCooldown>0)return;this.commandCooldown=.2;this.terminalTime=0;
-  const point=g.aimPoint(),dx=point.x-(g.player.x+10),dy=point.y-(g.player.y+16),d=Math.hypot(dx,dy),scale=Math.min(1,480/Math.max(1,d));
-  this.commandPoint={x:g.player.x+10+dx*scale,y:g.player.y+16+dy*scale};
-  this.focus=g.enemies.filter(e=>!e.dead&&e.hacked<=0&&Math.hypot(e.x+10-this.commandPoint!.x,e.y+15-this.commandPoint!.y)<85&&g.lineOfSight(g.player.x+10,g.player.y+16,e.x+10,e.y+15)).sort((a,b)=>Math.hypot(a.x-point.x,a.y-point.y)-Math.hypot(b.x-point.x,b.y-point.y))[0]??null;
+  const point=g.aimPoint(),dx=point.x-(g.player.x+10),dy=point.y-(g.bodyY),d=Math.hypot(dx,dy),scale=Math.min(1,480/Math.max(1,d));
+  this.commandPoint={x:g.player.x+10+dx*scale,y:g.bodyY+dy*scale};
+  this.focus=g.enemies.filter(e=>!e.dead&&e.hacked<=0&&Math.hypot(e.x+10-this.commandPoint!.x,e.y+15-this.commandPoint!.y)<85&&g.lineOfSight(g.player.x+10,g.bodyY,e.x+10,e.y+15)).sort((a,b)=>Math.hypot(a.x-point.x,a.y-point.y)-Math.hypot(b.x-point.x,b.y-point.y))[0]??null;
   this.focusBoss=g.boss.active&&!g.boss.dead&&Math.hypot(g.boss.x+38-point.x,g.boss.y+38-point.y)<90;
   this.orderTime=d<65?0:8;
   if(d<65){this.focus=null;this.focusBoss=false;this.commandPoint=null;}

@@ -12,7 +12,7 @@ export class OtherTibo {
  constructor(public g:Game){}
  activate(){
   const g=this.g;if(this.active||this.cooldown>0||g.state!=='playing')return false;g.updateAim();
-  const point=g.aimPoint(),x=g.player.x+10,y=g.player.y+16,dx=point.x-x,dy=point.y-y,d=Math.hypot(dx,dy),range=Math.min(360,d),angle=d>1?Math.atan2(dy,dx):g.aimAngle;
+  const point=g.aimPoint(),x=g.player.x+10,y=g.bodyY,dx=point.x-x,dy=point.y-y,d=Math.hypot(dx,dy),range=Math.min(360,d),angle=d>1?Math.atan2(dy,dx):g.aimAngle;
   this.active={x:x-12,y:y-20,w:24,h:36,vx:0,vy:0,grounded:false,life:1.8,age:0,duration:Math.max(.16,range/850),startX:x-12,startY:y-20,tx:x+Math.cos(angle)*range-12,ty:y+Math.sin(angle)*range-18,angle,face:Math.cos(angle)>=0?1:-1,phase:'leap',grip:0,target:null,thrown:false,blocks:3,flash:0,bark:0,catchable:false};
   g.barks.request('double');this.cooldown=4.5;g.emit(x,y,18,['#d5ff60','#f4efcd','#778787'],120,4,.35);g.makeNoise(x,y,190);g.audio.tone(260,.14,'triangle',.045,700);return true;
  }
@@ -32,13 +32,13 @@ export class OtherTibo {
  collect(b:Double){
   const g=this.g;g.barks.request('catch');this.active=null;this.cooldown=0;this.catchFeedback=.85;this.catchFrom={x:b.x,y:b.y,face:b.face};
   g.emit(b.x+12,b.y+18,18,['#d5ff60','#fff6cb'],110,3,.35);
-  g.rings.push({x:g.player.x+10,y:g.player.y+16,r:8,max:43,life:.3,color:'#e9ff9f'});
+  g.rings.push({x:g.player.x+10,y:g.bodyY,r:8,max:43,life:.3,color:'#e9ff9f'});
   g.audio.tone(440,.1,'triangle',.045,880);g.audio.tone(880,.19,'sine',.025,1320);
  }
  updateFeedback(dt:number){
   const g=this.g;this.catchFeedback=Math.max(0,this.catchFeedback-dt);this.rewardFeedback=Math.max(0,this.rewardFeedback-dt);
   for(const f of this.flights){
-    f.age+=dt;const t=Math.min(1,f.age/f.duration),u=t*t*(3-2*t),dx=g.player.x+10-f.fromX,dy=g.player.y+16-f.fromY,d=Math.max(1,Math.hypot(dx,dy)),arc=Math.sin(t*Math.PI)*f.bend;
+    f.age+=dt;const t=Math.min(1,f.age/f.duration),u=t*t*(3-2*t),dx=g.player.x+10-f.fromX,dy=g.bodyY-f.fromY,d=Math.max(1,Math.hypot(dx,dy)),arc=Math.sin(t*Math.PI)*f.bend;
     f.x=f.fromX+dx*u-dy/d*arc;f.y=f.fromY+dy*u+dx/d*arc-Math.sin(t*Math.PI)*22;
     if(t>=1){const gain=Math.min(10,TOKEN_CAPACITY-g.usage);g.usage+=gain;g.tokenTrail=Math.max(g.tokenTrail,g.usage);this.rewardTotal+=gain;this.rewardFeedback=.85;
       if(gain>0){g.dryFeedback=0;g.dryFire=0;}g.emit(f.x,f.y,3,['#d5ff60','#fff7cc'],45,2,.2);g.audio.tone(620+this.rewardTotal*7,.045,'sine',.018,900+this.rewardTotal*7);
@@ -52,7 +52,7 @@ export class OtherTibo {
   b.age+=dt;b.life-=dt;
   if(Math.hypot(b.x+12-this.g.player.x-10,b.y+18-this.g.player.y-16)>44)b.catchable=true;b.flash=Math.max(0,b.flash-dt);b.bark=Math.max(0,b.bark-dt);
   if(b.life<=0){if(b.target)this.fling(b);this.active=null;return;}
-  if(b.phase==='guard'&&b.age>.25&&(b.catchable||b.thrown)&&overlap({x:b.x-8,y:b.y-6,w:b.w+16,h:b.h+12},this.g.player)&&this.g.lineOfSight(b.x+12,b.y+18,this.g.player.x+10,this.g.player.y+16)){this.collect(b);return;}
+  if(b.phase==='guard'&&b.age>.25&&(b.catchable||b.thrown)&&overlap({x:b.x-8,y:b.y-6,w:b.w+16,h:b.h+12},this.g.player)&&this.g.lineOfSight(b.x+12,b.y+18,this.g.player.x+10,this.g.bodyY)){this.collect(b);return;}
   if(b.phase==='grab'){
     const e=b.target;if(!e||e.dead){b.target=null;b.phase='guard';b.thrown=true;return;}
     e.stun=.25;e.wind=0;e.vx=0;e.vy=0;

@@ -12,7 +12,7 @@ import {
 import { showRoster } from "./roster";
 import { clamp, COLS, TILE, LEVEL_HEIGHT } from "./world";
 import { W, H, text } from "./art";
-const PROTOCOL = 2,
+const PROTOCOL = 3,
   BUILD =
     typeof __COOP_BUILD__ === "undefined" ? "development" : __COOP_BUILD__,
   characters = ["tibo", "peter", "dimillian", "pidalf", "marcus", "theo"];

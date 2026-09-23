@@ -1,9 +1,9 @@
-import { rect,text,withHeadTilt } from './art';
+import { rect,text,withHeadTilt,crouchLegs } from './art';
 export const PI_COLOR='#efc47f';
 export const levitationBob=(time:number)=>Math.sin(time*3.4)*2.5;
 // The hand, shoulders, feet and cloak share one pose curve: anticipation,
 // fast contact and a slower recovery, rather than an isolated weapon swing.
-export function pidalf(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,angle:number,slap=0,holding=false,casting=0,scale=1,power=0,ward=0,swat=0,levitating=false){
+export function pidalf(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,moving:boolean,angle:number,slap=0,holding=false,casting=0,scale=1,power=0,ward=0,swat=0,levitating=false,duck=false){
  c.save();c.translate(Math.round(x+10),Math.round(y+17+(levitating?levitationBob(time):0)));c.scale(face*scale,scale);
  const charge=ward>0?Math.min(1,ward/.35):0,slam=ward>.35?Math.sin(Math.min(1,(ward-.35)/.3)*Math.PI):0;
  const squeeze=casting>0?Math.min(1,casting):0,recovery=casting>1?Math.max(0,1-(casting-1)/.3):0;
@@ -11,7 +11,9 @@ export function pidalf(c:CanvasRenderingContext2D,x:number,y:number,face:number,
  const fist=casting>1?recovery:Math.max(0,Math.min(1,(squeeze-.22)/.58));
  const swish=swat>0?Math.sin(Math.min(1,swat/.75)*Math.PI):0;
  const step=moving?Math.sin(time*15)*3:0,hit=slap>0?(slap<.27?-Math.sin(slap/.27*Math.PI/2):Math.sin(Math.min(1,(slap-.27)/.73)*Math.PI)*1.4):0;
- if(levitating){rect(c,-9,9,6,8,'#242830');rect(c,-9,15,10,4,'#242830');rect(c,-2,16,7,3,'#171c24');rect(c,4,10,6,11,'#343a41');rect(c,4,20,10,3,'#171c24');}else{rect(c,-8,10,6,7+step,'#242830');rect(c,3,10,6,7-step,'#242830');rect(c,-10,16+step,9,3,'#171c24');rect(c,3,16-step,10,3,'#171c24');}
+ if(duck){c.save();c.translate(0,-17);crouchLegs(c,time,moving,'#242830','#343a41','#171c24');c.restore();}
+ else if(levitating){rect(c,-9,9,6,8,'#242830');rect(c,-9,15,10,4,'#242830');rect(c,-2,16,7,3,'#171c24');rect(c,4,10,6,11,'#343a41');rect(c,4,20,10,3,'#171c24');}else{rect(c,-8,10,6,7+step,'#242830');rect(c,3,10,6,7-step,'#242830');rect(c,-10,16+step,9,3,'#171c24');rect(c,3,16-step,10,3,'#171c24');}
+ if(duck)c.translate(0,-7);
  c.save();c.translate(hit*3+slam*3+swish*4-drawBack*3+crunch*3,-Math.abs(hit)+slam*2+drawBack*2-crunch);c.rotate(hit*.12-charge*.08+slam*.2+swish*.2-drawBack*.15+crunch*.13);
  const lift=ward>0?(ward<.35?Math.sin(ward/.35*Math.PI/2)*24:ward<.44?24*(1-(ward-.35)/.09):-4*Math.max(0,1-(ward-.44)/.56)):0;
  // Draw the reaching arm on the far side, before the cloak and chest.
@@ -32,9 +34,12 @@ export function pidalf(c:CanvasRenderingContext2D,x:number,y:number,face:number,
  };
  if(ward<=0)drawArm();
  const tail=Math.sin(time*6)*2+hit*7+slam*12+swish*8+drawBack*5-crunch*7;
+ if(duck){c.save();c.beginPath();c.rect(-60,-60,120,65);c.clip();}
  c.fillStyle='#303740';c.beginPath();c.moveTo(-9,-10);c.lineTo(-17-tail,16);c.lineTo(-1,12);c.lineTo(13,15);c.lineTo(10,-10);c.fill();
  rect(c,-9,-7,18,19,'#555b61');rect(c,-9,-5,8,20,'#353e48');rect(c,-7,-7,3,18,'#49535c');rect(c,1,-6,8,18,'#969b91');rect(c,2,-3,5,13,'#a5a698');rect(c,8,-5,2,16,'#737c78');rect(c,-7,6,15,3,'#282c33');rect(c,0,6,3,3,PI_COLOR);
+ if(duck)c.restore();
  withHeadTilt(c,0,-6,angle,(gaze)=>{
+ if(duck)c.translate(0,12);
  // Tied-back hair and short beard leave the round glasses legible.
  rect(c,-9,-23,17,8,'#514f4d');rect(c,-11,-19,6,10,'#8b8880');rect(c,-13,-15,5,6,'#5f605e');rect(c,-7,-21,15,15,'#d5ad8b');rect(c,-8,-23,15,5,'#666762');rect(c,-6,-24,10,2,'#aba79b');rect(c,-6,-9,12,5,'#777873');rect(c,-3,-8,6,2,'#bcb3a0');rect(c,7,-13,2,3,'#dfb997');rect(c,0,-9,5,1,'#e8d4b8');rect(c,-8,-15,3,5,'#ba9479');
  c.strokeStyle='#222a32';c.lineWidth=1.5;for(const xx of [-3,5]){c.beginPath();c.arc(xx,-15,3.3,0,Math.PI*2);c.stroke();}rect(c,-8,-17,2,1,'#252a30');rect(c,0,-16,2,1,'#252a30');rect(c,-2,-15+gaze,1,1,'#343a3b');rect(c,6,-15+gaze,1,1,'#343a3b');
@@ -42,7 +47,7 @@ export function pidalf(c:CanvasRenderingContext2D,x:number,y:number,face:number,
 
  c.save();if(swat>0){c.translate(9,-2);c.rotate(angle+.6+swish*1.5);c.translate(12,-4);}else{c.translate(ward>0?charge*12:0,-lift);c.rotate(ward>0?-.16*(1-slam):0);}
  // Staff rises with both hands, then drives into the ground ahead of his stance.
- rect(c,-13,-9,3,33,'#372f2a');rect(c,-12,-9,1,29,'#a19173');rect(c,-17,-18,11,3,ward>0?'#fff0c5':PI_COLOR);rect(c,-15,-16,2,7+power*2,PI_COLOR);rect(c,-9,-16,2,7+power*2,PI_COLOR);rect(c,-14,0,5,5,'#cda383');
+ rect(c,-13,-9,3,duck?17:33,'#372f2a');rect(c,-12,-9,1,duck?16:29,'#a19173');rect(c,-17,-18,11,3,ward>0?'#fff0c5':PI_COLOR);rect(c,-15,-16,2,7+power*2,PI_COLOR);rect(c,-9,-16,2,7+power*2,PI_COLOR);rect(c,-14,0,5,5,'#cda383');
  if(ward>0){rect(c,-19,-20,15,1,'#ffe4a4');rect(c,-16,-23,2,4,'#fff0c5');}c.restore();
 
  if(ward>0)drawArm();

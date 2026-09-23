@@ -10,7 +10,7 @@ export class Defense {
  constructor(public g:Game){}
  get pendingCooldown(){return this.active?.kind==='absorb'?BASE_COOLDOWN+this.active.tokens*SECONDS_PER_TOKEN:this.cooldown;}
  activate(){
-  const g=this.g;if(this.active||this.cooldown>0||g.state!=='playing')return false;g.updateAim();const angle=g.aimAngle,nx=Math.cos(angle),ny=Math.sin(angle),ox=g.player.x+10,oy=g.player.y+16;
+  const g=this.g;if(this.active||this.cooldown>0||g.state!=='playing')return false;g.updateAim();const angle=g.aimAngle,nx=Math.cos(angle),ny=Math.sin(angle),ox=g.player.x+10,oy=g.bodyY;
   const prism=g.character==='peter';let distance=24;
   if(prism){distance=16;for(let r=16;r<=60;r+=4){if(g.world.at(ox+nx*r,oy+ny*r))break;distance=r;}if(g.world.at(ox+nx*distance,oy+ny*distance))return false;}
   if(prism)g.barks.request('prism');this.cooldown=prism?6.5:0;
@@ -25,7 +25,7 @@ export class Defense {
  }
  sync(){
   const s=this.active;if(!s||s.kind!=='absorb')return;
-  const g=this.g;g.updateAim();s.angle=g.aimAngle;s.x=g.player.x+10+Math.cos(s.angle)*24;s.y=g.player.y+16+Math.sin(s.angle)*24;
+  const g=this.g;g.updateAim();s.angle=g.aimAngle;s.x=g.player.x+10+Math.cos(s.angle)*24;s.y=g.bodyY+Math.sin(s.angle)*24;
  }
  update(dt:number){
   this.cooldown=Math.max(0,this.cooldown-dt);this.feedback=Math.max(0,this.feedback-dt);

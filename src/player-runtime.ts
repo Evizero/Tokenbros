@@ -70,6 +70,20 @@ export class PlayerRuntime {
   audio = new AudioFX();
   state: "title" | "intro" | "playing" | "paused" | "dead" | "won" = "title";
   player: Body = { x: 90, y: 828, w: 20, h: 32, vx: 0, vy: 0, grounded: true };
+  get bodyY(){return this.player.y+(this.crouched?10:16);}
+  get crouched(){return this.player.h < 32;}
+  get crouchHeld(){return this.keys.has("ControlLeft")||this.keys.has("ControlRight");}
+  updateStance(){
+    const p=this.player;
+    const requested=this.crouchHeld && (p.grounded||this.crouched||this.character==='dimillian'&&this.dimillianKit.form===2);
+    const height=requested?18:32;
+    if(p.h===height)return;
+    const y=p.y+p.h-height;
+    // Stay tucked underneath cover until there is genuinely room to stand.
+    if(height>p.h&&this.world.overlaps(p.x,y,p.w,height))return;
+    p.y=y;p.h=height;
+    if(requested){this.wallGrip=0;this.vertical.cancel();if(this.character==='theo'){this.theoKit.mounted=false;this.theoKit.mountBlend=0;}}
+  }
   keys = new Set<string>();
   particles: Particle[] = [];
   rings: Ring[] = [];
@@ -377,6 +391,7 @@ export class PlayerRuntime {
     )
       this.setThinking(Number(key.at(-1)) - 1);
     if (key === "Space" && this.state === "playing") {
+      if(this.crouched)return;
       if (this.character === "theo") { if (!this.theoKit.jump()) this.jumpBuffer = 0.12; }
       else if (!this.vertical.press()) this.jumpBuffer = 0.12;
     }
@@ -761,7 +776,7 @@ export class PlayerRuntime {
     this.resetCount++;
     this.resetProp = throwButton(
       this.player.x + 10,
-      this.player.y + 17,
+      this.bodyY + 1,
       this.aimAngle,
     );
     this.audio.tone(280, 0.22, "triangle", 0.055, 650);
@@ -899,14 +914,14 @@ export class PlayerRuntime {
     }
     return {
       x: this.player.x + 10 + Math.cos(this.aimAngle) * 220,
-      y: this.player.y + 16 + Math.sin(this.aimAngle) * 220,
+      y: this.bodyY + Math.sin(this.aimAngle) * 220,
     };
   }
   updateAim() {
     if (this.networkAim) {
       const p = this.networkAim;
       this.aimAngle = Math.atan2(
-        p.y - this.player.y - 17,
+        p.y - this.bodyY - 1,
         p.x - this.player.x - 10,
       );
       this.face = Math.cos(this.aimAngle) >= 0 ? 1 : -1;
@@ -925,7 +940,7 @@ export class PlayerRuntime {
         this.canvas.getBoundingClientRect(),
       );
       ax = pos.x + this.cam - (this.player.x + 10);
-      ay = pos.y + this.camY - (this.player.y + 17);
+      ay = pos.y + this.camY - (this.bodyY + 1);
       if (Math.abs(ax) > 0.5) this.face = ax > 0 ? 1 : -1;
     } else {
       ax =
@@ -999,7 +1014,7 @@ export class PlayerRuntime {
     this.dryFire = 0;
     this.dryFeedback = 0;
     const originX = this.player.x + 10,
-      originY = this.player.y + 17;
+      originY = this.bodyY + 1;
     this.makeNoise(originX, originY, [330, 430, 570][tier]);
     for (const spread of [tier === 0 ? rand(-0.014, 0.014) : 0]) {
       const a = angle + spread;
@@ -1672,6 +1687,7 @@ export class PlayerRuntime {
             this.marcusKit.lcd.charging
               ? this.marcusKit.lcd.charge
               : this.marcusKit.invader.charge,
+            this.crouched,
           );
       } else if (this.character === "pidalf")
         pidalf(
@@ -1690,6 +1706,7 @@ export class PlayerRuntime {
           this.pidalfKit.wardPose,
           this.pidalfKit.swatPose,
           this.vertical.active,
+          this.crouched,
         );
       else if (this.character === "peter")
         peter(
@@ -1704,6 +1721,7 @@ export class PlayerRuntime {
           this.aim,
           1,
           this.peterKit.kind,
+          this.crouched,
         );
       else if (this.character === "dimillian")
         dimillian(
@@ -1734,6 +1752,7 @@ export class PlayerRuntime {
           this.dimillianKit.swing ?? undefined,
           {strength:this.dimillianKit.dischargeStrength,teleport:this.vertical.blinkReady?1:0,arrival:this.vertical.blinkArrival,polymorph:this.dimillianKit.sheepGesture},
           {...this.dimillianKit.thrusters,kick:this.dimillianKit.rocketKick,surge:this.dimillianKit.forwardRun/1.25,sonic:this.dimillianKit.sonic,flash:this.dimillianKit.sonicFlash,flight:this.dimillianKit.flightBlend,heading:Math.atan2(Math.sin(this.dimillianKit.flightAngle),Math.cos(this.dimillianKit.flightAngle)*this.face)},
+          this.crouched,
         );
       else
         tibo(
@@ -1749,6 +1768,7 @@ export class PlayerRuntime {
           1,
           thinkingWeapon(this.thinking).tier,
           this.dryFire,
+          0,this.crouched,
         );
       if (this.wallGrip)
         wallGripPose(
@@ -1846,6 +1866,7 @@ export class PlayerRuntime {
       return;
     }
     if (this.state !== "playing") return;
+    this.updateStance();
     this.elapsed += dt;
     if (this.player.x > 1000 && this.player.y < 780) this.barks.place("tower");
     this.modeFeedback = Math.max(0, this.modeFeedback - dt);
@@ -1908,6 +1929,7 @@ export class PlayerRuntime {
     this.pendingShot = Math.max(0, this.pendingShot - dt);
   }
   movePlayer(dt: number, predicting = false, followCamera = true) {
+    this.updateStance();
     const p = this.player;
     this.invuln = Math.max(0, this.invuln - dt);
     this.fireTimer -= dt;
@@ -1934,7 +1956,7 @@ export class PlayerRuntime {
       p.vy = 0;
       this.jumpBuffer = 0;
       this.wallGrip = 0;
-    } else if (flying) this.dimillianKit.fly(dt, dir, predicting);
+    } else if (flying) this.dimillianKit.fly(dt,dir,predicting);
     else {
       const contact = this.touchingWall(dir)
         ? dir
@@ -1958,7 +1980,7 @@ export class PlayerRuntime {
       if (this.wallLock <= 0 && !this.vertical.grapple?.attached && !(this.character === "theo" && this.theoKit.horizontal(dt, dir))) {
         const target =
             dir *
-            (this.keys.has("ShiftLeft") || this.keys.has("ShiftRight")
+            (this.crouched
               ? 90
               : this.character === "pidalf" && this.vertical.active ? 320 : 235),
           accel = dir ? 2900 : 2200;
@@ -1967,6 +1989,7 @@ export class PlayerRuntime {
       if (
         !this.zip &&
         this.jumpBuffer > 0 &&
+        !this.crouched &&
         (this.coyote > 0 || this.wallGrace > 0 || this.climb !== null)
       ) {
         const wallJump =
@@ -1989,7 +2012,7 @@ export class PlayerRuntime {
         p.grounded = false;
         if (!predicting) {
           this.audio.jump();
-          this.emit(p.x + 10, p.y + 31, 6, ["#adba83", "#63765b"], 55, 3, 0.25);
+          this.emit(p.x + 10, p.y + p.h - 1, 6, ["#adba83", "#63765b"], 55, 3, 0.25);
         }
       }
       const up = this.keys.has("KeyW") || this.keys.has("ArrowUp"),
@@ -1998,15 +2021,15 @@ export class PlayerRuntime {
         !this.zip &&
         this.climb === null &&
         this.zipCooldown <= 0 &&
-        !this.vertical.active &&
+        !this.vertical.active && !this.crouched &&
         (up || down)
       ) {
         const i = LADDERS.findIndex(
           (l) =>
             Math.abs(p.x + 10 - l.x) < 22 &&
-            p.y + 32 >= l.top - 2 &&
-            p.y + 32 <= l.bottom + 5 &&
-            (up ? p.y + 32 > l.top + 1 : p.y + 32 < l.bottom - 1),
+            p.y + p.h >= l.top - 2 &&
+            p.y + p.h <= l.bottom + 5 &&
+            (up ? p.y + p.h > l.top + 1 : p.y + p.h < l.bottom - 1),
         );
         if (i >= 0) this.climb = i;
       }
@@ -2015,17 +2038,17 @@ export class PlayerRuntime {
         p.x = l.x - 10;
         p.y = clamp(
           p.y + (down ? 1 : up ? -1 : 0) * 150 * dt,
-          l.top - 32,
-          l.bottom - 32,
+          l.top - p.h,
+          l.bottom - p.h,
         );
         p.vx = 0;
         p.vy = 0;
         this.wall = 0;
-        if (p.y <= l.top - 32 && up) {
+        if (p.y <= l.top - p.h && up) {
           this.climb = null;
           p.grounded = true;
           this.coyote = 0.09;
-        } else if (p.y >= l.bottom - 32 && down) {
+        } else if (p.y >= l.bottom - p.h && down) {
           this.climb = null;
           this.zipCooldown = 0.2;
         }
@@ -2078,10 +2101,10 @@ export class PlayerRuntime {
           ? dir
           : 0;
       if (!wasGrounded && p.grounded && fallingSpeed > 380)
-        if (!predicting) this.makeNoise(p.x + 10, p.y + 30, 140);
+        if (!predicting) this.makeNoise(p.x + 10, p.y + p.h - 2, 140);
       this.footstep -= dt;
       if (p.grounded && Math.abs(p.vx) > 120 && this.footstep <= 0) {
-        if (!predicting) this.makeNoise(p.x + 10, p.y + 30, 90);
+        if (!predicting) this.makeNoise(p.x + 10, p.y + p.h - 2, 90);
         this.footstep = 0.32;
       }
     }

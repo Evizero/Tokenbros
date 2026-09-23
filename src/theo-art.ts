@@ -1,4 +1,4 @@
-import { rect,withHeadTilt } from './art';
+import { rect,withHeadTilt,crouchLegs } from './art';
 import type { TheoKit } from './theo';
 export const THEO_COLOR='#78d9ff';
 const ink='#101923',skin='#e5b19a';
@@ -38,6 +38,7 @@ function head(c:CanvasRenderingContext2D,x:number,y:number,gaze=0){
  rect(c,x-3,y-8,7,1,'#514047');rect(c,x-6,y+2,2,3,'#d2e1e4');
 }
 export function theo(c:CanvasRenderingContext2D,x:number,y:number,face:number,time:number,k:TheoKit){
+ const duck=k.g.crouched;
  const p=k.g.player,riding=k.riding,ground=p.grounded,moving=Math.abs(p.vx)>35;
  const progress=k.attack>0?1-k.attack/k.attackDuration:0;
  const attack=k.attack>0?Math.sin(Math.min(1,progress*1.8)*Math.PI):0;
@@ -53,7 +54,7 @@ export function theo(c:CanvasRenderingContext2D,x:number,y:number,face:number,ti
  const run=!riding&&moving&&ground&&k.attack<=0?Math.sin(time*15)*5:0;
  const airborne=!ground;
  c.save();c.translate(Math.round(x+10),Math.round(y+31));c.scale(riding?k.rideFace:face,1);
- const tilt=lean*(riding?k.rideFace:face),hipX=-tilt*.2,hipY=-12+crouch,shoulderX=tilt,shoulderY=-25+crouch;
+ const tilt=lean*(riding?k.rideFace:face),hipX=-tilt*.2,hipY=-12+crouch,shoulderX=tilt,shoulderY=(duck?-26:-25)+crouch;
  if(riding){
   if(k.rush>.08){
    c.save();c.globalAlpha=k.rush*.75;c.strokeStyle='#c5f5ff';c.lineWidth=1.5+k.rushFlash*3;
@@ -71,10 +72,12 @@ export function theo(c:CanvasRenderingContext2D,x:number,y:number,face:number,ti
  const kicking=k.kickPose>0?Math.sin(k.kickPose/.4*Math.PI):0;
  if(kicking){frontX=14+kicking*21;frontY=-8-kicking*13;}
  if(k.flip>0){frontX=12+flip*5;frontY=-2;}
- limb(c,[[hipX-2,hipY],[backX-1,(hipY+backY)/2],[backX,backY]],'#293746',5);
+ if(duck){c.save();c.translate(0,-31);crouchLegs(c,time,moving,'#293746','#435363','#dce5dc');c.restore();}
+ else { limb(c,[[hipX-2,hipY],[backX-1,(hipY+backY)/2],[backX,backY]],'#293746',5);
  limb(c,[[hipX+3,hipY],[frontX*.55,(hipY+frontY)/2],[frontX,frontY]],'#435363',5);
  const shoe=(xx:number,yy:number,front:boolean)=>{rect(c,xx-3,yy-2,8,4,front?'#dce5dc':'#aebfc6');rect(c,xx-3,yy+1,8,1,'#f0f3e6');};
  shoe(backX,backY,false);shoe(frontX,frontY,true);
+ }
  // Boxing arms are drawn after the torso: the rear shoulder rotates forward
  // on the cross instead of disappearing behind the chest and lead guard.
  if(!boxing&&toss>0){
@@ -88,7 +91,7 @@ export function theo(c:CanvasRenderingContext2D,x:number,y:number,face:number,ti
  rect(c,shoulderX-2,shoulderY-1,6,2,'#ba8b76');
  // Tiny cyan tee print echoes the deck without turning his clothes neon.
  rect(c,shoulderX+1,shoulderY+6,4,1,'#77b2ca');rect(c,shoulderX+3,shoulderY+7,2,2,'#58819c');
- c.save();c.translate(Math.round(shoulderX+1),Math.round(shoulderY-5-attack-toss*2));c.scale(riding?face*k.rideFace:1,1);withHeadTilt(c,0,5,k.g.aim,(gaze)=>head(c,0,0,gaze));c.restore();
+ c.save();c.translate(Math.round(shoulderX+1),Math.round(shoulderY-5-attack-toss*2));c.scale(riding?face*k.rideFace:1,1);withHeadTilt(c,0,5,k.g.aim,(gaze)=>head(c,0,duck?6:0,gaze));c.restore();
  let handX=riding?13:10,handY=shoulderY+(riding?11:14),deckAngle=-.95;
  const localAim=Math.atan2(Math.sin(k.attackAngle),Math.cos(k.attackAngle)*face);
  if(k.attack>0&&k.attackKind!==3){
