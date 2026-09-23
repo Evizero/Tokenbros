@@ -24,7 +24,7 @@ export const DIM_FORMS=['DUELIST','MAGE','PILOT'];
 function head(c:CanvasRenderingContext2D,y=0,gaze=0){
  rect(c,-7,y+1,14,12,'#d6a681');rect(c,-8,y-2,15,5,'#74604e');rect(c,-11,y,5,6,'#685143');rect(c,-14,y+3,5,4,'#7c6450');
  rect(c,-7,y+9,14,6,'#806147');rect(c,2,y+10,5,2,'#eed4b2');rect(c,6,y+6,4,3,'#e6b992');
- rect(c,-6,y+4,6,5,'#31303b');rect(c,2,y+4,6,5,'#31303b');rect(c,0,y+5,2,1,'#c6bacd');rect(c,-5,y+5,4,2,'#b7d6d4');rect(c,3,y+5,4,2,'#c6dfde');rect(c,9,y+9,3,2,'#454054');rect(c,-3,y+5+gaze,1,1,'#343240');rect(c,5,y+5+gaze,1,1,'#343240');
+ rect(c,-6,y+4,6,5,'#31303b');rect(c,2,y+4,6,5,'#31303b');rect(c,0,y+5,2,1,'#c6bacd');rect(c,-5,y+5,4,3,'#b7d6d4');rect(c,3,y+5,4,3,'#c6dfde');rect(c,9,y+9,3,2,'#454054');rect(c,-3,y+6+gaze,1,1,'#343240');rect(c,5,y+6+gaze,1,1,'#343240');
 }
 // The same black glass, pill camera and home indicator at hand and bunker scale.
 export function iphone(c:CanvasRenderingContext2D,x:number,y:number,w=8,h=13){
