@@ -20,7 +20,7 @@ export function stageDemo(g: Game, id: string): DemoScene {
  let setup='';
  switch(id){
   case 'deck-run':
-   bot(350,'gunner',5);bot(430,'gunner',5);wall(25,3);break;
+   bot(310,'gunner',5);break;
   case 'deck-ram':
    bot(465,'gunner',4);bot(515,'gunner',4);break;
   case 'deck-grip':

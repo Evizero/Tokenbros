@@ -4,7 +4,7 @@ import { stageDemo, type DemoScene } from './showcase-scenes';
 type Clip = { id: string; title: string; mode: number; tip: string; duration?: number };
 export const SHOWCASES: Record<Game['character'], readonly Clip[]> = {
  theo: [
-  {id:'deck-run',title:'E · THROW / CATCH',mode:0,tip:'Kick a bot into a ride, then recall through the survivors. Catch and keep moving forward; clean catches build speed.',duration:6.8},
+  {id:'deck-run',title:'E · THROW THE DECK',mode:0,tip:'Throw your board into a bot and send it rolling away. Press E again to recall it.',duration:5},
   {id:'deck-ram',title:'MOVE · FULL SEND',mode:0,tip:'Keep pushing to build speed. The cyan rush marks ram speed: ride through light bots and keep your line.',duration:5},
   {id:'deck-grip',title:'LMB · DECK COMBO',mode:0,tip:'Swing on foot. Land two hits to earn a heavy third swing. Without the board, keep fighting with weaker punches.',duration:5.8},
   {id:'deck-parry',title:'Q · SHIELD TOSS',mode:0,tip:'Throw the board broadside into incoming fire. Shots shove it; the board protects anyone behind it. E brings it back.',duration:5},
@@ -122,7 +122,7 @@ export class Showcase {
   this.target=enemy?{x:enemy.x+10,y:enemy.y+15}:{x:450,y:820};
   switch(id){
    case 'deck-run':
-    this.move('KeyD',.2,.65);this.target={x:360,y:841};this.tap('KeyE',.68,'E · THROW THE DECK');this.tap('KeyE',1.45,'E · RECALL');this.move('KeyD',2.1,2.45);break;
+    this.target={x:320,y:844};this.tap('KeyE',.35,'E · THROW THE DECK');break;
    case 'deck-ram':
     this.move('KeyD',.2,1.15);break;
    case 'deck-grip':
@@ -235,7 +235,7 @@ export class Showcase {
   p.maxKills=Math.max(p.maxKills,g.kills);
   const kills=g.kills,broken=g.world.destroyed;
   const results:Record<string,string>={
-   'deck-run':g.theoKit.carries>0&&g.theoKit.catches>0?'DECK HIT / CAUGHT':'',
+   'deck-run':g.theoKit.carries>0&&g.theoKit.board.x>=650?'BOT ON BOARD':'',
    'deck-ram':g.theoKit.rams>=2?'FULL SEND':'',
    'deck-grip':g.theoKit.finishers>0?'DECK FINISHER':'',
    'deck-parry':g.theoKit.blocks>0?'VOLLEY BLOCKED':'',
@@ -293,7 +293,7 @@ export class Showcase {
   // Give the last hit a short breath, restarting it if another bot goes down.
   this.settled=ready&&g.kills===this.lastKills?this.settled+dt:0;
   this.lastKills=g.kills;
-  this.finished=this.settled>=.6||this.time>=this.duration;
+  this.finished=this.settled>=(this.clip.id==='deck-run'?.35:.6)||this.time>=this.duration;
  }
  private displayKey(key:string){return key==='Space'?'MOVE':['KeyA','KeyD','KeyW','KeyS'].includes(key)?'MOVE':key.replace('Key','');}
  labels(){
@@ -323,7 +323,7 @@ export class Showcase {
   // Frame the floor AND airborne abilities above the input rail. Short windows
   // pull back rather than cropping the reset hand, a bomber or the player.
   const width=Math.max(1,this.canvas.clientWidth),combatHeight=Math.max(80,this.canvas.clientHeight-this.inputElement.offsetHeight-42);
-  const span=Math.max(180,860-g.player.y+60),w=Math.min(820,Math.max(500,span*width/combatHeight)),h=w*ratio;
+  const span=Math.max(180,860-g.player.y+60),w=Math.min(820,Math.max(this.clip.id==='deck-run'?700:500,span*width/combatHeight)),h=w*ratio;
   const bottom=860-g.camY+(this.inputElement.offsetHeight+16)*w/width;
   c.fillStyle='#10141a';c.fillRect(0,0,960,height);
   c.drawImage(g.canvas,95,bottom-h,w,h,0,0,960,height);
