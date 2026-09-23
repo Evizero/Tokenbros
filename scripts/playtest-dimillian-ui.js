@@ -12,7 +12,7 @@ async(page)=>{
  await page.evaluate(()=>{const g=window.__qa;g.effects=false;g.enemies=[];g.barrels=[];g.rescues=[];g.relays=[];g.alarms=[];g.boss.active=false;document.querySelector('.toast').innerHTML='';});
  const stage=await page.locator('#game').boundingBox();await page.mouse.move(stage.x+stage.width*.4,stage.y+stage.height*.6);
  await page.keyboard.press('2');await page.mouse.down();await page.evaluate(()=>{const g=window.__qa;for(let i=0;i<36;i++)g.update(1/120);if(g.dimillianKit.charge<.25)throw Error('Real pointer did not charge');});
- await page.mouse.up();await page.evaluate(()=>{const g=window.__qa;g.update(1/120);if(g.shotCount!==1)throw Error('Real release did not cast');});
+ await page.mouse.up();await page.evaluate(()=>{const g=window.__qa;g.update(1/120);if(g.shotCount!==1||g.dimillianKit.charge!==0)throw Error('Lightning did not discharge once on release');});
  await page.mouse.wheel(0,-300);await page.waitForFunction(()=>window.tokenbros.snapshot().dimillian.form==='PILOT');
  await page.keyboard.down('Space');await page.keyboard.down('d');await page.evaluate(()=>{const g=window.__qa;for(let i=0;i<42;i++)g.update(1/120);if(g.player.y>=800||g.player.x<120)throw Error('Real movement/thrust failed');});await page.keyboard.up('Space');await page.keyboard.up('d');
  await page.keyboard.down('q');await page.evaluate(()=>{const g=window.__qa;if(!g.dimillianKit.shield)throw Error('Q did not hold');g.update(1/120);});await page.keyboard.up('q');await page.evaluate(()=>{if(window.__qa.dimillianKit.shield)throw Error('Q release did not drop shield');});

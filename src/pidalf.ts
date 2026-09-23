@@ -1,7 +1,7 @@
 import type { PlayerRuntime as Game } from './player-runtime';
 import { type Body,clamp,overlap,LEVEL_HEIGHT,TILE,COLS } from './world';
 import { robot,rect,text } from './art';
-import { PI_COLOR } from './pidalf-art';
+import { PI_COLOR,forceWave } from './pidalf-art';
 type Enemy=Game['enemies'][number];
 type ScrapBall=Body&{mass:number;round:boolean;angle:number;life:number;hit:Map<Enemy,number>;flash:number;crate?:boolean};
 type Barrel=Game['barrels'][number];
@@ -12,14 +12,16 @@ type Crush={x:number;y:number;scale:number;age:number;duration:number;targets:En
 export class PidalfKit {
  waves:SlopWave[]=[];props:ScrapBall[]=[];held:Held[]=[];grabbing=false;grabTime=0;grabCooldown=0;compactCooldown=0;crush:Crush|null=null;
  slap:{age:number;duration:number;x:number;y:number;scale:number;hit:boolean}|null=null;
- qCooldown=0;ward=0;wardHit=false;crunchRecoil=0;
+ qCooldown=0;ward=0;wardHit=false;wardCharging=false;wardCharge=0;wardPower=0;wardDirectional=false;wardAngle=0;crunchRecoil=0;
  ghosts:{x:number;y:number;face:number;age:number;dx:number}[]=[];message='';messageLife=0;
  constructor(public g:Game){}
  get scale(){return this.g.thinking/2;}
  get radius(){return 20+this.scale*105;}
  get capacity(){return 1+Math.floor(this.scale*5);}
  get mass(){return this.held.reduce((s,h)=>s+h.mass,0);}
- get wardPose(){return this.ward>0?1-this.ward/.85:0;}
+ get wardPose(){return this.wardCharging?.001+this.wardCharge*.349:this.ward>0&&!this.wardDirectional?.35+(1-this.ward/.65)*.65:0;}
+ get swatPose(){return this.ward>0&&this.wardDirectional?1-this.ward/.26:0;}
+ get wardRadius(){return this.wardDirectional?92:110+this.wardPower*120+this.scale*20;}
  get castPose(){return this.crush?Math.max(.001,this.crush.age/this.crush.duration):this.crunchRecoil>0?1+(1-this.crunchRecoil/.24)*.3:0;}
  get pose(){return this.slap?this.slap.age/this.slap.duration:0;}
  weight(e:Enemy){return e.type==='turret'?3:e.type==='shield'?2:1;}
@@ -30,7 +32,7 @@ export class PidalfKit {
  targets(x:number,y:number,r:number,needsSight=true){return this.g.enemies.filter(e=>!e.dead&&e.hacked<=0&&!this.g.claimedByOther(e)&&Math.hypot(e.x+10-x,e.y+15-y)<=r&&(needsSight?this.visible(e):this.inReach(e))).sort((a,b)=>Math.hypot(a.x+10-x,a.y+15-y)-Math.hypot(b.x+10-x,b.y+15-y));}
  controls(e:Enemy){return this.held.some(h=>h.enemy===e)||!!this.crush?.targets.includes(e);}
  fire(){
-  const g=this.g;if(this.slap||this.crush||this.ward>0)return;if(this.grabbing){this.compactHeld();g.fireTimer=.2;return;}const p=this.point(),s=this.scale;
+  const g=this.g;if(this.slap||this.crush||this.ward>0||this.wardCharging)return;if(this.grabbing){this.compactHeld();g.fireTimer=.2;return;}const p=this.point(),s=this.scale;
   this.slap={age:0,duration:.46+s*.25,x:p.x,y:p.y,scale:s,hit:false};g.fireTimer=.62+s*.5;g.lastCooldown=g.fireTimer;g.shotCount++;
   g.audio.noise(.12,.025,1200);g.audio.tone(230,.12,'triangle',.025,100);
  }
@@ -85,7 +87,7 @@ export class PidalfKit {
   this.g.emit(w.x,w.y,5,[PI_COLOR,'#d9c09b'],130,2,.25);
  }
  grab(){
-  if(this.grabbing||this.crush||this.slap||this.grabCooldown>0)return;
+  if(this.grabbing||this.crush||this.slap||this.wardCharging||this.ward>0||this.grabCooldown>0)return;
   const p=this.point();let budget=this.capacity;const bodies:{body:Body;enemy?:Enemy;barrel?:Barrel;grenade?:Grenade;mass:number;crate?:boolean}[]=[...this.crateCandidates(p.x,p.y,this.radius).map(body=>({body,mass:1,crate:true})),...this.g.grenades.filter(b=>b.life>0&&Math.hypot(b.x-p.x,b.y-p.y)<this.radius&&this.inReach(this.grenadeBody(b))).map(grenade=>({body:this.grenadeBody(grenade),grenade,mass:1})),...this.g.barrels.filter(b=>!b.dead&&this.inReach(b)&&Math.hypot(b.x+b.w/2-p.x,b.y+b.h/2-p.y)<this.radius).map(barrel=>({body:barrel,barrel,mass:1})),...this.props.filter(b=>b.life>0&&this.inReach(b)&&Math.hypot(b.x+b.w/2-p.x,b.y+b.h/2-p.y)<this.radius).map(body=>({body,mass:body.mass})),...this.targets(p.x,p.y,this.radius,false).map(enemy=>({body:enemy,enemy,mass:this.weight(enemy)}))];
   bodies.sort((a,b)=>Math.hypot(a.body.x-p.x,a.body.y-p.y)-Math.hypot(b.body.x-p.x,b.body.y-p.y));
   for(const h of bodies){if(h.mass>budget||this.g.peers.some(a=>a!==this.g&&(a.dimillianKit.paired===h.enemy&&!!h.enemy||a.pidalfKit.held.some(o=>o.body===h.body||!!h.grenade&&o.grenade===h.grenade)||!!h.enemy&&(a.pidalfKit.controls(h.enemy)||a.marcusKit.pacman.controls(h.enemy)))))continue;budget-=h.mass;if(h.crate)h.body=this.loosenCrate(h.body);this.held.push({body:h.body,enemy:h.enemy,barrel:h.barrel,grenade:h.grenade,mass:h.mass,ox:clamp(h.body.x+h.body.w/2-p.x,-55,55),oy:clamp(h.body.y+h.body.h/2-p.y,-45,45),vx:0,vy:0});if(h.barrel)h.barrel.mobile=true;if(h.enemy){h.enemy.wind=0;h.enemy.dash=0;h.enemy.stun=.2;}}
@@ -127,7 +129,7 @@ export class PidalfKit {
  }
  compact(){
   if(this.grabbing){this.compactHeld();return;}
-  if(this.crush||this.slap||this.compactCooldown>0)return;
+  if(this.crush||this.slap||this.wardCharging||this.ward>0||this.compactCooldown>0)return;
   const g=this.g,p=g.aimPoint(),s=this.scale,large=s>=.35;
   if(Math.hypot(p.x-g.player.x-10,p.y-g.player.y-16)>360){this.feedback('F OUT OF REACH');return;}
   const target=this.directTarget(p.x,p.y),center=!large&&target?{x:target.x+10,y:target.y+15}:p;
@@ -143,24 +145,61 @@ export class PidalfKit {
   g.audio.tone(210,.6,'sawtooth',.035,45);g.makeNoise(center.x,center.y,500+s*500);
  }
  defend(){
-  if(this.qCooldown>0)return;this.release(false);this.crush=null;this.slap=null;this.ward=.85;this.wardHit=false;this.qCooldown=4.5;this.g.audio.tone(160,.18,'triangle',.055,620);
+  if(this.qCooldown>0||this.wardCharging||this.ward>0)return;
+  this.release(false);this.crush=null;this.slap=null;this.wardCharge=0;this.wardCharging=true;
+  this.g.audio.tone(160,.16,'triangle',.025,300);
+ }
+ cancelDefense(){this.wardCharging=false;this.wardCharge=0;}
+ releaseDefense(){
+  if(!this.wardCharging)return;
+  const g=this.g;g.updateAim();this.wardPower=this.wardCharge;this.wardDirectional=this.wardCharge<.2;this.wardAngle=g.aimAngle;
+  this.cancelDefense();this.ward=this.wardDirectional?.26:.65;this.wardHit=false;
+  this.qCooldown=this.wardDirectional?1.1:2.4+this.wardPower*3.6;
+  if(this.wardDirectional){this.wardHit=true;this.repel();}
+  else g.audio.tone(220,.12,'triangle',.045,80);
+ }
+ wardReaches(tx:number,ty:number){
+  const g=this.g,x=g.player.x+10,y=g.player.y+16,dx=tx-x,dy=ty-y,d=Math.hypot(dx,dy);
+  return d<this.wardRadius&&(!this.wardDirectional||dx*Math.cos(this.wardAngle)+dy*Math.sin(this.wardAngle)>d*.5)&&g.lineOfSight(x,y,tx,ty);
+ }
+ reflectShots(){
+  const g=this.g,x=g.player.x+10,y=g.player.y+16;
+  for(const b of g.bullets)if(b.hostile&&b.life>0&&this.wardReaches(b.x,b.y)){
+   const a=this.wardDirectional?this.wardAngle:Math.atan2(b.y-y,b.x-x),v=Math.max(420,Math.hypot(b.vx,b.vy));
+   b.vx=Math.cos(a)*v;b.vy=Math.sin(a)*v;b.hostile=false;b.owner=g.id;b.color='#e2eeeb';b.power=Math.min(3,b.power);b.hit.clear();b.life=Math.max(b.life,.5);g.emit(b.x,b.y,4,['#d6e7e4','#fff5d3'],140,2,.3);
+  }
+  for(const b of g.grenades)if((!this.wardDirectional||b.owner!==g.id)&&b.life>0&&this.wardReaches(b.x,b.y)){const a=this.wardDirectional?this.wardAngle:Math.atan2(b.y-y,b.x-x);b.owner=g.id;b.vx=Math.cos(a)*580;b.vy=Math.sin(a)*380-220;}
  }
  repel(){
-  const g=this.g,x=g.player.x+10,y=g.player.y+16,r=105+this.scale*70;
-  for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&Math.hypot(e.x+10-x,e.y+15-y)<r&&g.lineOfSight(x,y,e.x+10,e.y+15)){
-   let dx=e.x+10-x,dy=e.y+15-y;const d=Math.max(1,Math.hypot(dx,dy)),resist=this.weight(e)>1?.65:1;e.vx=dx/d*520*resist;e.vy=dy/d*360*resist-160;e.stun=.7;e.flungBy=g.id;e.flung=.7;e.wind=0;e.dash=0;
+  const g=this.g,x=g.player.x+10,y=g.player.y+16,r=this.wardRadius,power=this.wardPower,tap=this.wardDirectional;
+  for(const e of g.enemies)if(!e.dead&&e.hacked<=0&&this.wardReaches(e.x+10,e.y+15)){
+   const a=tap?this.wardAngle:Math.atan2(e.y+15-y,e.x+10-x),resist=this.weight(e)>1?.65:1,force=tap?260:460+power*340;
+   e.vx=Math.cos(a)*force*resist;e.vy=Math.sin(a)*force*.7*resist-(tap?60:180);e.stun=tap?.25:.65+power*.5;e.flungBy=g.id;e.flung=tap?.3:1.1;e.wind=0;e.dash=0;
+   e.hp-=tap?1:2+Math.floor(power*6);if(e.hp<=0)g.kill(e,e.vx,e.vy,true);else if(!tap)g.debris.armor(e.x,e.y,Math.sign(e.vx)||g.face);
   }
-  for(const b of this.crateCandidates(x,y,r)){
+  if(!tap)for(const b of this.crateCandidates(x,y,r)){
    const cx=b.x+10,cy=b.y+10,d=Math.hypot(cx-x,cy-y);let clear=true;
    for(let t=4;t<d;t+=4){const xx=x+(cx-x)*t/d,yy=y+(cy-y)*t/d;if(g.world.at(xx,yy)){clear=Math.floor(xx/TILE)===Math.floor(b.x/TILE)&&Math.floor(yy/TILE)===Math.floor(b.y/TILE);break;}}
    if(clear)this.loosenCrate(b);
   }
-  for(const p of [...this.props,...g.barrels.filter(b=>!b.dead)])if(Math.hypot(p.x+p.w/2-x,p.y+p.h/2-y)<r&&this.visible(p)){const a=Math.atan2(p.y+p.h/2-y,p.x+p.w/2-x);if('fuse' in p)p.mobile=true;p.vx=Math.cos(a)*540;p.vy=Math.sin(a)*400-150;}
-  for(const b of g.bullets)if(b.hostile&&b.life>0&&Math.hypot(b.x-x,b.y-y)<r&&g.lineOfSight(x,y,b.x,b.y)){
-   const a=Math.atan2(b.y-y,b.x-x),v=Math.max(420,Math.hypot(b.vx,b.vy));b.vx=Math.cos(a)*v;b.vy=Math.sin(a)*v;b.hostile=false;b.owner=g.id;b.color=PI_COLOR;b.power=Math.min(3,b.power);b.hit.clear();b.life=Math.max(b.life,.5);g.emit(b.x,b.y,4,[PI_COLOR,'#fff5d3'],140,2,.3);
+  for(const p of [...this.props,...g.barrels.filter(b=>!b.dead)])if(this.wardReaches(p.x+p.w/2,p.y+p.h/2)){const a=tap?this.wardAngle:Math.atan2(p.y+p.h/2-y,p.x+p.w/2-x);if('fuse' in p){p.mobile=true;p.owner=g.id;}p.vx=Math.cos(a)*(tap?280:540+power*200);p.vy=Math.sin(a)*400-150;}
+  this.reflectShots();
+  const boss=g.boss;if(!tap&&boss.active&&!boss.dead&&boss.phase===2&&this.wardReaches(boss.x+38,boss.y+38))boss.hp-=4+power*10;
+  if(tap){g.audio.noise(.09,.035,950);g.audio.tone(260,.1,'triangle',.025,100);g.makeNoise(x,y,210);return;}
+  g.rings.push({x,y,r:8,max:r,life:.38,color:'#edf4eb'});g.rings.push({x,y,r:3,max:r*.88,life:.5,color:PI_COLOR});g.emit(x,y,24+power*28,[PI_COLOR,'#edf4eb','#baa47d'],300+power*180,4,.5);g.emit(x,g.player.y+32,20+power*16,['#8e8170','#c4ab7d','#f4d291'],220+power*100,5,.65);g.audio.noise(.18,.065,1200);g.audio.tone(95,.25,'sine',.06,32);g.shake=Math.max(g.shake,5+power*7);if(g.effects)g.freeze=.035+power*.045;g.makeNoise(x,y,700+power*250);g.barks.request('repel');
+ }
+ updateDefense(dt:number){
+  const g=this.g;this.qCooldown=Math.max(0,this.qCooldown-dt);
+  if(this.wardCharging){
+   if(!g.keys.has('KeyQ'))this.releaseDefense();
+   else{const before=this.wardCharge;this.wardCharge=Math.min(1,this.wardCharge+dt/1.1);
+    if(before<1&&this.wardCharge===1){g.audio.tone(640,.18,'triangle',.04,960);g.emit(g.player.x+10,g.player.y-26,14,['#fff7dd',PI_COLOR],100,2,.4);}
+   }
   }
-  for(const b of g.grenades)if(Math.hypot(b.x-x,b.y-y)<r&&g.lineOfSight(x,y,b.x,b.y)){const a=Math.atan2(b.y-y,b.x-x);b.owner=g.id;b.vx=Math.cos(a)*580;b.vy=Math.sin(a)*380-220;}
-  g.rings.push({x,y,r:8,max:r,life:.38,color:'#fff2cf'});g.rings.push({x,y,r:3,max:r*.88,life:.5,color:PI_COLOR});g.emit(x,y,42,[PI_COLOR,'#fff1c9','#baa47d'],360,4,.5);g.emit(x,g.player.y+32,24,['#8e8170','#c4ab7d','#f4d291'],220,5,.65);g.audio.noise(.18,.065,1200);g.audio.tone(95,.25,'sine',.06,32);g.shake=Math.max(g.shake,8);if(g.effects)g.freeze=.055;g.makeNoise(x,y,700);g.barks.request('repel');
+  if(this.ward>0){this.ward=Math.max(0,this.ward-dt);
+   if(!this.wardHit&&this.ward<=.53){this.wardHit=true;this.repel();}
+   if(this.wardDirectional&&this.ward>.08)this.reflectShots();
+  }
  }
  aimGuide(){
   const g=this.g,raw=g.aimPoint(),p=this.point(),x=g.player.x+10,y=g.player.y+16,d=Math.hypot(raw.x-x,raw.y-y);let wall:{x:number;y:number}|null=null;
@@ -174,9 +213,9 @@ export class PidalfKit {
   const compactValid=d<=360&&!blocked&&(this.scale>=.35||!!compactTarget);
   return {x,y,raw,p,linePoint,wall,target,prop,barrel,grenade,crate,body,range:d>360,blocked,grabValid,compactValid,compactTarget,valid:grabValid||compactValid};
  }
- clear(){this.release(false);this.crush=null;this.crunchRecoil=0;this.slap=null;this.ward=0;this.waves=[];this.props=[];this.ghosts=[];}
+ clear(){this.release(false);this.crush=null;this.crunchRecoil=0;this.slap=null;this.ward=0;this.cancelDefense();this.waves=[];this.props=[];this.ghosts=[];}
  update(dt:number){
-  const g=this.g;this.crunchRecoil=Math.max(0,this.crunchRecoil-dt);this.qCooldown=Math.max(0,this.qCooldown-dt);if(this.ward>0){this.ward=Math.max(0,this.ward-dt);if(!this.wardHit&&this.ward<=.55){this.wardHit=true;this.repel();}}this.grabCooldown=Math.max(0,this.grabCooldown-dt);this.compactCooldown=Math.max(0,this.compactCooldown-dt);this.messageLife=Math.max(0,this.messageLife-dt);
+  const g=this.g;this.crunchRecoil=Math.max(0,this.crunchRecoil-dt);this.updateDefense(dt);this.grabCooldown=Math.max(0,this.grabCooldown-dt);this.compactCooldown=Math.max(0,this.compactCooldown-dt);this.messageLife=Math.max(0,this.messageLife-dt);
   if(this.slap){const a=this.slap;a.age+=dt;if(!a.hit&&a.age/a.duration>=.27){a.hit=true;this.strike(a);}if(a.age>=a.duration)this.slap=null;}
   this.updateWaves(dt);
   this.ghosts.forEach(x=>x.age+=dt);this.ghosts=this.ghosts.filter(x=>x.age<.38);
@@ -194,7 +233,7 @@ export class PidalfKit {
   }
   if(this.crush){const a=this.crush;a.age+=dt;const t=clamp(a.age/a.duration,0,1);
    if(!a.fromGrab&&a.scale>=.35&&t<.7)this.gather(a,this.targets(a.x,a.y,22+a.scale*120));
-   for(const e of a.targets){if(e.dead)continue;e.wind=0;e.stun=.2;const angle=g.time*6+a.targets.indexOf(e)*2,orbit=(1-t)*a.scale*26;const dx=a.x+Math.cos(angle)*orbit-e.x-10,dy=a.y+Math.sin(angle)*orbit-e.y-15;e.vx=dx*12;e.vy=dy*12;g.world.move(e,dt);}
+   for(const e of a.targets){if(e.dead)continue;e.wind=0;e.stun=.2;const dx=a.x-e.x-10,dy=a.y-e.y-15;e.vx=dx*12;e.vy=dy*12;g.world.move(e,dt);}
    if(t>=1){this.crunchRecoil=.24;let mass=0;for(const e of a.targets)if(!e.dead){mass+=this.weight(e);e.hp=0;e.dead=true;g.kills++;g.chargeKills++;g.barks.killed();}
     if(mass){const size=a.scale<.35?18:24+mass*4;let x=a.x-size/2,y=a.y-size/2;let placed=!g.world.overlaps(x,y,size,size);for(let i=1;!placed&&i<=10;i++){y=a.y-size/2-i*8;placed=!g.world.overlaps(x,y,size,size);}if(placed){const prop:ScrapBall={x,y,w:size,h:size,vx:a.scale>.35?g.face*85:0,vy:40,grounded:false,mass,round:a.scale>=.35,angle:0,life:24,hit:new Map(),flash:.25};this.props.push(prop);
       if(a.carry&&g.keys.has('KeyE')){const p=this.point();this.held.push({body:prop,mass,ox:clamp(x+size/2-p.x,-55,55),oy:clamp(y+size/2-p.y,-45,45),vx:0,vy:0});this.grabbing=true;this.grabTime=Math.min(this.grabTime,1.7);g.rings.push({x:x+size/2,y:y+size/2,r:4,max:size+12,life:.3,color:PI_COLOR});}
@@ -231,17 +270,25 @@ export class PidalfKit {
    for(const e of (this.grabbing||this.crush?[]:this.targets(p.x,p.y,this.radius,false).slice(0,this.capacity))){c.globalAlpha=.85;c.strokeStyle=PI_COLOR;for(const dx of [-1,1])for(const dy of [-1,1]){const xx=e.x+10-g.cam+dx*14,yy=e.y+15+dy*20;c.beginPath();c.moveTo(xx-dx*5,yy);c.lineTo(xx,yy);c.lineTo(xx,yy-dy*5);c.stroke();}}
    c.globalAlpha=.95;
    const grabLabel=a.target?(this.weight(a.target)>this.capacity?'MORE SCALE TO GRAB':'E GRAB'):a.barrel?'E THROW BARREL':a.grenade?'E THROW GRENADE':a.crate?'E LIFT CRATE':a.prop?(a.prop.mass>this.capacity?'MORE SCALE TO LIFT':a.prop.crate?'E THROW CRATE':'E THROW SCRAP'):'';
-   const compactLabel=a.blocked?'F BLOCKED':this.scale>=.35?'F BLACK HOLE':a.compactTarget?'F COMPACT':'F AIM AT BOT';
+   const compactLabel=a.blocked?'F BLOCKED':this.scale>=.35?'F AREA COMPACT':a.compactTarget?'F COMPACT':'F AIM AT BOT';
    const heldHint=this.crush?.carry?'COMPACTING…':this.held.some(h=>h.enemy)?(this.compactCooldown>0?'COMPACT RECHARGING':this.held.some(h=>h.enemy&&this.visible(h.enemy))?'CLICK TO COMPACT':'PULL INTO VIEW'):'RELEASE E TO THROW';
    const label=this.grabbing?heldHint:a.range?'OUT OF REACH':grabLabel?`${grabLabel} · ${compactLabel}`:compactLabel;
    if(a.body||this.grabbing||g.modeFeedback>0)text(c,label,clamp(p.x-g.cam,95,865),p.y+30,color,8,'center');
 
    c.restore();if(g.modeFeedback>0)text(c,`${Math.round(s*100)}% · ${this.capacity} MASS`,p.x-g.cam,p.y-this.radius-12,PI_COLOR,10,'center');
   }
-  if(this.ward>0){const q=this.wardPose,x=g.player.x+10-g.cam,y=g.player.y+16,r=105+s*70;c.save();
-   if(q<.36){const charge=q/.36;c.strokeStyle='#f2d4a5';c.lineWidth=2;c.globalAlpha=.3+charge*.5;for(let i=0;i<10;i++){const a=i*Math.PI/5+g.time*2,rr=45*(1-charge)+10;rect(c,x+Math.cos(a)*rr,y-35+Math.sin(a)*rr,2+charge*2,2+charge*2,'#ffedc8');}c.beginPath();c.ellipse(x,y+16,18+charge*20,5+charge*4,0,0,Math.PI*2);c.stroke();}
-   else{const t=(q-.36)/.64,rr=20+Math.pow(t,.45)*r;c.globalAlpha=(1-t)*.8;c.strokeStyle='#fff3d1';c.lineWidth=5*(1-t)+1;c.beginPath();c.arc(x,y,rr,0,Math.PI*2);c.stroke();c.fillStyle='#ffe1a0';for(let i=0;i<16;i++){const a=i*Math.PI/8;c.save();c.translate(x+Math.cos(a)*rr,y+Math.sin(a)*rr);c.rotate(a);c.fillRect(0,-1,18*(1-t),3);c.restore();}
-    c.globalAlpha=(1-t)*.38;c.fillStyle='#ffdda1';c.beginPath();c.arc(x,y,Math.max(1,rr-8),0,Math.PI*2);c.fill();c.globalAlpha=(1-t)*.9;text(c,'π',x,y-28-t*18,'#fff0ca',48,'center');}
+  if(this.wardCharging){const q=this.wardCharge,x=g.player.x+10-g.cam,y=g.player.y+16;c.save();
+   const lift=Math.sin(q*Math.PI/2)*24;c.strokeStyle='#e7dec2';c.lineWidth=1;
+   for(let i=0;i<12;i++){const phase=(g.time*(.8+q*.5)+i/12)%1,a=i*2.4,rr=(1-phase)*(22+q*35)+5;c.globalAlpha=Math.sin(phase*Math.PI)*(.15+q*.4);c.beginPath();c.moveTo(x+Math.cos(a)*rr,y-18-lift+Math.sin(a)*rr*.65);c.lineTo(x+Math.cos(a)*(rr+4),y-18-lift+Math.sin(a)*(rr+4)*.65);c.stroke();}
+   c.globalAlpha=.2+q*.35;c.beginPath();c.ellipse(x,y+16,17+q*15,4+q*3,0,0,Math.PI*2);c.stroke();
+   const glow=c.createRadialGradient(x,y-18-lift,0,x,y-18-lift,8+q*21);glow.addColorStop(0,q===1?'#fff3ca88':'#efcf9e44');glow.addColorStop(1,'#efcf9e00');c.globalAlpha=1;c.fillStyle=glow;c.fillRect(x-30,y-48-lift,60,60);
+   if(q===1){c.globalAlpha=.55+Math.sin(g.time*7)*.15;c.strokeStyle='#fff2cb';c.beginPath();c.ellipse(x,y+16,35,8,0,0,Math.PI*2);c.stroke();}c.restore();
+  }
+  if(this.ward>0){const x=g.player.x+10-g.cam,y=g.player.y+16;c.save();
+   if(this.wardDirectional){const t=1-this.ward/.26;c.translate(x,y);c.rotate(this.wardAngle);c.globalAlpha=(1-t)*.55;c.strokeStyle='#e2eeeb';c.lineWidth=2*(1-t)+.5;c.beginPath();c.ellipse(8,0,18+t*55,15+t*45,0,-1.05,1.05);c.stroke();}
+   else if(this.wardHit){const t=Math.min(1,(.53-this.ward)/.53),rr=20+Math.pow(t,.5)*this.wardRadius;c.globalAlpha=(1-t)*.7;c.strokeStyle='#edf4eb';c.lineWidth=4*(1-t)+1;c.beginPath();c.arc(x,y,rr,0,Math.PI*2);c.stroke();
+    c.globalAlpha=(1-t)*.12;c.fillStyle='#e2e9da';c.beginPath();c.arc(x,y,Math.max(1,rr-8),0,Math.PI*2);c.fill();
+    for(let i=0;i<16;i++){const a=i*Math.PI/8;c.globalAlpha=(1-t)*.4;c.strokeStyle=i%2?'#d9e8e4':PI_COLOR;c.beginPath();c.moveTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);c.lineTo(x+Math.cos(a)*(rr+15),y+Math.sin(a)*(rr+15));c.stroke();}}
    c.restore();}
   // Sparse force traces suggest direction without drawing a rope or orbit ring.
   for(const [index,h] of this.held.entries()){
@@ -256,18 +303,24 @@ export class PidalfKit {
 
   for(const p of this.props){c.save();c.globalAlpha=Math.min(1,p.life);c.translate(p.x+p.w/2-g.cam,p.y+p.h/2);c.rotate(p.angle);if(p.crate){rect(c,-10,-10,20,20,p.flash>0?'#cbb08b':'#65594e');rect(c,-9,-9,18,2,'#b9a485');rect(c,-9,-7,2,15,'#8d7c65');rect(c,7,-7,2,16,'#39332f');rect(c,-5,-4,10,8,'#484039');rect(c,-3,-2,6,2,'#d1b78b');c.restore();continue;}c.fillStyle=p.flash>0?'#f8e8bf':'#727d80';c.strokeStyle='#232b32';c.lineWidth=3;c.beginPath();if(p.round)c.arc(0,0,p.w/2,0,Math.PI*2);else c.rect(-p.w/2,-p.h/2,p.w,p.h);c.fill();c.stroke();
    for(let i=0;i<5;i++){const a=i*2.4;rect(c,Math.cos(a)*p.w*.27-3,Math.sin(a)*p.h*.27-3,7,5,i%2?'#b5b3a4':'#3c4b54');}rect(c,-4,-3,3,2,'#ffb779');rect(c,2,-3,3,2,'#ffb779');c.restore();}
-  if(this.crush){const a=this.crush,t=a.age/a.duration,x=a.x-g.cam,y=a.y,r=(22+a.scale*120)*(1-t*.7);c.save();
-   if(a.scale>=.35){
-    c.fillStyle='#1b151b44';c.beginPath();c.arc(x,y,r*.85,0,Math.PI*2);c.fill();
-    for(let arm=0;arm<3;arm++){c.strokeStyle=arm===0?'#f5d7a1':'#ae8654';c.lineWidth=arm===0?2:1;c.beginPath();for(let j=0;j<=36;j++){const u=j/36,angle=arm*Math.PI*2/3+g.time*5+u*5,rr=8+u*r;const xx=x+Math.cos(angle)*rr,yy=y+Math.sin(angle)*rr*.65;if(j)c.lineTo(xx,yy);else c.moveTo(xx,yy);}c.stroke();}
-    const core=6+t*22;c.fillStyle='#080b13';c.beginPath();c.arc(x,y,core,0,Math.PI*2);c.fill();c.strokeStyle='#ffdf9d';c.lineWidth=2;c.beginPath();c.ellipse(x,y,core*1.7,core*.45,-.25,0,Math.PI*2);c.stroke();
+  if(this.crush){const a=this.crush,t=clamp(a.age/a.duration,0,1),x=a.x-g.cam,y=a.y,large=a.scale>=.35;
+   // The same four-sided press at both scales. Pressure closes in; no orbit or vortex.
+   const reach=large?42+a.scale*85:24,ease=1-Math.pow(1-t,2),r=reach+(10-reach)*ease,span=large?Math.max(13,r*.6):14;
+   c.save();c.strokeStyle=PI_COLOR;c.lineWidth=2+t;
+   for(const sign of [-1,1]){
+    c.globalAlpha=.7+t*.3;c.beginPath();c.moveTo(x+sign*r,y-span);c.lineTo(x+sign*r,y+span);c.moveTo(x-span,y+sign*r);c.lineTo(x+span,y+sign*r);c.stroke();
+    c.globalAlpha=.15;c.lineWidth=5;c.beginPath();c.moveTo(x+sign*(r+3),y-span*.85);c.lineTo(x+sign*(r+3),y+span*.85);c.moveTo(x-span*.85,y+sign*(r+3));c.lineTo(x+span*.85,y+sign*(r+3));c.stroke();c.lineWidth=2+t;
    }
-   else{c.strokeStyle=PI_COLOR;c.lineWidth=3;const r=24-t*14;for(const sign of [-1,1]){c.beginPath();c.moveTo(x+sign*r,y-14);c.lineTo(x+sign*r,y+14);c.stroke();c.beginPath();c.moveTo(x-14,y+sign*r);c.lineTo(x+14,y+sign*r);c.stroke();}}
-   for(let i=0;i<16;i++){const angle=i*2.4+g.time*5,rr=r*((i%4+1)/4);rect(c,x+Math.cos(angle)*rr,y+Math.sin(angle)*rr,2,2,PI_COLOR);}c.restore();}
+   for(let i=0;i<(large?20:8);i++){
+    const phase=(g.time*1.6+i/7)%1,side=i%4,offset=((i*17)%31-15)/15*span,rr=r+5+(1-phase)*(large?32:12);c.globalAlpha=Math.sin(phase*Math.PI)*.45;c.lineWidth=1;c.strokeStyle=i%2?'#e5e9dc':PI_COLOR;
+    c.beginPath();if(side<2){const sign=side?1:-1;c.moveTo(x+sign*rr,y+offset);c.lineTo(x+sign*(rr+5),y+offset);}else{const sign=side===2?1:-1;c.moveTo(x+offset,y+sign*rr);c.lineTo(x+offset,y+sign*(rr+5));}c.stroke();
+   }
+   c.restore();}
+
   for(const q of this.ghosts){c.save();c.globalAlpha=1-q.age/.38;c.translate(q.x+10-g.cam,q.y+15+q.age*30);c.rotate(q.age*q.dx);rect(c,-2,-9,4,20,'#d2cdb8');rect(c,-8,-5,16,3,'#d2cdb8');for(let i=0;i<3;i++)rect(c,-5,-2+i*4,10,1,'#acb2ac');rect(c,-5,-13,10,6,'#495861');c.restore();}
-  for(const w of this.waves){c.save();c.translate(w.x-g.cam,w.y);c.rotate(w.angle);for(let i=2;i>=0;i--){c.globalAlpha=(1-i*.28)*Math.min(1,(400-w.travel)/60);c.strokeStyle=i?'#d7a45f':'#fff0c9';c.lineWidth=i?2:4;c.beginPath();c.arc(-i*9,0,w.radius+4+i*2,-1.25,1.25);c.stroke();}c.globalAlpha=.7;for(let i=0;i<5;i++){const yy=(i-2)*w.radius*.4;rect(c,-18-(i%2)*9,yy,8,2,PI_COLOR);}c.restore();}
+  for(const w of this.waves)forceWave(c,w.x-g.cam,w.y,w.angle,w.radius,w.travel,g.time);
   if(this.messageLife>0)text(c,this.message,g.player.x+10-g.cam,g.player.y-18,PI_COLOR,9,'center');
   if(this.grabbing){const x=g.player.x-g.cam,y=g.player.y+42;rect(c,x,y,22,3,'#33363a');rect(c,x,y,22*(1-this.grabTime/3.2),3,PI_COLOR);}
  }
- snapshot(){return {scale:this.scale,waves:this.waves.length,held:this.held.length,grabbing:this.grabbing,grabCooldown:this.grabCooldown,compactCooldown:this.compactCooldown,qCooldown:this.qCooldown,ward:this.ward,compacting:!!this.crush,slap:!!this.slap,props:this.props.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,mass:p.mass,round:p.round}))};}
+ snapshot(){return {scale:this.scale,waves:this.waves.length,held:this.held.length,grabbing:this.grabbing,grabCooldown:this.grabCooldown,compactCooldown:this.compactCooldown,qCooldown:this.qCooldown,ward:this.ward,wardCharging:this.wardCharging,wardCharge:this.wardCharge,wardPower:this.wardPower,wardDirectional:this.wardDirectional,compacting:!!this.crush,slap:!!this.slap,props:this.props.map(p=>({x:p.x,y:p.y,vx:p.vx,vy:p.vy,mass:p.mass,round:p.round}))};}
 }

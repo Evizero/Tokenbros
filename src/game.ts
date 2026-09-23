@@ -65,7 +65,7 @@ selectCharacter(character:'tibo'|'peter'|'dimillian'|'pidalf'|'marcus'){this.cha
   }
 start(){
     if(this.coop.active&&!this.coop.launching)return;
-    this.barks.reset();this.pidalfKit.clear();this.pidalfKit=new PidalfKit(this);this.marcusKit=new MarcusKit(this);
+    this.vertical.clear();this.barks.reset();this.pidalfKit.clear();this.pidalfKit=new PidalfKit(this);this.marcusKit=new MarcusKit(this);
     this.rosterPreview?.destroy();this.rosterPreview=null;
     if(!this.preview)this.canvas.parentElement!.classList.remove('roster-open');
     this.refillFeedback=0;
@@ -86,7 +86,7 @@ showIntro(){
     o.removeAttribute('hidden');$('.skip-intro').addEventListener('click',()=>this.finishIntro());this.audio.tone(80,.5,'sawtooth',.08,220);this.audio.blast();
   }
 finishIntro(){if(this.state!=='intro')return;this.state='playing';this.barks.request('spawn');this.keys.clear();this.pointer.down=false;this.pendingShot=0;$('#overlay').className='overlay';$('#overlay').setAttribute('hidden','');this.canvas.focus();if(this.character==='marcus'){this.notify('ANOTHER ANGLE.','Click launches · E recalls · scroll augments · Q flips · F batches.');return;}if(this.character==='pidalf'){this.notify('LESS IS MORE.','Hold E to grab · click while holding to compact · release E to throw · F places compact.');return;}if(this.character==='dimillian'){this.notify('HOT RELOAD.','Scroll forms · click attacks · E pairs bots · Q defends · F goes big.');return;}this.notify(this.character==='peter'?'THE CLAW IS THE LAW.':'POINT. SHOOT. THINK BIGGER.',this.character==='peter'?'Click attacks + commands · E throws claws · scroll changes type · F molts.':'Mouse aims · click fires · scroll ↑ increases thinking · F throws RESET.');}
-pause(){if(this.coop.pause())return;this.marcusKit.lcd.cancel();this.marcusKit.wasFiring=false;this.marcusKit.invader.cancel();this.marcusKit.invader.wasFiring=false;this.pidalfKit.release(false);this.defense.release();this.dimillianKit.releaseDefense();this.dimillianKit.charge=0;this.audio.silenceRobots();this.state='paused';this.keys.clear();this.pointer.down=false;this.pendingShot=0;this.panel('TAKE A BREATHER.','The refinery can wait.','RESUME OPERATION',()=>this.resume(),'<button class="text-btn" id="restart">RESTART MISSION</button><button class="text-btn" id="switch-bro">SWITCH BRO</button>');$('#restart').addEventListener('click',()=>this.start());$('#switch-bro').addEventListener('click',()=>showRoster(this));}
+pause(){if(this.coop.pause())return;this.vertical.cancel();this.marcusKit.lcd.cancel();this.marcusKit.wasFiring=false;this.marcusKit.invader.cancel();this.marcusKit.invader.wasFiring=false;this.pidalfKit.release(false);this.pidalfKit.cancelDefense();this.defense.release();this.dimillianKit.releaseDefense();this.dimillianKit.cancelLightning();this.audio.silenceRobots();this.state='paused';this.keys.clear();this.pointer.down=false;this.pendingShot=0;this.panel('TAKE A BREATHER.','The refinery can wait.','RESUME OPERATION',()=>this.resume(),'<button class="text-btn" id="restart">RESTART MISSION</button><button class="text-btn" id="switch-bro">SWITCH BRO</button>');$('#restart').addEventListener('click',()=>this.start());$('#switch-bro').addEventListener('click',()=>showRoster(this));}
 resume(){if(this.coop.running){this.coop.resume();return;}this.state='playing';this.keys.clear();this.pointer.down=false;this.pendingShot=0;$('#overlay').setAttribute('hidden','');this.canvas.focus();}
 panel(title:string,body:string,button:string,action:()=>void,extra=''){
     const o=$('#overlay');o.className='overlay';o.innerHTML=`<div class="briefing"><div class="eyebrow">OPERATION HARD RESET</div><div class="result-title">${title}</div><div class="result-stats">${body}</div><div class="pause-actions"><button class="primary" id="panel-action">${button} <span class="arrow">↗</span></button>${extra}</div></div>`;o.removeAttribute('hidden');$('#panel-action').addEventListener('click',action);
@@ -99,7 +99,7 @@ win(){
   }
 hud(){
     if(this.preview)return;
-    $('#usage').textContent=`${this.usage.toLocaleString()} / ${TOKEN_CAPACITY.toLocaleString()}`;$('.meter-fill').setAttribute('style',`width:${this.usage/TOKEN_CAPACITY*100}%`);$('.meter-trail').setAttribute('style',`width:${this.tokenTrail/TOKEN_CAPACITY*100}%`);
+    $('#usage').textContent=`${Math.floor(this.usage).toLocaleString()} / ${TOKEN_CAPACITY.toLocaleString()}`;$('.meter-fill').setAttribute('style',`width:${this.usage/TOKEN_CAPACITY*100}%`);$('.meter-trail').setAttribute('style',`width:${this.tokenTrail/TOKEN_CAPACITY*100}%`);
     $('.resources').classList.toggle('tokens-gained',this.character==='tibo'&&this.otherTibo.rewardFeedback>0);
     $('.resources').classList.toggle('tokens-low',this.usage<200);$('.resources').classList.toggle('tokens-empty',this.usage<8);
     const cost=shotCost(thinkingWeapon(this.thinking).cost);$('#token-cost').textContent=this.usage<cost?'F RESET / LOWER THINKING':`${Math.floor(this.usage/cost)} SHOTS · ${cost} TOKENS / SHOT`;
@@ -110,7 +110,8 @@ hud(){
     $('#objective').textContent=this.boss.dead?'EXTRACT →':this.boss.active?(this.boss.phase===2?'CORE EXPOSED — FIRE!':'DODGE THE VOLLEY'):this.relays.every(r=>r.done)?'FIND THE RATE LIMITER →':`OVERLOAD UPLINKS ${this.relays.filter(r=>r.done).length}/2 ↑`;
     $('#secondary-ready').textContent=this.otherTibo.cooldown>0?`E ${this.otherTibo.cooldown.toFixed(1)}s`:'E OTHER TIBO';
     const mode=thinkingWeapon(this.thinking);$('#thinking-level').textContent=mode.name;
-    const percent=this.thinking/(this.character==='marcus'?3:2)*100;const slider=$<HTMLInputElement>('#thinking-slider');slider.value=String(percent);slider.style.setProperty('--thinking-progress',`${percent}%`);slider.setAttribute('aria-valuetext',`${Math.round(this.thinking*50)} percent, ${mode.name}`);$('.resources').style.setProperty('--shot-color',mode.color);
+    $('#control-jump').textContent=this.character==='marcus'?'JUMP / AIR HOLD LCD':this.character==='tibo'?'JUMP / HOLD ROCKET BOOTS':this.character==='peter'?'JUMP / HOLD GRAPPLE':this.character==='pidalf'?'HOVER · W/S UP/DOWN':this.dimillianKit.form===0?'JUMP / DOUBLE JUMP':this.dimillianKit.form===1?'JUMP / AIR HOLD · RELEASE BLINK':'SPACE / W · ASCEND';
+    const percent=this.thinking/2*100;const slider=$<HTMLInputElement>('#thinking-slider');slider.value=String(percent);slider.style.setProperty('--thinking-progress',`${percent}%`);slider.setAttribute('aria-valuetext',`${Math.round(this.thinking*50)} percent, ${mode.name}`);$('.resources').style.setProperty('--shot-color',mode.color);
     $('#defense-ready').hidden=false;$('#control-q').parentElement!.hidden=false;const isPeter=this.character==='peter';slider.setAttribute('aria-label',isPeter?'Claw type':'Thinking intensity');slider.setAttribute('aria-valuetext',isPeter?this.peterKit.name:`${Math.round(this.thinking*50)} percent, ${mode.name}`);$('.name').textContent=isPeter?'PETER':'TIBO';$('.role').textContent=isPeter?'THE CLAWFATHER':'THE RESET GUY';$('#resource-name').textContent=isPeter?'PACK':'TOKENS';$('#thinking-label').textContent=isPeter?'CLAW':'THINK';
     this.canvas.setAttribute('aria-label',isPeter?'Peter: WASD move, Space jump, click command and claw strike, punch during Molt, E throw claws or override nearby uplink, scroll claw type, F Molt, Q deploy prism shield, Escape pause.':'Tibo: WASD move, Space jump, click fire, scroll thinking power, E summon the other Tibo, F throw reset, hold Q to absorb bullets into tokens, Escape pause.');
     $('#defense-ready').textContent=this.defense.active?(isPeter?`Q PRISM ${this.defense.active.hits}`:`Q +${this.defense.active.tokens}`):this.defense.cooldown>0?`Q ${this.defense.cooldown.toFixed(1)}s`:`Q ${isPeter?'PRISM':'ABSORB'}`;$('#defense-ready').classList.toggle('spent',this.defense.cooldown>0&&!this.defense.active);$('#control-q').textContent=isPeter?'PRISM SHIELD':'HOLD / ABSORB';
@@ -124,13 +125,18 @@ hud(){
     }else if(this.character==='dimillian'){
       const kit=this.dimillianKit;$('.name').textContent='DIMILLIAN';$('.role').textContent='THE HOT RELOADER';$('#resource-name').textContent='SHIELD';$('#usage').textContent=`${Math.ceil(kit.shieldHP)}%`;
       $('.meter-fill').style.width=`${kit.shieldHP}%`;$('.meter-trail').style.width=`${kit.shieldHP}%`;$('.resources').classList.remove('tokens-low','tokens-empty');
-      $('#token-cost').textContent=kit.form===0?'LAND TWO SLASHES · UNLOCK FINISHER':kit.form===1?'HOLD FIREBALL · FULL CHARGE EXPLODES':'SPACE / W ↑ · S ↓ · RELEASE TO HOVER';$('#token-spend').textContent='';
+      $('#token-cost').textContent=kit.remoteDriving?'OVERCLOCK · W/S CLIMB · MOUSE FIRE':kit.form===0?'LAND TWO SLASHES · UNLOCK FINISHER':kit.form===1?'TAP TO ZAP · CHARGE / RELEASE TO CHAIN':'SPACE / W ↑ · S ↓ · RELEASE TO HOVER';$('#token-spend').textContent='';
       $('#thinking-label').textContent='FORM';$('#thinking-level').textContent=kit.name;$('.resources').style.setProperty('--shot-color',kit.color);slider.setAttribute('aria-label','Game form');slider.setAttribute('aria-valuetext',kit.name);
       $('#reset-status').textContent=kit.special>0?`${kit.fName} ${kit.special.toFixed(1)}`:kit.fCooldown>0?`${Math.ceil(kit.fCooldown)}s`:kit.fName;$('.reset-label').classList.toggle('spent',kit.fCooldown>0&&kit.special<=0);
-      $('#secondary-ready').textContent=this.relays.some(r=>!r.done&&Math.hypot(r.x-this.player.x,r.y-this.player.y)<130)?'E OVERRIDE':kit.pairing?'E PAIRING':kit.paired?`E LINK ${Math.ceil(kit.remoteTime)}`:kit.eCooldown>0?`E ${Math.ceil(kit.eCooldown)}s`:`E ${kit.eName}`;
-      $('#defense-ready').textContent=kit.shieldBroken?`Q ${kit.qCooldown.toFixed(1)}s`:kit.shield?'Q ACTIVE':'Q HOLD';$('#defense-ready').classList.toggle('spent',kit.qCooldown>0&&!kit.shield);
-      $('#control-fire').textContent=kit.form===1?'HOLD / RELEASE SPELL':'AIM / ATTACK';$('#control-scroll').textContent='FORM';$('#control-q').textContent='HOLD '+kit.qName;$('#control-f').textContent=kit.fName;$('#control-e').textContent=kit.form===0?'REMOTE PAIR':kit.form===1?'SHEEP':'DROP BOMB';
-      this.canvas.setAttribute('aria-label','Dimillian: WASD move, Space jump or ascend as pilot, W ascend, S descend, release to hover, mouse aim, click attack or hold and release mage spell, scroll or 1 2 3 transform, E remote pair as duelist, polymorph as mage, drop bomb as pilot, or override nearby uplink; hold Q iPhone bunker as duelist, bubble as mage, directional shield as pilot; all share regenerating shield health, F form special, Escape pause.');
+      $('#secondary-ready').textContent=this.relays.some(r=>!r.done&&Math.hypot(r.x-this.player.x,r.y-this.player.y)<130)?'E OVERRIDE':kit.pairing?'E PAIRING':kit.paired?'E LINKED':kit.eCooldown>0?`E ${Math.ceil(kit.eCooldown)}s`:`E ${kit.eName}`;
+      $('#defense-ready').textContent=kit.shieldBroken?`Q ${kit.qCooldown.toFixed(1)}s`:kit.shield?(kit.form===0?'Q EXIT':'Q ACTIVE'):(kit.form===0?'Q BUNKER':'Q HOLD');$('#defense-ready').classList.toggle('spent',kit.qCooldown>0&&!kit.shield);
+      if(kit.remoteDriving)$('#control-jump').textContent=kit.paired?.type==='drone'?'REMOTE · FLY UP':'REMOTE · JUMP';
+      $('#control-fire').textContent=kit.remoteDriving?'REMOTE AIM / FIRE':kit.form===1?'HOLD / RELEASE SPELL':'AIM / ATTACK';$('#control-scroll').textContent='FORM';$('#control-q').textContent=kit.form===0?(kit.shield?'TAP · EXIT BUNKER':'TAP · ENTER BUNKER'):'HOLD '+kit.qName;$('#control-f').textContent=kit.fName;$('#control-e').textContent=kit.form===0?'REMOTE PAIR':kit.form===1?'SHEEP':'DROP BOMB';
+      if(kit.form===2){
+        $('#token-cost').textContent=kit.rocketFlight?'MOUSE STEERS · RELEASE THRUST TO BRAKE':kit.sonic?'RAM READY · WEAPONS LOCKED':'HOLD FORWARD · BUILD INTO A RAM';
+        if(kit.sonic){$('#control-fire').textContent=kit.rocketFlight?'STEER RAM':'RAM · NO FIRE';$('#control-f').textContent='LOCKED';$('#control-e').textContent='LOCKED';$('#secondary-ready').textContent='E LOCKED';$('#reset-status').textContent='LOCKED';}
+      }
+      this.canvas.setAttribute('aria-label','Dimillian: WASD move, Space jump or ascend as pilot, W ascend, S descend, release to hover, mouse aim, click attack or hold and release mage spell, scroll or 1 2 3 transform, E remote pair as duelist, polymorph as mage, drop bomb as pilot, or override nearby uplink; tap Q to enter/exit the iPhone bunker as duelist; WASD and mouse control your linked bot inside; hold Q for mage bubble or pilot directional shield; all share regenerating shield health, F form special, Escape pause.');
       dimillianPortrait($<HTMLCanvasElement>('.portrait').getContext('2d')!,kit.form);
     }else if(this.character==='pidalf'){
       const kit=this.pidalfKit,pct=Math.round(kit.scale*100);$('.name').textContent='PIDALF';$('.role').textContent='THE SLOP SLAYER';$('#resource-name').textContent='INFLUENCE';$('#usage').textContent=`${pct}%`;
@@ -138,8 +144,8 @@ hud(){
       $('#token-cost').textContent=kit.grabbing?`CLICK COMPACTS · RELEASE E THROWS`:`${kit.capacity} MASS · SCROLL TO SCALE`;$('#token-spend').textContent='';$('#thinking-label').textContent='SCALE';$('#thinking-level').textContent=pct<35?'PRECISE':pct<70?'BROAD':'MASSIVE';slider.setAttribute('aria-label','Influence scale');slider.setAttribute('aria-valuetext',`${pct} percent, ${kit.capacity} mass`);
       $('#reset-status').textContent=kit.crush?'COMPACTING':kit.compactCooldown>0?`COMPACT ${kit.compactCooldown.toFixed(1)}s`:'COMPACT';$('.reset-label').classList.toggle('spent',kit.compactCooldown>0);
       $('#secondary-ready').textContent=this.relays.some(r=>!r.done&&Math.hypot(r.x-this.player.x,r.y-this.player.y)<130)?'E OVERRIDE':kit.grabbing?'E RELEASE / THROW':kit.grabCooldown>0?`E ${kit.grabCooldown.toFixed(1)}s`:'E HOLD / GRAB';
-      $('#defense-ready').textContent=kit.qCooldown>0?`Q ${kit.qCooldown.toFixed(1)}s`:'Q REPEL';$('#defense-ready').classList.toggle('spent',kit.qCooldown>0);$('#control-q').textContent='REPEL';$('#control-fire').textContent=kit.grabbing?'COMPACT HELD':'SLOP!';$('#control-scroll').textContent='INFLUENCE SCALE';$('#control-f').textContent='COMPACT';$('#control-e').textContent='HOLD GRAB / RELEASE THROW';
-      this.canvas.setAttribute('aria-label','Pidalf: WASD move, Space jump, mouse aim, click backhand, hold E to grab bots or scrap and release to throw, F compact, Q repel nearby threats, scroll continuous influence scale, E near uplink overrides it, Escape pause.');pidalfPortrait($<HTMLCanvasElement>('.portrait').getContext('2d')!);
+      $('#defense-ready').textContent=kit.wardCharging?(kit.wardCharge===1?'Q RELEASE!':`Q ${Math.round(kit.wardCharge*100)}%`):kit.qCooldown>0?`Q ${kit.qCooldown.toFixed(1)}s`:'Q REPEL';$('#defense-ready').classList.toggle('spent',kit.qCooldown>0);$('#control-q').textContent='TAP DEFLECT / HOLD REPEL';$('#control-fire').textContent=kit.grabbing?'COMPACT HELD':'SLOP!';$('#control-scroll').textContent='INFLUENCE SCALE';$('#control-f').textContent='COMPACT';$('#control-e').textContent='HOLD GRAB / RELEASE THROW';
+      this.canvas.setAttribute('aria-label','Pidalf: WASD move, Space jump and hold to hover, W rises and S descends while hovering, mouse aim, click backhand, hold E to grab bots or scrap and release to throw, F compact, tap Q to deflect toward the mouse, hold Q then release for a charged radial repel, scroll continuous influence scale, E near uplink overrides it, Escape pause.');pidalfPortrait($<HTMLCanvasElement>('.portrait').getContext('2d')!);
     }else if(this.character==='marcus')this.marcusKit.hud();else portrait($<HTMLCanvasElement>('.portrait').getContext('2d')!,false,this.usage/TOKEN_CAPACITY*100);
   }
 render(){
@@ -155,7 +161,7 @@ render(){
       if(!r.done){rect(c,x-10,y-18,43,52,'#172b25');rect(c,x-10,y-18,43,3,'#b4c783');rect(c,x-8,y-13,39,7,'#435b3b');text(c,'LIMITED',x-5,y-7,'#d8e4ad',6);tibo(c,x+1,y+2,1,this.time,false,false,0,0,.85);for(let i=0;i<5;i++)rect(c,x-7+i*9,y-1,2,33,'#a7b39b');text(c,'RESCUE',x+12,y-27,this.accent,9,'center');rect(c,x+10,y-24+Math.sin(this.time*4)*3,4,4,this.accent);}
       else {rect(c,x+6,y-35,3,69,'#84936f');rect(c,x+9,y-35,29,18,this.accent);text(c,'✓',x+19,y-21,'#243621',12);text(c,'DEPLOYED',x+12,y-46,'#cadd9d',8,'center');}
     }
-    for(const e of this.enemies)if(!e.dead&&e.x-this.cam>-40&&e.x-this.cam<W+40){if(this.peers.some(a=>{a.renderView={c,cam:this.cam,camY:this.camY};try{return a.marcusKit.pacman.drawEnemy(e)||a.pidalfKit.drawEnemy(e);}finally{a.renderView=null;}}))continue;if(e.sheep)sheep(c,e.x-this.cam,e.y,this.time,e.face);else robot(c,e.x-this.cam,e.y,e.type,e.face,this.time,e.wind,e.hurt,e.shieldDown>0?0:e.shield,e.hacked);}
+    for(const e of this.enemies)if(!e.dead&&e.x-this.cam>-40&&e.x-this.cam<W+40){if(this.peers.some(a=>{a.renderView={c,cam:this.cam,camY:this.camY};try{return a.marcusKit.pacman.drawEnemy(e)||a.pidalfKit.drawEnemy(e)||a.dimillianKit.drawPolymorphEnemy(e);}finally{a.renderView=null;}}))continue;if(e.sheep)sheep(c,e.x-this.cam,e.y,this.time,e.face);else robot(c,e.x-this.cam,e.y,e.type,e.face,this.time,e.wind,e.hurt,e.shieldDown>0?0:e.shield,e.hacked);}
     for(const e of this.enemies)if(!e.dead&&!e.sheep){
       const x=e.x+10-this.cam;
       if(e.type==='drone'&&e.wind>0&&e.hacked<=0){c.strokeStyle='#ffad6877';c.lineWidth=1;c.setLineDash([4,6]);c.beginPath();c.moveTo(x,e.y+15);c.lineTo(e.lockX-this.cam,e.lockY);c.stroke();c.setLineDash([]);rect(c,e.lockX-this.cam-4,e.lockY-4,8,1,'#ffb36b');}
@@ -197,7 +203,7 @@ drawUsageFeedback(){
     text(c,dry?(this.usage===0?'EMPTY · CLICK':'NOT ENOUGH'):refilling&&this.burstLife<=0?(progress<1?'REFILLING':'RELOADED'):"−"+this.burstSpend+' TOK',x,y-lift,color,dry?12:15+Math.min(3,Math.floor(this.burstShots/4)),'center');
     rect(c,x-34,y+5,68,4,'#141b24');if(!refilling)rect(c,x-34,y+5,68*this.tokenTrail/TOKEN_CAPACITY,4,'#aa9a7b');rect(c,x-34,y+5,68*shown/TOKEN_CAPACITY,4,color);
     if(refilling&&progress<1){rect(c,x-35+68*shown/TOKEN_CAPACITY,y+3,2,8,'#f6ffd8');}
-    text(c,dry?(this.usage===0?'F RESET':`${this.usage} LEFT · NEED ${shotCost(thinkingWeapon(this.thinking).cost)}`):refilling?`${Math.round(shown)} / ${TOKEN_CAPACITY}`:`${this.burstShots} SHOT${this.burstShots===1?'':'S'} · −${this.lastSpend}/SHOT`,x,y+20,'#e1e5dc',8,'center');
+    text(c,dry?(this.usage===0?'F RESET':`${Math.floor(this.usage)} LEFT · NEED ${shotCost(thinkingWeapon(this.thinking).cost)}`):refilling?`${Math.round(shown)} / ${TOKEN_CAPACITY}`:`${this.burstShots} SHOT${this.burstShots===1?'':'S'} · −${this.lastSpend}/SHOT`,x,y+20,'#e1e5dc',8,'center');
     if(dry){c.strokeStyle=color;c.lineWidth=2;const jolt=this.dryFire>0?Math.sin(this.dryFire/.16*Math.PI)*3:0;c.strokeRect(x-5+jolt,y+27,10,8);rect(c,x-2+jolt,y+25,4,2,color);c.beginPath();c.moveTo(x-7+jolt,y+37);c.lineTo(x+7+jolt,y+25);c.stroke();}
     c.restore();
   }
@@ -206,7 +212,7 @@ drawThinkingFeedback(){
     const c=this.c,isPeter=this.character==='peter',mode=thinkingWeapon(this.thinking),tier=this.character==='marcus'?this.marcusKit.mode:mode.tier;
     const isMarcus=this.character==='marcus',isDim=this.character==='dimillian',color=isMarcus?AUGMENT_COLORS[tier]:isDim?DIM_COLORS[tier]:isPeter?CLAW_COLORS[tier]:THINKING[tier].color;
     const names=isMarcus?AUGMENT_NAMES:isDim?DIM_FORMS:isPeter?['PINCHER','SKIPPER','CRUSHER']:['LOW · RAPID','MED · PULSE','HIGH · RAIL'];
-    const hints=isMarcus?['FAST RICOCHETS / E RECALL','HOLD / AIM / SLING YOURSELF','HOLD TO GROW / RELEASE BOMBER','CLICK BOT / CLICK NEXT / CHAIN x4']:isDim?['SWING / E REMOTE / HOLD Q SHIELD','CHARGE FIREBALL / E SHEEP','TWIN CANNONS / E BOMB / SPACE UP']:isPeter?['CLICK BLAST / E SMART GRENADE','CLICK PISTOL / E DASH PET','CLICK MELEE / E DIGGING PET']:['FAST FIRE / LIGHT HITS','STAGGER / BREAK SHIELDS','HEAVY HITS / PIERCING'];
+    const hints=isMarcus?['FAST RICOCHETS / E RECALL','HOLD / AIM / SLING YOURSELF','HOLD TO GROW / RELEASE BOMBER','CLICK BOT / CLICK NEXT / CHAIN x4']:isDim?['SWING / E REMOTE / HOLD Q SHIELD','CHARGE / RELEASE LIGHTNING / E SHEEP','TWIN CANNONS / E BOMB / SPACE UP']:isPeter?['CLICK BLAST / E SMART GRENADE','CLICK PISTOL / E DASH PET','CLICK MELEE / E DIGGING PET']:['FAST FIRE / LIGHT HITS','STAGGER / BREAK SHIELDS','HEAVY HITS / PIERCING'];
     // World-adjacent arcade readout: large enough to read while aiming, away from the HUD.
     const px=this.player.x+10-this.cam,py=this.player.y-this.camY;
     const x=clamp(px-132,16,W-280),y=clamp(py-124,125,H-108),burst=this.modeBurst/.5;
@@ -217,10 +223,10 @@ drawThinkingFeedback(){
     else for(let i=0;i<=tier;i++){rect(c,x+12,y+19+i*9,30,4,color);rect(c,x+42,y+18+i*9,6,6,'#f2eee1');}
     text(c,names[tier],x+62,y+30,color,20);text(c,hints[tier],x+12,y+49,'#dbe0e5',8);
     const barX=x+12,barY=y+59,barW=240;
-    const count=isMarcus?4:3;for(let i=0;i<count;i++){rect(c,barX+i*barW/count,barY,barW/count-2,8,i===tier?color:'#48515d');}
-    const marker=barX+this.thinking/(isMarcus?3:2)*barW;rect(c,marker-2,barY-3,4,14,'#fff6de');
-    text(c,`${Math.round(this.thinking/(isMarcus?3:2)*100)}%`,x+252,y+80,color,9,'right');
-    text(c,isMarcus?'AUGMENT · SCROLL / 1 2 3 4':isDim?'HOT RELOAD · SCROLL / 1 2 3':isPeter?'E THROW · CLICK ATTACK':'THINKING POWER',x+12,y+80,'#a8b4c2',7);
+    const selected=isMarcus?[0,2,3].indexOf(tier):tier;const count=3;for(let i=0;i<count;i++){rect(c,barX+i*barW/count,barY,barW/count-2,8,i===selected?color:'#48515d');}
+    const marker=barX+this.thinking/2*barW;rect(c,marker-2,barY-3,4,14,'#fff6de');
+    text(c,`${Math.round(this.thinking/2*100)}%`,x+252,y+80,color,9,'right');
+    text(c,isMarcus?'AUGMENT · SCROLL / 1 2 3':isDim?'HOT RELOAD · SCROLL / 1 2 3':isPeter?'E THROW · CLICK ATTACK':'THINKING POWER',x+12,y+80,'#a8b4c2',7);
     if(this.pointer.active){const p=canvasPoint(this.pointer.x,this.pointer.y,this.canvas.getBoundingClientRect());
       // Shape and segment count change decisively at thresholds; radius follows every scroll sample.
       c.strokeStyle=color;c.lineWidth=2;const r=18+this.thinking*6+(this.effects?burst*10:0);c.beginPath();

@@ -16,7 +16,6 @@ export class LCDLaunch {
  clear(){this.cancel();this.flight=null;this.land=0;this.impactPose=0;this.ghosts=[];this.skid=0;}
  input(dt:number,firing:boolean,rising:boolean){
   const g=this.g;
-  if(this.owner.mode!==1){this.cancel();return;}
   if(this.flight||this.owner.flip>0)return;
   if(rising&&this.cooldown<=0&&!this.airUsed&&g.fireTimer<=0){this.charging=true;this.charge=.001;this.land=0;this.poseClock=0;g.player.vx=0;g.player.vy=0;this.drawAt=-1;g.climb=null;g.zip=false;g.audio.tone(170,.1,'square',.025,260);}
   else if(rising&&(this.cooldown>0||this.airUsed)){this.notice=.65;g.audio.tone(110,.045,'square',.015,75);}

@@ -1,3 +1,4 @@
+import { VerticalAbility } from "./vertical";
 import { MarcusKit } from "./marcus";
 import { marcus, MARCUS_COLOR } from "./marcus-art";
 import { LEVEL_ENEMIES, LEVEL_BARRELS, SECTORS } from "./level";
@@ -58,6 +59,7 @@ export class PlayerRuntime {
   character: "tibo" | "peter" | "dimillian" | "pidalf" | "marcus" = "dimillian";
   peterKit = new PeterKit(this);
   dimillianKit = new DimillianKit(this);
+  vertical = new VerticalAbility(this);
   pidalfKit = new PidalfKit(this);
   marcusKit = new MarcusKit(this);
   debris = new Debris();
@@ -275,6 +277,7 @@ export class PlayerRuntime {
   clearToast() {}
   hud() {}
   win() {
+    this.vertical.cancel();
     this.state = "won";
     this.keys.clear();
     this.pointer.down = false;
@@ -367,11 +370,12 @@ export class PlayerRuntime {
       this.face = 1;
     if (
       this.state === "playing" &&
-      (/^Digit[123]$/.test(key) ||
-        (this.character === "marcus" && key === "Digit4"))
+      /^Digit[123]$/.test(key)
     )
       this.setThinking(Number(key.at(-1)) - 1);
-    if (key === "Space" && this.state === "playing") this.jumpBuffer = 0.12;
+    if (key === "Space" && this.state === "playing") {
+      if (!this.vertical.press()) this.jumpBuffer = 0.12;
+    }
     if ((key === "KeyF" || key === "KeyK") && this.state === "playing") {
       if (this.character === "marcus") this.marcusKit.ultimate();
       else if (this.character === "pidalf") this.pidalfKit.compact();
@@ -404,19 +408,22 @@ export class PlayerRuntime {
         this.pidalfKit.defend();
         return;
       }
-      if (this.character === "dimillian") this.dimillianKit.defend();
+      if (this.character === "dimillian") this.dimillianKit.pressDefense();
       else this.defense.activate();
     }
     if (key === "KeyR" && this.state === "dead") this.respawn();
   }
   release(key: string) {
+    const grappling = !!this.vertical.grapple?.attached;
     this.keys.delete(key);
+    if (key === "Space") this.vertical.release();
     if (key === "KeyE" && this.character === "pidalf") this.pidalfKit.release();
     if (key === "KeyQ") {
+      if (this.character === "pidalf") this.pidalfKit.releaseDefense();
       this.defense.release();
-      this.dimillianKit.releaseDefense();
+      if (this.dimillianKit.form !== 0) this.dimillianKit.releaseDefense();
     }
-    if (key === "Space" && this.player.vy < -180) this.player.vy = -180;
+    if (key === "Space" && !grappling && !this.marcusKit.lcd.flight && this.player.vy < -180) this.player.vy = -180;
   }
   emit(
     x: number,
@@ -614,6 +621,7 @@ export class PlayerRuntime {
   }
   die() {
     if (this.state !== "playing") return;
+    this.vertical.clear();
     this.marcusKit.clear();
     this.pidalfKit.clear();
     this.resetProp = null;
@@ -659,6 +667,7 @@ export class PlayerRuntime {
     );
   }
   respawn() {
+    this.vertical.clear();
     this.pidalfKit.clear();
     this.pidalfKit = new PidalfKit(this);
     this.marcusKit = new MarcusKit(this);
@@ -833,7 +842,7 @@ export class PlayerRuntime {
       this.dimillianKit.feedback("FINISH THE MOVE");
       return;
     }
-    const next = clamp(level, 0, this.character === "marcus" ? 3 : 2);
+    const next = clamp(level, 0, 2);
     if (next === this.thinking) return;
     const previousTier =
       this.character === "marcus"
@@ -844,7 +853,6 @@ export class PlayerRuntime {
       this.marcusKit.modeAt(next) !== previousTier
     ) {
       this.marcusKit.invader.cancel();
-      this.marcusKit.lcd.cancel();
     }
     this.thinking = next;
     const tier =
@@ -1644,12 +1652,12 @@ export class PlayerRuntime {
             this.time,
             Math.abs(this.player.vx) > 15,
             this.aim,
-            this.marcusKit.mode,
+            this.marcusKit.lcd.charging ? 1 : this.marcusKit.mode,
             this.marcusKit.launch,
             this.marcusKit.catchPose,
             this.marcusKit.flip,
             1,
-            this.marcusKit.mode === 1
+            this.marcusKit.lcd.charging
               ? this.marcusKit.lcd.charge
               : this.marcusKit.invader.charge,
           );
@@ -1668,6 +1676,8 @@ export class PlayerRuntime {
           1,
           this.pidalfKit.scale,
           this.pidalfKit.wardPose,
+          this.pidalfKit.swatPose,
+          this.vertical.active,
         );
       else if (this.character === "peter")
         peter(
@@ -1710,6 +1720,8 @@ export class PlayerRuntime {
               ? 33
               : 29,
           this.dimillianKit.swing ?? undefined,
+          {strength:this.dimillianKit.dischargeStrength,teleport:this.vertical.blinkReady?1:0,arrival:this.vertical.blinkArrival,polymorph:this.dimillianKit.sheepGesture},
+          {...this.dimillianKit.thrusters,kick:this.dimillianKit.rocketKick,surge:this.dimillianKit.forwardRun/1.25,sonic:this.dimillianKit.sonic,flash:this.dimillianKit.sonicFlash,flight:this.dimillianKit.flightBlend,heading:Math.atan2(Math.sin(this.dimillianKit.flightAngle),Math.cos(this.dimillianKit.flightAngle)*this.face)},
         );
       else
         tibo(
@@ -1718,7 +1730,7 @@ export class PlayerRuntime {
           this.player.y,
           this.face,
           this.time,
-          Math.abs(this.player.vx) > 15,
+          !this.vertical.active && Math.abs(this.player.vx) > 15,
           false,
           this.muzzle,
           this.aim,
@@ -1745,6 +1757,7 @@ export class PlayerRuntime {
     if (this.character === "peter") this.peterKit.draw();
     if (this.character === "tibo") this.otherTibo.draw();
     if (this.character === "dimillian") this.dimillianKit.draw();
+    this.vertical.draw();
     this.defense.draw();
     this.drawReset();
     if (this.zip) {
@@ -1851,6 +1864,7 @@ export class PlayerRuntime {
     if (this.character === "peter") this.peterKit.update(dt);
     this.otherTibo.update(dt);
     if (this.character === "dimillian") this.dimillianKit.update(dt);
+    this.vertical.update(dt);
     this.movePlayer(dt);
     const p = this.player;
     if (
@@ -1903,7 +1917,7 @@ export class PlayerRuntime {
       p.vy = 0;
       this.jumpBuffer = 0;
       this.wallGrip = 0;
-    } else if (flying) this.dimillianKit.fly(dt, dir);
+    } else if (flying) this.dimillianKit.fly(dt, dir, predicting);
     else {
       const contact = this.touchingWall(dir)
         ? dir
@@ -1924,12 +1938,12 @@ export class PlayerRuntime {
       }
       if (p.grounded) this.coyote = 0.09;
       else this.coyote -= dt;
-      if (this.wallLock <= 0) {
+      if (this.wallLock <= 0 && !this.vertical.grapple?.attached) {
         const target =
             dir *
             (this.keys.has("ShiftLeft") || this.keys.has("ShiftRight")
               ? 90
-              : 235),
+              : this.character === "pidalf" && this.vertical.active ? 320 : 235),
           accel = dir ? 2900 : 2200;
         p.vx += clamp(target - p.vx, -accel * dt, accel * dt);
       }
@@ -1967,6 +1981,7 @@ export class PlayerRuntime {
         !this.zip &&
         this.climb === null &&
         this.zipCooldown <= 0 &&
+        !this.vertical.active &&
         (up || down)
       ) {
         const i = LADDERS.findIndex(
@@ -2002,6 +2017,7 @@ export class PlayerRuntime {
       if (
         !this.zip &&
         this.zipCooldown <= 0 &&
+        !this.vertical.active &&
         p.x > 1670 &&
         p.x < 2310 &&
         (this.keys.has("KeyW") || this.keys.has("ArrowUp")) &&
@@ -2030,12 +2046,13 @@ export class PlayerRuntime {
         wasGrounded = p.grounded;
       if (!this.zip && this.climb === null) {
         p.vy = Math.min(660, p.vy + 1400 * dt);
-        if (dir && this.touchingWall(dir) && this.wallRegrab <= 0)
+        this.vertical.apply(dt);
+        if (!this.vertical.active && dir && this.touchingWall(dir) && this.wallRegrab <= 0)
           p.vy = Math.min(p.vy, 55);
         this.wall = this.world.move(p, dt);
       }
       this.wallGrip =
-        !p.grounded &&
+        !this.vertical.active && !p.grounded &&
         !this.zip &&
         this.climb === null &&
         this.wallRegrab <= 0 &&
@@ -2056,9 +2073,10 @@ export class PlayerRuntime {
       return;
     }
     if (followCamera) {
-      const targetCam = clamp(p.x - 320, 0, COLS * TILE - W);
+      const focus = this.character === "dimillian" && this.dimillianKit.remoteDriving ? this.dimillianKit.paired! : p;
+      const targetCam = clamp(focus.x - 320, 0, COLS * TILE - W);
       this.cam += (targetCam - this.cam) * Math.min(1, dt * 7);
-      const targetY = clamp(p.y - 330, 0, LEVEL_HEIGHT - H);
+      const targetY = clamp(focus.y - 330, 0, LEVEL_HEIGHT - H);
       this.camY += (targetY - this.camY) * Math.min(1, dt * 5);
     }
     this.updateAim();

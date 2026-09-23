@@ -11,7 +11,7 @@ async(page)=>{
  for(const [form,name] of ['bunker','bubble','deflector'].entries()){
  await page.evaluate(form=>{const g=window.__qa;g.start();g.finishIntro();g.effects=false;g.invuln=0;g.enemies=[];g.barrels=[];g.player.x=215;g.player.y=828;g.cam=0;g.camY=440;g.pointer.active=false;g.face=1;g.setThinking(form);g.dimillianKit.transform=0;g.modeFeedback=0;g.press('KeyQ');document.querySelector('.toast').innerHTML='';g.hud();g.render();},form);
  await page.screenshot({path:`output/playwright/dimillian-${name}-v23.png`});}
- await page.evaluate(()=>{const g=window.__qa;g.release('KeyQ');g.setThinking(1);g.modeFeedback=0;g.dimillianKit.transform=0;g.dimillianKit.charge=1.15;g.dimillianKit.cast();g.updateBullets(.24);const e=g.spawnEnemy(360,830,'shield');g.enemies.push(e);g.aimPoint=()=>({x:370,y:844});g.dimillianKit.secondary();g.hud();g.render();});await page.screenshot({path:'output/playwright/dimillian-fireball-sheep-v23.png'});
+ await page.evaluate(()=>{const g=window.__qa;g.release('KeyQ');g.setThinking(1);g.modeFeedback=0;g.dimillianKit.transform=0;g.dimillianKit.charge=1.15;g.dimillianKit.cast();g.updateBullets(.24);const e=g.spawnEnemy(360,830,'shield');g.enemies.push(e);g.aimPoint=()=>({x:370,y:844});g.dimillianKit.secondary();g.hud();g.render();});await page.screenshot({path:'output/playwright/dimillian-lightning-sheep.png'});
  return {physics};
  }finally{await page.unroute('**/src/main.ts*');await page.reload();}
 }

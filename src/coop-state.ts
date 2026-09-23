@@ -17,6 +17,7 @@ const data = (o: any, skip: string[] = []) =>
     Object.keys(o).filter((k) => !["g", "owner", ...skip].includes(k)),
   );
 const kits = (a: PlayerRuntime) => ({
+  vertical: a.vertical,
   defense: a.defense,
   otherTibo: a.otherTibo,
   peterKit: a.peterKit,
@@ -28,6 +29,7 @@ const kits = (a: PlayerRuntime) => ({
 function actorState(a: PlayerRuntime) {
   const k = kits(a),
     active = [
+      "vertical",
       "defense",
       "barks",
       a.character === "tibo" ? "otherTibo" : `${a.character}Kit`,

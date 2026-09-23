@@ -2,11 +2,14 @@ import { Pacman } from './marcus-pacman';
 import { LCDLaunch } from './marcus-lcd';
 import { Invader } from './marcus-invader';
 import type { PlayerRuntime as Game } from './player-runtime';
-import { clamp,LEVEL_HEIGHT } from './world';
+import { clamp,COLS,TILE,LEVEL_HEIGHT } from './world';
 import { text } from './art';
 import { marcus,marcusPortrait,cartridgeArt,MARCUS_COLOR,AUGMENT_NAMES,AUGMENT_COLORS } from './marcus-art';
 type Enemy=Game['enemies'][number];
 type Disc={x:number;y:number;vx:number;vy:number;mode:number;r:number;power:number;age:number;life:number;back:boolean;hit:Set<unknown>;group:number;echo:boolean;bounces:number;trail:{x:number;y:number}[]};
+const CARTRIDGE_CAPACITY=4;
+const CARTRIDGE_OUTBOUND_TIME=5;
+const CARTRIDGE_BOUNCES=16;
 export class MarcusKit {
  discs:Disc[]=[];serial=0;launch=0;pending:{mode:number;angle:number;scale:number}|null=null;catchPose=0;catchFlash=0;catches=0;combo=0;comboLife=0;
  flip=0;flipCooldown=0;flipDir=1;batch=0;batchCooldown=0;empty=0;
@@ -14,26 +17,31 @@ export class MarcusKit {
  lcd=new LCDLaunch(this);wasFiring=false;
  invader=new Invader(this);pacman=new Pacman(this);
  constructor(public g:Game){}
- fireInput(dt:number,firing:boolean){const rising=firing&&!this.wasFiring;this.wasFiring=firing;if(this.mode===3&&!this.lcd.flight){this.invader.cancel();this.invader.wasFiring=firing;if(rising)this.pacman.click();return;}if(this.mode===1||this.lcd.flight){this.invader.cancel();this.invader.wasFiring=firing;this.lcd.input(dt,firing,rising);return;}this.invader.input(dt,firing);}
- modeAt(value:number){return Math.min(3,Math.floor(value*4/3));}
+ fireInput(dt:number,firing:boolean){
+  const rising=firing&&!this.wasFiring;this.wasFiring=firing;
+  if(this.lcd.driving){this.invader.cancel();this.invader.wasFiring=firing;return;}
+  if(this.mode===3){this.invader.cancel();this.invader.wasFiring=firing;if(rising)this.pacman.click();return;}
+  this.invader.input(dt,firing);
+ }
+ modeAt(value:number){return [0,2,3][Math.min(2,Math.floor(clamp(value,0,2)*3/2))];}
  get mode(){return this.modeAt(this.g.thinking);}
  get name(){return AUGMENT_NAMES[this.mode];}
- get stock(){return Math.max(0,3-new Set(this.discs.filter(d=>!d.echo&&d.life>0).map(d=>d.group)).size-(this.pending?1:0)-(this.invader.occupied?1:0)-(this.pacman.active?1:0));}
+ get stock(){return Math.max(0,CARTRIDGE_CAPACITY-new Set(this.discs.filter(d=>!d.echo&&d.life>0).map(d=>d.group)).size-(this.pending?1:0)-(this.invader.occupied?1:0)-(this.pacman.active?1:0));}
  clear(){this.pacman.clear();this.lcd.clear();this.wasFiring=false;this.invader.clear();this.discs=[];this.pending=null;this.launch=0;this.flip=0;this.batch=0;this.ghosts=[];this.catchPose=0;this.catchFlash=0;this.combo=0;this.comboLife=0;}
  fire(){
-  const g=this.g;if(this.mode!==0||this.lcd.flight)return;if(this.pending||this.flip>0)return;
+  const g=this.g;if(this.mode!==0||this.lcd.driving)return;if(this.pending||this.flip>0)return;
   if(!this.stock){g.fireTimer=.15;if(this.empty<=0){g.audio.tone(140,.055,'square',.018,70);this.empty=.6;}return;}
   g.updateAim();this.pending={mode:this.mode,angle:g.aimAngle,scale:g.thinking/2};this.launch=.001;g.fireTimer=[.32,.46,.74][this.mode];g.lastCooldown=g.fireTimer;
   g.audio.tone(180,.1,'triangle',.025,550);
  }
  releaseShot(p:NonNullable<MarcusKit['pending']>){
   const g=this.g,group=++this.serial,spread=p.mode===1?[-.16,.16]:[0],speed=[650,590,430][p.mode]+p.scale*25;
-  const spawn=(offset:number,echo:boolean)=>{const a=p.angle+offset;this.discs.push({x:g.player.x+10,y:g.player.y+16,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,mode:p.mode,r:p.mode===2?11+p.scale*2:5+p.scale,power:([4,2.8,8][p.mode])*(echo?.5:1),age:0,life:3.1,back:false,hit:new Set(),group,echo,bounces:0,trail:[]});};
+  const spawn=(offset:number,echo:boolean)=>{const a=p.angle+offset;this.discs.push({x:g.player.x+10,y:g.player.y+16,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,mode:p.mode,r:p.mode===2?11+p.scale*2:5+p.scale,power:([4,2.8,8][p.mode])*(echo?.5:1),age:0,life:p.mode===0?CARTRIDGE_OUTBOUND_TIME+6:3.1,back:false,hit:new Set(),group,echo,bounces:0,trail:[]});};
   for(const a of spread)spawn(a,false);if(this.batch>0)for(const a of [-.33,-.23,.23,.33])spawn(a,true);
   g.shotCount++;g.makeNoise(g.player.x+10,g.player.y+16,430);g.audio.tone(p.mode===2?100:440,.12,'triangle',.045,p.mode===2?45:170);g.audio.noise(.045,.025,1700);
   g.emit(g.player.x+10+Math.cos(p.angle)*20,g.player.y+16+Math.sin(p.angle)*20,6,[AUGMENT_COLORS[p.mode],'#fff3ce'],80,2,.18);
  }
- returnDisc(d:Disc){if(d.back)return;d.back=true;d.hit.clear();d.age=0;}
+ returnDisc(d:Disc){if(d.back)return;d.back=true;d.hit.clear();d.age=0;if(d.mode===0)d.life=6;}
  recall(){const recalled=this.invader.recall(),chomp=this.pacman.recall();if(!recalled&&!chomp&&!this.discs.some(d=>!d.back))return;for(const d of this.discs)this.returnDisc(d);this.g.audio.tone(720,.16,'sine',.04,280);this.g.barks.request('recall');}
  dodge(){
   const g=this.g;if(this.lcd.flight||this.flipCooldown>0||this.flip>0)return;this.lcd.cancel();this.flip=.3;this.flipCooldown=1.45;
@@ -61,7 +69,7 @@ export class MarcusKit {
   for(const p of this.ghosts)p.life-=dt;this.ghosts=this.ghosts.filter(p=>p.life>0);
   if(this.launch>0){this.launch+=dt;if(this.pending&&this.launch>=.1){const p=this.pending;this.pending=null;this.releaseShot(p);}if(this.launch>.34)this.launch=0;}
   for(const d of this.discs){
-   d.age+=dt;d.life-=dt;if(!d.back&&d.age>(d.mode===2?.85:.72))this.returnDisc(d);
+   d.age+=dt;d.life-=dt;if(!d.back&&(d.age>(d.mode===0?CARTRIDGE_OUTBOUND_TIME:d.mode===2?.85:.72)||d.mode===0&&d.bounces>=CARTRIDGE_BOUNCES))this.returnDisc(d);
    if(d.back){const dx=g.player.x+10-d.x,dy=g.player.y+16-d.y,len=Math.hypot(dx,dy);if(len<18&&g.lineOfSight(d.x,d.y,g.player.x+10,g.player.y+16)){this.catchDisc(d);continue;}
     const speed=d.mode===2?650:840,k=Math.min(1,dt*12);d.vx+=(dx/Math.max(1,len)*speed-d.vx)*k;d.vy+=(dy/Math.max(1,len)*speed-d.vy)*k;
    }
@@ -76,14 +84,21 @@ export class MarcusKit {
      if(this.solid(nx,ny,d.r)){
       if(this.solid(nx,d.y,d.r))d.vx*=-1;else d.vy*=-1;d.bounces++;this.bounceCount++;
       g.emit(d.x,d.y,4,[AUGMENT_COLORS[d.mode],'#fff5d6'],120,2,.2);if(d.bounces<5)g.audio.tone(700+d.bounces*90,.05,'triangle',.018,300);
-      if(d.bounces>8){d.life=0;g.emit(d.x,d.y,8,[MARCUS_COLOR],80,2,.3);}break;
+      if(d.mode===0){if(d.bounces>=CARTRIDGE_BOUNCES)this.returnDisc(d);}
+      else if(d.bounces>8){d.life=0;g.emit(d.x,d.y,8,[MARCUS_COLOR],80,2,.3);}break;
      }
     }
     d.x=nx;d.y=ny;
     for(const e of g.enemies)if(!e.dead&&!d.hit.has(e)&&Math.hypot(clamp(d.x,e.x,e.x+e.w)-d.x,clamp(d.y,e.y,e.y+e.h)-d.y)<d.r+2&&g.lineOfSight(d.x,d.y,e.x+e.w/2,e.y+e.h/2))this.hitEnemy(d,e);
     for(const b of g.barrels)if(!b.dead&&!d.hit.has(b)&&Math.hypot(d.x-b.x-9,d.y-b.y-15)<d.r+15&&g.lineOfSight(d.x,d.y,b.x+9,b.y+15)){d.hit.add(b);b.hp-=d.power;if(b.hp<=0){b.owner=g.id;b.fuse=.06;}}
     const b=g.boss;if(b.active&&!b.dead&&b.phase===2&&!d.hit.has(b)&&d.x+d.r>b.x&&d.x-d.r<b.x+b.w&&d.y+d.r>b.y&&d.y-d.r<b.y+b.h){d.hit.add(b);b.hp-=d.power;g.emit(d.x,d.y,12,[MARCUS_COLOR,'#fff4c9'],180,3,.3);}
-    if(d.x<0||d.x>4080||d.y>LEVEL_HEIGHT+30||d.y<0)d.life=0;
+    if(d.mode===0){
+     // Long volleys bank off the map bounds instead of silently losing a slot.
+     let bank=false;
+     if(d.x<d.r||d.x>COLS*TILE-d.r){d.x=clamp(d.x,d.r,COLS*TILE-d.r);d.vx=d.x===d.r?Math.abs(d.vx):-Math.abs(d.vx);bank=true;}
+     if(d.y<d.r||d.y>LEVEL_HEIGHT-d.r){d.y=clamp(d.y,d.r,LEVEL_HEIGHT-d.r);d.vy=d.y===d.r?Math.abs(d.vy):-Math.abs(d.vy);bank=true;}
+     if(bank){d.bounces++;this.bounceCount++;if(d.bounces>=CARTRIDGE_BOUNCES)this.returnDisc(d);}
+    }else if(d.x<0||d.x>COLS*TILE||d.y>LEVEL_HEIGHT+30||d.y<0)d.life=0;
    }
   }
   this.discs=this.discs.filter(d=>d.life>0);
@@ -98,16 +113,16 @@ export class MarcusKit {
  }
  hud(){
   const g=this.g,$=(s:string)=>document.querySelector<HTMLElement>(s)!;
-  $('.name').textContent='MARCUS';$('.role').textContent='THE AUGMENTOR';$('#resource-name').textContent='STOCK';$('#usage').textContent=`${this.stock} / 3`;
-  for(const s of ['.meter-fill','.meter-trail'])$(s).style.width=`${this.stock/3*100}%`;$('.resources').classList.remove('tokens-low','tokens-empty');$('.resources').style.setProperty('--shot-color',AUGMENT_COLORS[this.mode]);
-  if(this.mode===1){const ready=!this.lcd.airUsed&&this.lcd.cooldown<=0,pct=this.lcd.charging?this.lcd.charge*100:ready?100:this.lcd.airUsed?0:(1-this.lcd.cooldown/.65)*100;$('#resource-name').textContent='SLING';$('#usage').textContent=this.lcd.charging?`${Math.round(pct)}%`:this.lcd.flight?'FLYING':this.lcd.airUsed?'LAND':ready?'READY':'RECOVER';for(const name of ['.meter-fill','.meter-trail'])$(name).style.width=`${pct}%`;}
-  $('#token-cost').textContent=this.mode===3?(this.pacman.active?.phase==='bite'?'CLICK ANOTHER BOT · CHAIN ×4':this.pacman.active?'CHOMP INCOMING':this.pacman.cooldown>0?'DIGESTING…':'CLICK TO LAUNCH · CLICK TO CHAIN'):this.mode===1?(this.lcd.airUsed?'LAND TO RELOAD':this.lcd.charging?'RELEASE TO LAUNCH YOURSELF':this.lcd.cooldown>0?'RECOVERING':'HOLD · AIM · RELEASE YOURSELF'):this.mode===2?(this.invader.charging?'RELEASE TO LAUNCH':this.invader.craft?'BOMBER OUT · E RECALL':'HOLD TO GROW · RELEASE TO BOMB'):this.stock?'LAUNCH · REPOSITION · RECALL':'CARTS OUT · E RECALL';$('#token-spend').textContent='';$('#thinking-label').textContent='AUGMENT';$('#thinking-level').textContent=this.name;
-  const slider=$('#thinking-slider');slider.setAttribute('aria-label','Augmentation');slider.setAttribute('aria-valuetext',`${this.name}, ${Math.round(g.thinking/3*100)} percent`);
+  $('.name').textContent='MARCUS';$('.role').textContent='THE AUGMENTOR';$('#resource-name').textContent='STOCK';$('#usage').textContent=`${this.stock} / ${CARTRIDGE_CAPACITY}`;
+  for(const s of ['.meter-fill','.meter-trail'])$(s).style.width=`${this.stock/CARTRIDGE_CAPACITY*100}%`;$('.resources').classList.remove('tokens-low','tokens-empty');$('.resources').style.setProperty('--shot-color',AUGMENT_COLORS[this.mode]);
+  if(this.lcd.driving){const ready=!this.lcd.airUsed&&this.lcd.cooldown<=0,pct=this.lcd.charging?this.lcd.charge*100:ready?100:this.lcd.airUsed?0:(1-this.lcd.cooldown/.65)*100;$('#resource-name').textContent='SLING';$('#usage').textContent=this.lcd.charging?`${Math.round(pct)}%`:this.lcd.flight?'FLYING':this.lcd.airUsed?'LAND':ready?'READY':'RECOVER';for(const name of ['.meter-fill','.meter-trail'])$(name).style.width=`${pct}%`;}
+  $('#token-cost').textContent=this.mode===3?(this.pacman.active?.phase==='bite'?'CLICK ANOTHER BOT · CHAIN ×4':this.pacman.active?'CHOMP INCOMING':this.pacman.cooldown>0?'DIGESTING…':'CLICK TO LAUNCH · CLICK TO CHAIN'):this.mode===2?(this.invader.charging?'RELEASE TO LAUNCH':this.invader.craft?'BOMBER OUT · E RECALL':'HOLD TO GROW · RELEASE TO BOMB'):this.stock?'LAUNCH · REPOSITION · RECALL':'CARTS OUT · E RECALL';$('#token-spend').textContent='';$('#thinking-label').textContent='AUGMENT';$('#thinking-level').textContent=this.name;
+  const slider=$('#thinking-slider');slider.setAttribute('aria-label','Augmentation');slider.setAttribute('aria-valuetext',`${this.name}, ${Math.round(g.thinking/2*100)} percent`);
   $('#reset-status').textContent=this.batch>0?`BATCH ${this.batch.toFixed(1)}s`:this.batchCooldown>0?`BATCH ${Math.ceil(this.batchCooldown)}s`:'BATCH';$('.reset-label').classList.toggle('spent',this.batchCooldown>0&&!this.batch);
   $('#secondary-ready').textContent=g.relays.some(r=>!r.done&&Math.hypot(r.x-g.player.x,r.y-g.player.y)<130)?'E OVERRIDE':'E RECALL';$('#defense-ready').textContent=this.flipCooldown>0?`Q ${this.flipCooldown.toFixed(1)}s`:'Q FLIP';$('#defense-ready').classList.toggle('spent',this.flipCooldown>0);
-  $('#control-fire').textContent=this.mode===3?'CLICK / CHAIN BITES':this.mode===1?'HOLD / SELF-LAUNCH':this.mode===2?'HOLD / RELEASE INVADER':'LAUNCH CART';$('#control-scroll').textContent='AUGMENT';$('#control-e').textContent='RECALL';$('#control-q').textContent='FLIP DODGE';$('#control-f').textContent='BATCH AUGMENT';
+  $('#control-fire').textContent=this.mode===3?'CLICK / CHAIN BITES':this.mode===2?'HOLD / RELEASE INVADER':'LAUNCH CART';$('#control-scroll').textContent='AUGMENT';$('#control-e').textContent='RECALL';$('#control-q').textContent='FLIP DODGE';$('#control-f').textContent='BATCH AUGMENT';
   marcusPortrait((document.querySelector('.portrait') as HTMLCanvasElement).getContext('2d')!,this.mode);
-  g.canvas.setAttribute('aria-label','Marcus: WASD move and climb, Space jump, mouse aim, click launches cartridges; in LCD hold and release to launch yourself; in Zoom hold to grow an invader and release to launch a bombing run, in Pac-Man click to launch and click another enemy during each bite to chain up to four; scroll or 1 2 3 4 Rotate LCD Zoom Pac-Man, E recall or override nearby uplink, Q flip dodge, F batch augment, Escape pause.');
+  g.canvas.setAttribute('aria-label','Marcus: WASD move and climb, Space jumps immediately, press and hold Space again in midair then release for LCD launch with mouse aim; click launches cartridges; in Zoom hold to grow an invader and release to launch a bombing run, in Pac-Man click to launch and click another enemy during each bite to chain up to four; scroll or 1 2 3 Cartridges Invader Pac-Man, E recall or override nearby uplink, Q flip dodge, F batch augment, Escape pause.');
  }
  snapshot(){return {pacman:this.pacman.snapshot(),lcd:this.lcd.snapshot(),invader:this.invader.snapshot(),mode:this.name,stock:this.stock,pending:!!this.pending,discs:this.discs.map(d=>({x:d.x,y:d.y,vx:d.vx,vy:d.vy,mode:d.mode,back:d.back,echo:d.echo,group:d.group,bounces:d.bounces})),catches:this.catches,hits:this.hitCount,returnHits:this.returnHits,bounces:this.bounceCount,combo:this.combo,flip:this.flip,flipCooldown:this.flipCooldown,batch:this.batch,batchCooldown:this.batchCooldown};}
 }
