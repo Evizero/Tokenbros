@@ -473,10 +473,12 @@
   .app.mobile { grid-template-columns: 1fr !important; }
   .app.mobile .side { position: fixed; left: 0; top: 0; bottom: 0; width: min(82vw, 340px); z-index: 40; transform: translateX(-100%); transition: transform .4s cubic-bezier(.2,.9,.3,1); background: #000; border-right: 0; }
   .app.mobile.drawer .side { transform: none; }
-  .app.mobile .main { grid-template-rows: 60px 1fr 50px; transition: transform .4s cubic-bezier(.2,.9,.3,1), filter .4s, border-radius .4s; background: var(--bg); }
+  .app.mobile .main { position: relative; grid-template-rows: 1fr 50px; transition: transform .4s cubic-bezier(.2,.9,.3,1), filter .4s, border-radius .4s; background: var(--bg); }
   .app.mobile.drawer .main { transform: translateX(min(82vw, 340px)); filter: brightness(.5); border-radius: 30px; overflow: hidden; }
   .app.mobile .winbar, .app.mobile .review, .app.mobile .panel, .app.mobile .layers, .app.mobile .mapctl, .app.mobile .level { display: none !important; }
-  .app.mobile .title { padding: 0 12px; background: var(--bg); border-bottom: 0; gap: 0; }
+  /* the top bar floats over the content, as in the app: two round buttons over a soft fade */
+  .app.mobile .title { position: absolute; left: 0; right: 0; top: 0; height: 64px; z-index: 6; padding: 0 12px; background: linear-gradient(to bottom, rgba(11,11,11,.92) 35%, rgba(11,11,11,0)); border-bottom: 0; gap: 0; pointer-events: none; }
+  .app.mobile .title > * { pointer-events: auto; }
   .app.mobile .title > :not(.mmenu):not(.mpill) { display: none !important; }
   .app.mobile .mmenu { display: grid; width: 44px; height: 44px; border-radius: 22px; background: #1C1C1C; border: 1px solid #2A2A2A; color: #E6E6E6; }
   .app.mobile .mmenu svg { width: 20px; height: 20px; stroke-width: 1.8; }
@@ -493,10 +495,22 @@
   .app.mobile .play { width: 34px; height: 34px; }
   .app.mobile .mspeed { display: block; font: 600 11px var(--mono); color: #D6D6D6; background: #222; border: 1px solid #333; border-radius: 13px; padding: 6px 10px; white-space: nowrap; }
   .app.mobile #thread { padding: 8px 16px 140px; } .app.mobile .tw { font-size: 15px; }
-  .app.mobile .ext.center { left: 50%; width: calc(100% - 24px); } .app.mobile .ext.center .page { min-height: 200px; }
+  /* a phone: the browser is a small card in the corner; tap it to open the full view */
+  .ext.mini { position: absolute; top: 72px; right: 12px; width: 168px; z-index: 3; padding: 8px 8px 8px; border-radius: 14px; cursor: pointer; max-height: none;
+    transition: width .38s cubic-bezier(.2,.9,.3,1), opacity .3s, transform .35s cubic-bezier(.2,.9,.3,1), box-shadow .3s; transform-origin: 100% 0; }
+  .ext.mini h4 { margin: 0 0 6px; font-size: 12px; } .ext.mini h4 small { font-size: 10px; }
+  .ext.mini .chrome { padding: 4px 6px; } .ext.mini .chrome i { width: 6px; height: 6px; } .ext.mini .url { font-size: 10px; padding: 2px 7px; }
+  .ext.mini .page { min-height: 0; height: 88px; overflow: hidden; } .ext.mini .page img { height: 88px; object-fit: cover; object-position: top; }
+  .ext.mini .res { padding: 5px 8px 0; } .ext.mini .res b { height: 3px; } .ext.mini .res em { height: 5px; margin: 3px 0; } .ext.mini .res span { height: 3px; margin-top: 3px; }
+  .ext.mini .pa { left: 6px; bottom: 6px; font-size: 9.5px; padding: 2px 7px; }
+  .ext.mini .dock { width: 14px; height: 14px; }
+  .ext.mini.off { opacity: 0; transform: scale(.9); pointer-events: none; }
+  .ext.mini.open { width: calc(100% - 24px); cursor: default; } .ext.mini.open .page { height: auto; max-height: 52vh; } .ext.mini.open .page img { height: auto; }
+  .ext.mini.open h4 { font-size: 13px; } .ext.mini.open .url { font-size: 11.5px; }
+  .ext.mini.active { animation: none; border-color: rgba(127,139,255,.55); box-shadow: 0 0 0 1px rgba(127,139,255,.2), 0 12px 32px rgba(0,0,0,.5), 0 0 22px rgba(127,139,255,.18); }
   .app.mobile .stagex { top: 50px; }
   .app.mobile .scrim { right: 0 !important; }
-  .mback { position: absolute; top: 10px; left: 10px; z-index: 4; align-items: center; gap: 4px; height: 34px; padding: 0 14px 0 8px; border-radius: 17px; background: rgba(28,28,30,.95); border: 1px solid #3A3A3A; color: #E6E6E6; font-size: 13.5px;
+  .mback { position: absolute; top: 72px; left: 12px; z-index: 4; align-items: center; gap: 4px; height: 34px; padding: 0 14px 0 8px; border-radius: 17px; background: rgba(28,28,30,.95); border: 1px solid #3A3A3A; color: #E6E6E6; font-size: 13.5px;
     opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity .3s, transform .3s; }
   .mback svg { width: 17px; height: 17px; }
   .app.mobile .mback { display: flex; } .app.mobile .mback.on { opacity: 1; pointer-events: auto; transform: none; }
@@ -1453,7 +1467,7 @@ const s2w = (x, y) => [(x - cx0()) / cam.z + cam.x, (y - cy0()) / cam.z + cam.y]
 const FZ_MIN = .32, FZ_MAX = .78;
 // the part of the canvas you can actually see: below the map controls, above the composer
 function viewFrame() {
-  const c = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(), top = 64, bot = Math.min(VH - 12, c.top - m.top - 16);
+  const c = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(), top = MOBILE ? 68 : 64, bot = Math.min(VH - 12, c.top - m.top - 16);
   return { top, bot, h: Math.max(160, bot - top), cy: (top + bot) / 2, w: Math.max(200, VW - panelW - 80) };
 }
 let followZ = 0;
@@ -1522,7 +1536,7 @@ function squarify(items, x, y, w, h, out) {
 }
 // screen-space layout: components by total lines, files inside by their own lines
 function treemapLayout() {
-  const X0 = MOBILE ? 10 : 16, Y0 = MOBILE ? 8 : 56, X1 = VW - panelW - 10, Y1 = MOBILE ? viewFrame().bot - 6 : VH - 126, key = LKEY + '|' + VW + 'x' + VH + (MOBILE ? 'm' : '');
+  const X0 = MOBILE ? 10 : 16, Y0 = MOBILE ? 70 : 56, X1 = VW - panelW - 10, Y1 = MOBILE ? viewFrame().bot - 6 : VH - 126, key = LKEY + '|' + VW + 'x' + VH + (MOBILE ? 'm' : '');
   if (TM.key === key) return; TM.key = key;
   const val = fi => Math.max(14, F[fi].v[ST.vi[fi]] ? F[fi].v[ST.vi[fi]][1] : 0);
   const comps = L.comps.filter(c => c.files.length).map(c => ({ id: 'c' + c.id, c, v: c.files.reduce((s, fi) => s + val(fi), 0) })).sort((p, q) => q.v - p.v);
@@ -2183,9 +2197,10 @@ function drawRich(lines, x, y, lh, col, bold) {
 // room, above it otherwise; the window's content stays clear
 function drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, tFade, sFade) {
   const cr = $('ext').getBoundingClientRect(), mr = fxc.getBoundingClientRect(), card = { x: cr.left - mr.left, y: cr.top - mr.top, w: cr.width, h: cr.height };
-  const W = Math.max(said ? sw : 0, thought ? tw : 0), side = card.x - 20 - W >= 12;
+  const W = Math.max(said ? sw : 0, thought ? tw : 0), side = !MOBILE && card.x - 20 - W >= 12;
   let sx, sy, tx, ty;
-  if (side) { const right = card.x - 20; sx = right - sw; tx = right - tw; sy = Math.max(64, ay - 18); ty = said ? sy + sh + 14 : sy; }
+  if (MOBILE) { sx = Math.max(8, VW - 8 - sw); tx = Math.max(8, VW - 8 - tw); sy = card.y + card.h + 14; ty = said ? sy + sh + 12 : sy; }
+  else if (side) { const right = card.x - 20; sx = right - sw; tx = right - tw; sy = Math.max(64, ay - 18); ty = said ? sy + sh + 14 : sy; }
   else { sx = tx = Math.max(12, card.x + 10); sy = card.y - 18 - sh; ty = (said ? sy - 14 : card.y - 18) - th; }
   const tail = (x, y, w, h, fill) => {                    // a tapered tail from the bubble's nearest edge to the icon
     const bx = side ? x + w - 2 : Math.min(x + w - 24, Math.max(x + 24, ax)), by = side ? Math.min(y + h - 14, Math.max(y + 14, ay)) : y + h - 2;
@@ -2231,14 +2246,18 @@ function updateExt(now) {
         $('extP').innerHTML = `<img src="${IMG.list[it.ii].src}" alt="Screenshot the agent looked at">`;
       }
     }
-    const centre = !L.comps.length || MOBILE, parent = centre ? document.querySelector('.body') : $('extHome').parentElement;
-    if (el.parentElement !== parent) { el.classList.add('off'); if (centre) parent.appendChild(el); else $('extHome').after(el); el.classList.toggle('center', centre); void el.offsetWidth; }
+    // desktop: in the middle before there is a project, in the side panel after; a phone: a small
+    // card in the corner that opens when you tap it
+    const centre = !L.comps.length && !MOBILE, float = centre || MOBILE, parent = float ? document.querySelector('.body') : $('extHome').parentElement;
+    if (el.parentElement !== parent || el.classList.contains('center') !== centre || el.classList.contains('mini') !== MOBILE) {
+      el.classList.add('off'); if (float) parent.appendChild(el); else $('extHome').after(el); el.classList.toggle('center', centre); el.classList.toggle('mini', MOBILE); el.classList.remove('open'); void el.offsetWidth;
+    }
     el.classList.remove('off');
     const act = S[cur].k === 'web' || S[cur].k === 'image' || S[cur].k === 'playtest';
     el.classList.toggle('active', act); $('extS').textContent = act ? 'live' : 'outside the repo';
   } else if (!el.classList.contains('off')) {
     el.classList.remove('active');
-    if (!extOff) extOff = now; else if (now - extOff > 600 || stageFor >= 0) { el.classList.add('off'); extShown = -1; }
+    if (!extOff) extOff = now; else if (now - extOff > (MOBILE ? 250 : 600) || stageFor >= 0) { el.classList.add('off'); el.classList.remove('open'); extShown = -1; }
   }
 }
 // before anything exists: the agent waits in the middle of an empty folder
@@ -2380,9 +2399,9 @@ function drawAgent(now, ap, s) {
   // which side and whether above: decided with some hysteresis, so they do not flip back and forth
   const mapW0 = VW - panelW; if (BUB.left == null || !said && !thought) BUB.left = ax > mapW0 * .62; else if (BUB.left && ax < mapW0 * .5) BUB.left = false; else if (!BUB.left && ax > mapW0 * .72) BUB.left = true;
   const left = BUB.left;
-  const sl = said ? richWrap(said.text, { size: 13, weight: said.final ? 600 : 500 }, Math.min(320, VW - 120), 6) : [];
+  const sl = said ? richWrap(said.text, { size: MOBILE ? 12.5 : 13, weight: said.final ? 600 : 500 }, Math.min(320, VW - 120), MOBILE ? 4 : 6) : [];
   const sw = said ? Math.max(...sl.map(l => l.w)) + 26 : 0, sh = sl.length * 18 + 16;
-  const tl = thought ? richWrap(thought, { size: 13, weight: 400, italic: true }, Math.min(280, VW - 120), 4) : [];
+  const tl = thought ? richWrap(thought, { size: MOBILE ? 12.5 : 13, weight: 400, italic: true }, Math.min(280, VW - 120), MOBILE ? 2 : 4) : [];
   const tw = thought ? Math.max(...tl.map(l => l.w)) + 26 : 0, th = tl.length * 17 + 14;
   // the thought mirrors the speech on the other side of the avatar; if that side is off-canvas
   // it stacks beyond the speech instead
@@ -2801,7 +2820,7 @@ function drawAvatarBody(ax, ay, s, now, docked) {
   const busy = avatarBusy(now), empty = !L.comps.length;
   const parked = !empty && resting(now) && !stageSeat(now);
   const want = docked ? 9 : busy ? (empty ? 22 : 16) : (empty || parked || stageSeat(now)) ? 30 : 20;   // at rest it is bigger and calmer
-  AV_R += (want - AV_R) * .1; energy += ((busy ? 1 : 0) - energy) * (busy ? .06 : .05); advancePhase(now);
+  AV_R += ((docked ? (MOBILE ? 7 : want) : want * (MOBILE ? .62 : 1)) - AV_R) * .1; energy += ((busy ? 1 : 0) - energy) * (busy ? .06 : .05); advancePhase(now);
   // writing its answer: a steady working beat
   writeAmt += ((streaming(now) && stageFor >= 0 ? 1 : 0) - writeAmt) * .08;
   // thinking: reasoning between tool steps, or while a thought is showing
@@ -2857,7 +2876,7 @@ const canReopen = () => L.comps.length && stageFor < 0 && lastFinal() >= 0 && la
 const readSeconds = () => 1.6;                                // a beat, not a wait: pause to read
 // like a thread: the answer in the middle with the full height, its author beside the first line
 function stageGeom() {
-  if (MOBILE) return { ax: 40, ay: 44, left: 16, cw: VW - 32, top: 88 };     // a phone: the agent above, the answer below it
+  if (MOBILE) { const c = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(); return { ax: VW - 30, ay: c.top - m.top - 34, left: 16, cw: VW - 32, top: 68 }; }   // a phone: the answer is the screen; the agent floats at its right edge
   const mapW = VW - panelW, cw = Math.min(740, mapW - 190), x0 = Math.max(24, (mapW - cw) / 2 + 30);
   return { ax: x0 - 58, ay: 100, left: x0, cw, top: 40 };
 }
@@ -2940,7 +2959,7 @@ function drawWriteBeam(now, ax, ay) {
   const last = k === stream.units.length - 1; if (last && after > WRITE_TAIL) return;
   const fade = Math.min(1, (t - stream.due[0]) / 300) * (last && after > 0 ? 1 - after / WRITE_TAIL : 1);
   const st = $('stage').getBoundingClientRect(), fr = fxc.getBoundingClientRect(), r = (el.tagName === 'TR' ? el.closest('.tbl') : el).getBoundingClientRect(), ur = el.getBoundingClientRect();
-  const x0 = r.left - fr.left - 8, x1 = Math.min(r.right, st.right - 20) - fr.left;
+  const xl = r.left - fr.left - 8, xr = Math.min(r.right, st.right - 20) - fr.left, x0 = MOBILE ? xr + 6 : xl, x1 = MOBILE ? xl : xr;
   // one continuous beam: its target glides from paragraph to paragraph instead of jumping
   const T = Math.max(st.top - fr.top, ur.top - fr.top), B = Math.min(st.bottom - fr.top, ur.bottom - fr.top), dt = Math.min(50, now - (stream.bl || now)); stream.bl = now;
   const kk = 1 - Math.exp(-dt / 140); stream.bt = stream.bt == null ? T : stream.bt + (T - stream.bt) * kk; stream.bb = stream.bb == null ? B : stream.bb + (B - stream.bb) * kk;
@@ -2958,13 +2977,12 @@ function drawWriteBeam(now, ax, ay) {
   // a soft light where it lands, fading off to the right; steady, no flashing
   g.globalCompositeOperation = 'lighter';
   const lit = g.createLinearGradient(x0, 0, x1, 0); lit.addColorStop(0, rgbA(col, .1 * fade)); lit.addColorStop(.45, rgbA(col, .035 * fade)); lit.addColorStop(1, rgbA(col, 0));
-  g.fillStyle = lit; rr(x0 + 4, bt - 3, x1 - x0, bb - bt + 6, 8); g.fill();
+  g.fillStyle = lit; rr(Math.min(x0, x1) + (MOBILE ? -4 : 4), bt - 3, Math.abs(x1 - x0), bb - bt + 6, 8); g.fill();
   g.fillStyle = rgbA(col, .55 * fade); g.fillRect(x0 - .5, bt, 1.5, bb - bt);
   g.restore();
 }
 // where the writing is now (screen y, within the answer), or null when it is not writing
 function writingY(now) {
-  if (MOBILE) return null;                                  // on a phone it writes from its seat above
   if (!stream || !stream.k || stageFor < 0) return null;
   const k = stream.k - 1, el = stream.units[k], t = now - stream.t0; if (k === stream.units.length - 1 && t > stream.due[k] + stream.slot[k] + WRITE_TAIL) return null;
   const st = $('stage').getBoundingClientRect(), fr = fxc.getBoundingClientRect(), r = el.getBoundingClientRect(), y = (r.top + r.bottom) / 2 - fr.top;
@@ -3376,6 +3394,7 @@ function mUp(e) {
   pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
   if (!mdrag || pts.size) return;
   const d = mdrag; mdrag = null; if (d.moved) return;
+  if ($('ext').classList.contains('open')) { $('ext').classList.remove('open'); return; }
   const r = cv.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top, [gx, gy] = w2s(agent.x, agent.y);
   if (canReopen() && Math.hypot(sx - gx, sy - gy) < AV_R * 1.8) { reopenAnswer(); return; }
   const hit = hitTile(...s2w(sx, sy));
@@ -3396,6 +3415,8 @@ function closeDrawer() { document.querySelector('.app').classList.remove('drawer
 $('mmenu').addEventListener('click', e => { e.stopPropagation(); openDrawer(); });
 document.querySelector('.main').addEventListener('click', e => { if (document.querySelector('.app').classList.contains('drawer')) { e.stopPropagation(); e.preventDefault(); closeDrawer(); } }, true);
 $('mback').addEventListener('click', () => overview());
+// the small browser card: tap to open it, tap again (or the map) to put it back
+$('ext').addEventListener('click', e => { if (!MOBILE) return; e.stopPropagation(); $('ext').classList.toggle('open'); });
 
 /* the ··· sheet: views, speed, bubbles */
 function buildSheet() {
