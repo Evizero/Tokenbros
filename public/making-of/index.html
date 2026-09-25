@@ -243,7 +243,7 @@
   .app.mapanswer .stage .toMap { display: flex; align-items: center; gap: 8px; margin: 26px auto 6px; padding: 10px 18px 10px 14px; border-radius: 22px; background: #242428; border: 1px solid #3A3A42; color: #E6E6E6; font-size: 14px; }
   .app.mapanswer .stage .toMap:hover { background: #2E2E34; } .stage .toMap svg { width: 17px; height: 17px; color: var(--accent); }
   .app.mobile .stagex { top: 76px; width: 38px; height: 38px; border-radius: 19px; }
-  .app.mobile.mapanswer .stage .toMap { font-size: 16px; padding: 12px 20px 12px 16px; }
+  .app.mobile.mapanswer .stage .toMap { padding: 11px 18px 11px 14px; }
   .app.mapanswer .stagex { opacity: 1; pointer-events: auto; }
   .reopen { position: absolute; z-index: 5; display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px 0 9px; border-radius: 14px; background: rgba(28,28,34,.95); border: 1px solid rgba(127,139,255,.45); color: #DADDFF; font-size: 12.5px; white-space: nowrap;
     opacity: 0; pointer-events: none; transform: translateY(6px); transition: opacity .3s, transform .3s; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
@@ -551,10 +551,15 @@
   .app.mobile .composer.typing, .app.mobile .composer.sent { left: 10px; right: 10px; border-radius: 26px; padding: 12px 8px 8px 16px; }
   .app.mobile .composer.typing .crow, .app.mobile .composer.sent .crow { margin-top: 10px; }
   .app.mobile .composer .model { font-size: 14px; }
-  /* reading */
-  .app.mobile .stage { font-size: 17px; line-height: 1.45; } .app.mobile .stage .who { font-size: 14px; } .app.mobile .stage .who b { font-size: 16px; }
-  .app.mobile .tw { font-size: 17px; line-height: 1.45; } .app.mobile .tw .you .msg { font-size: 17px; border-radius: 26px; padding: 12px 18px; }
-  .app.mobile .tw .grp { font-size: 15px; }
+  /* reading, as the app sets it: about 15 pt with airy 25 pt lines (52 characters to a line) */
+  .app.mobile .stage { font-size: 15px; line-height: 1.66; padding-top: 22px; } .app.mobile .stage .who { font-size: 13px; } .app.mobile .stage .who b { font-size: 15px; }
+  .app.mobile .stage .md p { margin-bottom: .9em; } .app.mobile .stage .md .h1 { font-size: 1.2em; } .app.mobile .stage .md .h2 { font-size: 1.1em; }
+  .app.mobile .stage .md table { font-size: 14px; } .app.mobile .stage .md th, .app.mobile .stage .md td { padding: 9px 12px; }
+  .app.mobile .tw { font-size: 15px; line-height: 1.66; } .app.mobile .tw .you .msg { font-size: 15px; border-radius: 22px; padding: 10px 16px; }
+  .app.mobile .tw .grp { font-size: 14px; }
+  .app.mobile.mapanswer .stage .toMap { font-size: 15px; }
+  /* before there is a map, the browser is the main thing on a phone too */
+  .app.mobile .ext.center { left: 50%; width: calc(100% - 24px); } .app.mobile .ext.center .page { min-height: 190px; }
   /* the drawer */
   .app.mobile .side { font-size: 17px; padding-top: 6px; }
   .app.mobile .brand { padding: 18px 14px 14px 22px; } .app.mobile .brand > span:first-child { font-size: 24px; }
@@ -633,6 +638,7 @@
   <symbol id="i-image" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="M3 14l4-4 4 3 3-2 3 3"/></symbol>
 </svg>
 <div class="app">
+<script>/* a phone gets its layout before the first paint: no desktop sidebar flash */ if (matchMedia("(max-width: 760px)").matches) { document.currentScript.parentElement.classList.add("mobile"); document.body.classList.add("mobile"); }</script>
   <aside class="side">
     <div class="winbar"><button class="ib" title="Toggle sidebar"><svg><use href="#i-sidebar"/></svg></button><button class="ib" title="Back"><svg><use href="#i-back"/></svg></button><button class="ib off" title="Forward"><svg><use href="#i-fwd"/></svg></button></div>
     <div class="brand"><span>Codex<svg class="chev"><use href="#i-chev"/></svg></span><span class="bi"><button class="ib" title="Search"><svg><use href="#i-search"/></svg></button><button class="ib bell" title="Notifications"><svg><use href="#i-bell"/></svg></button></span></div>
@@ -1606,7 +1612,7 @@ function squarify(items, x, y, w, h, out) {
 }
 // screen-space layout: components by total lines, files inside by their own lines
 function treemapLayout() {
-  const X0 = MOBILE ? 10 : 16, Y0 = MOBILE ? 70 : 56, X1 = VW - panelW - 10, Y1 = MOBILE ? viewFrame().bot - 6 : VH - 126, key = LKEY + '|' + VW + 'x' + VH + (MOBILE ? 'm' : '');
+  const X0 = MOBILE ? 10 : 16, Y0 = MOBILE ? 70 : 56, X1 = VW - panelW - 10, Y1 = MOBILE ? viewFrame().bot - 6 : VH - 126, key = LKEY + '|' + VW + 'x' + VH + (MOBILE ? 'm' + (mcomp || '') : '');
   if (TM.key === key) return; TM.key = key;
   const val = fi => Math.max(14, F[fi].v[ST.vi[fi]] ? F[fi].v[ST.vi[fi]][1] : 0);
   const comps = L.comps.filter(c => c.files.length).map(c => ({ id: 'c' + c.id, c, v: c.files.reduce((s, fi) => s + val(fi), 0) })).sort((p, q) => q.v - p.v);
@@ -1616,6 +1622,17 @@ function treemapLayout() {
     const inner = { x: r.x + g2 + 3, y: r.y + g2 + 24, w: r.w - g2 * 2 - 6, h: r.h - g2 * 2 - 27 };
     const fr = squarify(c.files.map(fi => ({ id: 'f' + fi, v: val(fi) })).sort((p, q) => q.v - p.v), inner.x, inner.y, Math.max(1, inner.w), Math.max(1, inner.h), {});
     for (const [k, q] of Object.entries(fr)) rects[k] = { x: q.x + 1, y: q.y + 1, w: Math.max(1, q.w - 2), h: Math.max(1, q.h - 2) };
+  }
+  // a phone, one group opened: that group fills the screen (its files laid out afresh, big enough
+  // to read), and everything else is pushed outward by the same zoom
+  const fc = MOBILE && mcomp && comps.find(x => x.c.id === mcomp);
+  if (fc) {
+    const o = rects[fc.id], T0 = Y0 + 44, F0 = { x: X0, y: T0, w: X1 - X0, h: Y1 - T0 }, sx = F0.w / o.w, sy = F0.h / o.h;
+    const map = q => ({ x: F0.x + (q.x - o.x) * sx, y: F0.y + (q.y - o.y) * sy, w: q.w * sx, h: q.h * sy });
+    for (const k of Object.keys(rects)) if (k !== fc.id && !(k[0] === 'f' && F[+k.slice(1)].comp === mcomp)) rects[k] = map(rects[k]);
+    rects[fc.id] = { ...F0 };
+    const fr = squarify(fc.c.files.map(fi => ({ id: 'f' + fi, v: val(fi) })).sort((p, q) => q.v - p.v), F0.x + 4, F0.y + 30, F0.w - 8, F0.h - 34, {});
+    for (const [k, q] of Object.entries(fr)) rects[k] = { x: q.x + 2, y: q.y + 2, w: Math.max(1, q.w - 4), h: Math.max(1, q.h - 4) };
   }
   TM.rects = rects;
 }
@@ -1999,7 +2016,7 @@ function draw(now) {
     const r = V.get('c' + c.id); if (!r) continue;
     const flag = (LENS !== 'activity') && compMetrics(c)?.flag;
     rr(r.x, r.y, r.w, r.h, r.tm ? px(18 - 12 * tmT, 4, 18) : 18); g.fillStyle = rgba(c.def.kind === 'external' ? '#202020' : '#141414', r.a); g.fill();
-    if (r.tm && r.glob) { g.fillStyle = rgba('#1C1C1C', tmT * r.a); g.fill(); }
+    if (r.tm && r.glob) { g.fillStyle = rgba('#1C1C1C', tmT * r.a); g.fill(); if (MOBILE && mcomp === c.id) { g.strokeStyle = rgba(COL.accent, .8 * tmT); g.lineWidth = px(2, 2, 2); g.stroke(); } }
     g.lineWidth = px(c.def.kind === 'container' ? 3 : 2, 1, c.def.kind === 'container' ? 2.5 : 1.6); g.strokeStyle = rgba(flag ? '#7A3A40' : c.def.kind === 'component' ? '#383838' : '#4E4E4E', r.a); g.stroke();
   }
   // files
@@ -2014,7 +2031,7 @@ function draw(now) {
     if (LENS !== 'activity' && treeT < 1) { const c0 = tmColor(fi); if (c0 !== NEUTRAL) { g.globalAlpha = r.a * .55 * (1 - treeT); g.fillStyle = c0; g.fill(); g.globalAlpha = r.a; } }
     if (treeT > 0) {
       const tch = touchedAt.get(fi), gl = tch ? holdGlow(tch.t, now) : 0;
-      g.globalAlpha = r.a * treeT; g.fillStyle = tmColor(fi); g.fill();
+      g.globalAlpha = r.a * treeT * (MOBILE && mcomp && F[fi].comp !== mcomp ? .3 : 1); g.fillStyle = tmColor(fi); g.fill();
       if (gl > 0) { g.strokeStyle = rgba(tch.col === COL.green ? '#7CFFC4' : '#A9B2FF', .95 * gl); g.lineWidth = px(2.5, 1.5, 3); g.stroke(); }
       if ((LENS !== 'activity') && flagged(fi)) { g.fillStyle = COL.red; g.fillRect(r.x, r.y, r.w, Math.min(r.h, px(3, 2, 3))); }
       // what the agent has in context stays visible from far out: an inner outline, and a bar for how much
@@ -2269,7 +2286,10 @@ function drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, t
   const cr = $('ext').getBoundingClientRect(), mr = fxc.getBoundingClientRect(), card = { x: cr.left - mr.left, y: cr.top - mr.top, w: cr.width, h: cr.height };
   const W = Math.max(said ? sw : 0, thought ? tw : 0), side = !MOBILE && card.x - 20 - W >= 12;
   let sx, sy, tx, ty;
-  if (MOBILE) { sx = Math.max(8, VW - 8 - sw); tx = Math.max(8, VW - 8 - tw); sy = card.y + card.h + 14; ty = said ? sy + sh + 12 : sy; }
+  if (MOBILE && !L.comps.length) {                          // the browser fills the middle: speak from above it
+    sx = Math.max(8, Math.min(VW - 8 - sw, card.x + 6)); tx = Math.max(8, Math.min(VW - 8 - tw, card.x + 6));
+    const need = (said ? sh + 12 : 0) + (thought ? th + 12 : 0), top = Math.max(76, card.y - 12 - need); sy = top + (thought && said ? th + 12 : 0); ty = top;
+  } else if (MOBILE) { sx = Math.max(8, VW - 8 - sw); tx = Math.max(8, VW - 8 - tw); sy = card.y + card.h + 14; ty = said ? sy + sh + 12 : sy; }
   else if (side) { const right = card.x - 20; sx = right - sw; tx = right - tw; sy = Math.max(64, ay - 18); ty = said ? sy + sh + 14 : sy; }
   else { sx = tx = Math.max(12, card.x + 10); sy = card.y - 18 - sh; ty = (said ? sy - 14 : card.y - 18) - th; }
   const tail = (x, y, w, h, fill) => {                    // a tapered tail from the bubble's nearest edge to the icon
@@ -2318,9 +2338,9 @@ function updateExt(now) {
     }
     // desktop: in the middle before there is a project, in the side panel after; a phone: a small
     // card in the corner that opens when you tap it
-    const centre = !L.comps.length && !MOBILE, float = centre || MOBILE, parent = float ? document.querySelector('.body') : $('extHome').parentElement;
-    if (el.parentElement !== parent || el.classList.contains('center') !== centre || el.classList.contains('mini') !== MOBILE) {
-      el.classList.add('off'); if (float) parent.appendChild(el); else $('extHome').after(el); el.classList.toggle('center', centre); el.classList.toggle('mini', MOBILE); el.classList.remove('open'); void el.offsetWidth;
+    const centre = !L.comps.length, mini = MOBILE && !centre, float = centre || mini, parent = float ? document.querySelector('.body') : $('extHome').parentElement;
+    if (el.parentElement !== parent || el.classList.contains('center') !== centre || el.classList.contains('mini') !== mini) {
+      el.classList.add('off'); if (float) parent.appendChild(el); else $('extHome').after(el); el.classList.toggle('center', centre); el.classList.toggle('mini', mini); el.classList.remove('open'); void el.offsetWidth;
     }
     el.classList.remove('off');
     const act = S[cur].k === 'web' || S[cur].k === 'image' || S[cur].k === 'playtest';
@@ -2463,7 +2483,8 @@ function drawAgent(now, ap, s) {
   const thought = SHOW_BUBBLES && inView && !said ? bb0.thought : null;          // one bubble at a time: speech wins
   updateReopen(ax, ay);
   const newT = thought !== pop.t, sk = said ? said.text : '', newS = sk !== pop.s;
-  if (newT) { pop.t = thought; pop.tt = now; } if (newS) { pop.s = sk; pop.st = now; }
+  if (newT) { if (!pop.t || now - pop.tSeen > 250) pop.tt = now; pop.tx = now; pop.t = thought; } if (thought) pop.tSeen = now;
+  if (newS) { if (!pop.s || now - pop.sSeen > 250) pop.st = now; pop.sx = now; pop.s = sk; } if (said) pop.sSeen = now;
   BUB.dt = Math.min(50, now - (BUB.t0 || now)); BUB.t0 = now;
   // measure both, then stack them on the free side of the avatar: above it, or below when the
   // avatar is near the top edge. The speech sits nearest; the thought floats beyond it.
@@ -2489,28 +2510,28 @@ function drawAgent(now, ap, s) {
   if (dockedNow) drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, tFade, sFade);
   else {
   if (thought) withPop(ax, ay, pop.tt, now, tFade, () => {
-    let [x, y] = glideBub('t', mirrored ? tx0 : left ? ax - tw - 18 - o : ax + 18 + o, ty, ax, ay, newT); if (MOBILE) { x = Math.max(8, Math.min(VW - 8 - tw, x)); y = Math.max(8, y); }
-    const fp = fluffy(x, y, tw, th);
+    const [x, y, bw, bh, ta] = holdBub('t', mirrored ? tx0 : left ? ax - tw - 18 - o : ax + 18 + o, ty, tw, th, ax, ay, now, pop.tx);
+    const fp = fluffy(x, y, bw, bh);
     g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 14; g.shadowOffsetY = 3; g.fillStyle = THINK.fill; g.fill(fp); g.restore();
     g.strokeStyle = THINK.line; g.lineWidth = 1.2; g.stroke(fp);
-    const ex = Math.max(x + 16, Math.min(x + tw - 16, ax)), ey = y + th / 2 > ay ? y - 4 : y + th + 4;
+    const ex = Math.max(x + 16, Math.min(x + bw - 16, ax)), ey = y + bh / 2 > ay ? y - 4 : y + bh + 4;
     for (const [f, rad] of [[.3, 4.2], [.6, 3], [.84, 2]]) { g.beginPath(); g.arc(ex + (ax - ex) * f, ey + (ay - ey) * f, rad, 0, 7); g.fillStyle = THINK.fill; g.fill(); g.strokeStyle = THINK.line; g.lineWidth = 1; g.stroke(); }
-    drawRich(tl, x + 13, y + 19, 17, THINK.ink, '#D6D0FA');
+    g.save(); g.globalAlpha *= ta; g.beginPath(); g.rect(x, y, bw, bh); g.clip(); drawRich(tl, x + 13, y + 19, 17, THINK.ink, '#D6D0FA'); g.restore();
   });
   if (said) withPop(ax, ay, pop.st, now, sFade, () => {
-    let [x, y] = glideBub('s', left ? ax - sw - 34 - o : ax + 34 + o, sy, ax, ay, newS); if (MOBILE) { x = Math.max(8, Math.min(VW - 8 - sw, x)); y = Math.max(8, y); }
-    const up = y + sh / 2 > ay;
-    const bx = Math.max(x + 24, Math.min(x + sw - 24, x + sw / 2 < ax ? x + sw - 34 : x + 34)), dir = up ? -1 : 1;
-    const base = up ? y + 8 : y + sh - 8, edge = up ? y : y + sh;      // the tail starts inside the body: no seam
+    const [x, y, bw, bh, ta] = holdBub('s', left ? ax - sw - 34 - o : ax + 34 + o, sy, sw, sh, ax, ay, now, pop.sx);
+    const up = y + bh / 2 > ay;
+    const bx = Math.max(x + 24, Math.min(x + bw - 24, ax)), dir = up ? -1 : 1;
+    const base = up ? y + 8 : y + bh - 8, edge = up ? y : y + bh;      // the tail starts inside the body: no seam
     g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 16; g.shadowOffsetY = 4;
     g.fillStyle = said.final ? '#FFFFFF' : '#E9E9E9';
-    g.beginPath(); rr(x, y, sw, sh, 14);
-    // wind the tail the same way as the body so the overlap stays filled
-    const side = x + sw / 2 < ax ? -1 : 1, tipX = ax + side * (13 + o * .6), tipY = ay - dir * (15 + o * .6);
+    g.beginPath(); rr(x, y, bw, bh, 14);
+    // the tail points at the agent from wherever the bubble sits, stopping just short of it
+    const vx = bx - ax, vy = edge - ay, vl = Math.hypot(vx, vy) || 1, stop = AV_R * 1.15 + 6, tipX = ax + vx / vl * stop, tipY = ay + vy / vl * stop;
     if (!up) { g.moveTo(bx + 10, base); g.lineTo(bx + 10, edge); g.quadraticCurveTo(bx + 6, edge + dir * 6, tipX, tipY); g.quadraticCurveTo(bx - 2, edge + dir * 12, bx - 10, edge); g.lineTo(bx - 10, base); }
     else { g.moveTo(bx - 10, base); g.lineTo(bx - 10, edge); g.quadraticCurveTo(bx - 2, edge + dir * 12, tipX, tipY); g.quadraticCurveTo(bx + 6, edge + dir * 6, bx + 10, edge); g.lineTo(bx + 10, base); }
     g.closePath(); g.fill(); g.restore();
-    drawRich(sl, x + 13, y + 21, 18, '#111', '#000');
+    g.save(); g.globalAlpha *= ta; g.beginPath(); g.rect(x, y, bw, bh); g.clip(); drawRich(sl, x + 13, y + 21, 18, '#111', '#000'); g.restore();
   });
   }
   // the avatar: docked in a window outside the repo it becomes that window's icon, still turning
@@ -2523,6 +2544,30 @@ let SHOW_BUBBLES = true; try { SHOW_BUBBLES = localStorage.getItem('replay.bubbl
 function setBubbles(v) { SHOW_BUBBLES = v; $('bubblesT').classList.toggle('on', v); try { localStorage.setItem('replay.bubbles', v ? 'on' : 'off'); } catch {} }
 // a bubble's box glides to a new place relative to the agent (never lagging the agent itself)
 const BUB = { left: null, mir: null, below: null, t0: 0, dt: 16 };
+// A bubble you are reading stays where it is. It moves only when it has to (off screen, over the
+// agent, or the agent has gone too far from it), and then glides there on a critically damped
+// spring. A new text in a showing bubble resizes the box smoothly and fades the words in.
+function holdBub(key, tx, ty, w, h, ax, ay, now, swapT) {
+  let b = BUB[key + 'p'];
+  const dt = Math.min(50, BUB.dt || 16) / 1000;
+  if (!b || now - b.seen > 300) b = BUB[key + 'p'] = { x: tx, y: ty, vx: 0, vy: 0, w, h, moving: false, seen: now };
+  b.seen = now;
+  const kz = 1 - Math.exp(-dt * 1000 / 140); b.w += (w - b.w) * kz; b.h += (h - b.h) * kz;
+  const mapW = VW - panelW, bot = MOBILE ? viewFrame().bot : VH - 12, top = MOBILE ? 70 : 8;
+  const cx = Math.max(b.x, Math.min(b.x + b.w, ax)), cy = Math.max(b.y, Math.min(b.y + b.h, ay)), far = Math.hypot(ax - cx, ay - cy);
+  const onScreen = b.x > 2 && b.y > top - 4 && b.x + b.w < mapW - 2 && b.y + b.h < bot;
+  const covers = ax > b.x - AV_R * .5 && ax < b.x + b.w + AV_R * .5 && ay > b.y - AV_R * .5 && ay < b.y + b.h + AV_R * .5;
+  if (!b.moving && (!onScreen || covers || far > (MOBILE ? 190 : 300))) { b.moving = true; b.movedAt = now; }
+  const tX = MOBILE ? Math.max(8, Math.min(mapW - 8 - w, tx)) : tx, tY = MOBILE ? Math.max(top, ty) : ty;
+  if (b.moving) {
+    const o = 2 / .32, ex = b.x - tX, ey = b.y - tY;          // critically damped, about a third of a second
+    b.vx += (-o * o * ex - 2 * o * b.vx) * dt; b.vy += (-o * o * ey - 2 * o * b.vy) * dt;
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    if (Math.hypot(b.x - tX, b.y - tY) < 1.5 && Math.hypot(b.vx, b.vy) < 20) { b.x = tX; b.y = tY; b.vx = b.vy = 0; b.moving = false; }
+  }
+  const ta = swapT ? Math.min(1, Math.max(0, (now - swapT - 60) / 220)) : 1;
+  return [b.x, b.y, b.w, b.h, ta];
+}
 function glideBub(key, tx, ty, ax, ay, snap) {
   const o = BUB[key + 'o'], dx = tx - ax, dy = ty - ay;
   if (!o || snap) { BUB[key + 'o'] = { dx, dy }; return [tx, ty]; }
@@ -3400,14 +3445,14 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (stuck 
    The overview is the treemap of the whole project, fitted to the screen; the agent flies over it
    as on the desktop. Tap a file and the map morphs back around it, zoomed onto that file; tap it
    again to read its code; drag or pinch to look around; tap empty space or Overview to go back. */
-let MOBILE = false, mfocus = null;
+let MOBILE = false, mfocus = null, mcomp = null;
 const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
 function applyMobile() {
-  const was = MOBILE; MOBILE = isMobile();
+  const was = MOBILE; MOBILE = isMobile(); if (MOBILE && !applyMobile.done) { applyMobile.done = true; mfocus = null; mcomp = null; }
   document.querySelector('.app').classList.toggle('mobile', MOBILE); document.body.classList.toggle('mobile', MOBILE);
-  if (MOBILE && !was) { setFollow(false); mfocus = null; closeReview(); closeDrawer(); }
+  if (MOBILE && !was) { setFollow(false); mfocus = null; mcomp = null; closeReview(); closeDrawer(); }
   if (!MOBILE && was) { mfocus = null; setFollow(true); closeDrawer(); }
-  $('mback').classList.toggle('on', MOBILE && !!mfocus);
+  $('mback').classList.toggle('on', MOBILE && !!(mfocus || mcomp));
 }
 
 /* focus: a file (or a component) on the real map; null is the overview */
@@ -3435,9 +3480,11 @@ function focusOn(k, sx, sy, deep) {
   $('mback').classList.add('on');
 }
 function overview(sx, sy) {
-  if (!mfocus) return; mfocus = null; focusS = sx != null ? [sx, sy] : null;
+  if (!mfocus && !mcomp) return; mfocus = null; mcomp = null; focusS = sx != null ? [sx, sy] : null;
   $('mback').classList.remove('on');
 }
+// open a group: the treemap zooms onto it
+function openGroup(id) { mcomp = id; $('mback').classList.add('on'); }
 
 /* touch: on a phone the overview stays put; a tap opens a preview instead of zooming the canvas */
 const pts = new Map(); let mdrag = null, pinch = null;
@@ -3448,8 +3495,13 @@ function mUp(e) {
   if ($('ext').classList.contains('open')) { $('ext').classList.remove('open'); return; }
   const r = cv.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top, [gx, gy] = w2s(agent.x, agent.y);
   if (canReopen() && Math.hypot(sx - gx, sy - gy) < AV_R * 1.8) { reopenAnswer(); return; }
-  const hit = hitTile(...s2w(sx, sy)); if (!hit) return;
-  if (hit.k[0] === 'f') openFileView(+hit.k.slice(1)); else openCompView(hit.k.slice(1));
+  // two steps: a tap opens the group (still the treemap, now big enough to read); a tap on one of
+  // its files opens that file. A tap outside the open group goes back.
+  const hit = hitTile(...s2w(sx, sy));
+  const id = hit ? (hit.k[0] === 'f' ? F[+hit.k.slice(1)].comp : hit.k.slice(1)) : null;
+  if (!mcomp) { if (id) openGroup(id); return; }
+  if (id !== mcomp) { overview(sx, sy); return; }
+  if (hit.k[0] === 'f') openFileView(+hit.k.slice(1)); else openCompView(id);
 }
 cv.addEventListener('pointerdown', e => { if (MOBILE) mDown(e); });
 cv.addEventListener('pointermove', e => { if (MOBILE) mMove(e); });
@@ -3609,6 +3661,7 @@ setStep(0, false);
 // start playing on arrival, at a watchable pace
 setTimeout(() => { if (!playing && cur === 0) setPlaying(true); }, 900);
 requestAnimationFrame(frame);
+window.__bubS = () => BUB.sp && performance.now() - BUB.sp.seen < 50 ? [BUB.sp.x, BUB.sp.y, BUB.sp.id || (BUB.sp.id = Math.random())] : null;
 window.__rp = { vrect: k => { const r = V.get(k); if (!r) return null; const [x, y] = w2s(r.x, r.y); return [x, y, r.w * cam.z, r.h * cam.z]; }, st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ energy: +energy.toFixed(2), streamingNow: streaming(performance.now()), ag: w2s(agent.x, agent.y).map(Math.round), vf: viewFrame(), ty: typing.i, tsent: typing.sentAt, tearly: typing.early, spark: !!spark, sgot: spark && spark.got, rest: resting(performance.now()), busy: avatarBusy(performance.now()), stage: stageFor, tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
 
 })();
