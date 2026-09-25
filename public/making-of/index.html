@@ -101,7 +101,10 @@
   .ext .chrome i:nth-child(1) { background: #B5504B; } .ext .chrome i:nth-child(2) { background: #B89238; } .ext .chrome i:nth-child(3) { background: #3E9A4A; }
   .ext .url { flex: 1; min-width: 0; margin-left: 6px; background: #262626; border-radius: 9px; padding: 3px 10px; font-size: 11.5px; color: #BDBDBD; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ext .page { position: relative; min-height: 118px; }
-  .ext .page img { display: block; width: 100%; }
+  .ext .page img { display: block; width: 100%; } .ext .page img.dim { filter: brightness(.8); }
+  .ext .page .blank { height: 150px; background: repeating-linear-gradient(135deg, #151515 0 10px, #181818 10px 20px); }
+  .ext .pa { position: absolute; left: 10px; bottom: 10px; display: flex; align-items: center; gap: 7px; background: rgba(12,12,16,.9); border: 1px solid rgba(127,139,255,.5); border-radius: 10px; padding: 4px 10px; font: 11.5px var(--mono); color: var(--ink); animation: stIn .25s ease-out; }
+  .ext .pa i { width: 7px; height: 7px; border-radius: 50%; background: #C9BEFF; animation: pulse 1s infinite; }
   .ext .load { height: 2px; background: var(--teal); width: 0; animation: load .9s ease-out forwards; }
   @keyframes load { to { width: 100%; } }
   .ext .res { padding: 9px 12px 1px; opacity: 0; animation: resIn .3s ease-out forwards; }
@@ -188,16 +191,25 @@
   .mpick .mi.eff { color: var(--dim); font-size: 12.5px; } .mpick .mi.eff em { margin-left: auto; font-style: normal; color: var(--ink); }
   .mpick .msep { height: 1px; background: #333; margin: 4px 6px; }
   /* before there is a project, the answer in full, in front of you */
-  .stage { position: absolute; transform: translateX(14px); z-index: 3; overflow-y: auto; scrollbar-width: thin; height: auto; max-height: none;
-    background: rgba(28,28,28,.97); border: 1px solid #3A3A3A; border-radius: 18px; padding: 18px 22px; box-shadow: 0 22px 60px rgba(0,0,0,.5); color: #DADADA; font-size: 14px; line-height: 1.6;
-    opacity: 0; pointer-events: none; transition: opacity .35s, transform .45s cubic-bezier(.2,.9,.3,1); }
-  .stage.on { opacity: 1; transform: none; pointer-events: auto; }
-  .stage:not(.on) { transition: opacity .22s, transform .3s; }
+  /* the answer as the thread shows it, filling the middle, with its author beside it */
+  .stage { position: absolute; z-index: 3; overflow-y: auto; scrollbar-width: none; overscroll-behavior: contain; color: #D6D6D6; font-size: 15px; line-height: 1.62; padding: 34px 28px 48px 2px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 calc(100% - 48px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 34px, #000 calc(100% - 48px), transparent 100%);
+    opacity: 0; transform: translateY(14px); pointer-events: none; transition: opacity .22s, transform .3s; }
+  .stage::-webkit-scrollbar { display: none; }
+  .stage.on { opacity: 1; transform: none; pointer-events: auto; transition: opacity .45s .32s, transform .6s .32s cubic-bezier(.2,.9,.3,1); }
+  .stage .who { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; font-size: 13px; color: var(--dim); }
+  .stage .who b { color: var(--ink); font-weight: 600; font-size: 14px; } .stage .who span { color: var(--faint); }
+  .stage .md > p:first-child b:only-child { font-size: 1.04em; }
+  .stage .md .tbl { background: #1A1A1A; }
+  .stage .md > *, .stage .md li { transition: opacity .4s ease-out, transform .5s cubic-bezier(.2,.9,.3,1); }
+  .stage .pend { opacity: 0; transform: translateY(8px); }
+  .app.threadview .stage, .app.threadview .ext.center, .app.threadview .cursor { display: none !important; }
   .app.empty .layers, .app.empty .level { opacity: 0; pointer-events: none; }
   .layers, .level { transition: opacity .4s; }
   /* in the middle while there is no project: the browser as the main thing on screen */
   .ext.center { position: absolute; left: calc((100% - 380px) / 2); top: 50%; transform: translate(-50%, -52%); width: min(640px, calc(100% - 460px)); max-height: none; z-index: 3; pointer-events: auto; }
   .ext.center .page { min-height: 300px; } .ext.center.off { opacity: 0; transform: translate(-50%, -48%); max-height: none; }
+  .ext.off, .ext.center.off { pointer-events: none !important; } .ext.center.off { transition: opacity .2s, transform .25s; }
   .composer .model em { font-style: normal; color: #8A8A8A; }
   .composer .model svg { width: 10px; height: 10px; stroke: #8A8A8A; fill: none; stroke-width: 1.6; }
   .composer .mic { color: #BDBDBD; display: grid; place-items: center; width: 22px; }
@@ -568,9 +580,14 @@ function computeState(n) {
 let cur = 0, ST = null, enterAt = -1e9;
 let playing = false, speed = null, acc = 0, lastT = null, vt = 0;
 const IDLE_WAIT = 3000;
+// the agent is at work from the moment your message reaches it until its final answer
+function agentWorking() {
+  if (!ST || !ST.running || ST.prompt < ST.turnStart) return false;
+  const k = S[cur].k; return !(k === 'start' || k === 'prompt' || k === 'done' || (k === 'reply' && S[cur].final));
+}
 const SPEEDS = [{ k: 't', v: 1, n: '1\u00D7' }, { k: 't', v: 10, n: '10\u00D7' }, { k: 't', v: 60, n: '60\u00D7' }, { k: 't', v: 300, n: '300\u00D7' }, { k: 's', v: 1, n: '1 step/s' }, { k: 's', v: 8, n: '8 steps/s' }];
 speed = SPEEDS[4];                               // 1 step/s
-const dwell = s => s.k === 'prompt' ? 1.5 : s.k === 'steer' ? 1.5 : s.k === 'compact' ? 3 : s.k === 'done' ? 2.5 : s.k === 'start' ? .1 : s.k === 'reply' ? (s.final ? 3 : .5) : 1;
+const dwell = s => s.k === 'prompt' ? .6 : s.k === 'steer' ? .8 : s.k === 'compact' ? 2 : s.k === 'done' ? .8 : s.k === 'start' ? .1 : s.k === 'reply' ? (s.final ? 1.2 : .5) : 1;
 
 function setStep(n, animated) {
   n = clampI(n, 0, S.length - 1);
@@ -847,12 +864,13 @@ function updatePanels() {
   } else { $('health').innerHTML = '<span style="color:#5E5E5E">Measured each time the agent goes idle</span>'; $('mAt').textContent = 'not yet'; }
   // sidebar priority: a running turn needs attention
   const pr = $('prio');
-  pr.className = 'prio ' + (ST.running ? 'live' : 'idle');
+  const working = agentWorking();
+  pr.className = 'prio ' + (working ? 'live' : 'idle');
   // the thread lives here, running or idle: never listed twice
   $('prioT').textContent = D.meta.repo;
-  $('prioS').textContent = ST.running ? `Working · ${fmtDur(s.t - S[ST.turnStart].t)}` : `Waiting for you · ${ST.turnK ? `turn ${ST.turnK} done` : 'new thread'}`;
+  $('prioS').textContent = working ? `Working · ${fmtDur(s.t - S[ST.turnStart].t)}` : (() => { let d = 0; for (let j = 0; j <= cur; j++) if (S[j].k === 'done') d++; if (!working && S[cur].k === 'reply' && S[cur].final) d++; return `Waiting for you · ${d ? `turn ${d} done` : 'new thread'}`; })();
   // composer: idle unless a message is being typed; a stop button while the agent runs
-  $('composer').classList.toggle('running', ST.running);
+  $('composer').classList.toggle('running', working);
   if (typing.i < 0) idleComposer();
 
   $('clock').textContent = `${fmtTime(s.t)}${ST.turnK ? ` · turn ${ST.turnK}/${STARTS.length}` : ''} · step ${cur + 1}`;
@@ -1327,7 +1345,7 @@ function ctxFrac(fi) { const c = ST.fs[fi].ctx; if (!c.length) return 0; const v
 function fileDelta(fi) { let add = 0, del = 0; for (const a of ST.fs[fi].since) { add += a[4]; del += a[3]; } return [add, del]; }
 function tmColor(fi) {
   const m = metricOf(fi), v = F[fi].v[ST.vi[fi]], lines = v ? v[1] : 0, src = F[fi].path.startsWith('src/'), test = /\.test\./.test(F[fi].path);
-  if (LENS === 'activity') { const [ad, dl] = fileDelta(fi); if (!ad && !dl) { const f = ctxFrac(fi); return f ? mix('#1F2233', '#353C78', .2 + .8 * f) : NEUTRAL; } return mix('#1F3129', '#2C6A4E', .25 + .75 * Math.sqrt(Math.min(1, (ad + dl) / Math.max(20, lines)))); }
+  if (LENS === 'activity') { const [ad, dl] = fileDelta(fi); if (!ad && !dl) { const f = ctxFrac(fi); return f ? mix('#1F2233', '#353C78', .2 + .8 * f) : NEUTRAL; } return mix('#1D2B25', '#265340', .25 + .75 * Math.sqrt(Math.min(1, (ad + dl) / Math.max(20, lines)))); }
   if (LENS === 'coverage') { if (!m || !src || test) return NEUTRAL; if (m[2] == null) return '#5A4520'; return m[2] < 65 ? mix('#7A2C35', '#7A6A2A', m[2] / 65) : mix('#7A6A2A', '#2E7A55', (m[2] - 65) / 35); }
   if (!m || !src) return NEUTRAL; const t = Math.min(1, m[1] / 300); return t < .5 ? mix(NEUTRAL, '#7A5B1F', t * 2) : mix('#7A5B1F', '#8C2F3A', (t - .5) * 2);
 }
@@ -1440,7 +1458,7 @@ function stepRect(s) {
 const agent = { fx: 0, fy: 0, t0: 0, x: 0, y: 0, anchors: [], mapAnchors: [], leaving: false };
 // what a step touches, as (file, line) anchors; the avatar sits at their centre of mass
 function anchorsOf(s) {
-  if (s.k === 'web' || s.k === 'image') return [['ext']];
+  if (s.k === 'web' || s.k === 'image' || s.k === 'playtest') return [['ext']];
   const out = [];
   (s.reads || []).forEach(([fi, a, b]) => out.push([fi, (a + b) / 2]));
   (s.hits || []).forEach(([fi, l]) => out.push([fi, l]));
@@ -1565,7 +1583,7 @@ function minus(A, B) {
 }
 
 /* ---------- drawing helpers ---------- */
-function rr(x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function rr(x, y, w, h, r) { w = Math.max(0, w); h = Math.max(0, h); r = Math.max(0, Math.min(r, w / 2, h / 2)); g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 const world = () => g.setTransform(DPR * cam.z, 0, 0, DPR * cam.z, DPR * (cx0() - cam.x * cam.z), DPR * (cy0() - cam.y * cam.z));
 const screen = () => g.setTransform(DPR, 0, 0, DPR, 0, 0);
 const px = (base, lo, hi) => Math.max(lo, Math.min(hi, base * cam.z)) / cam.z;
@@ -1735,15 +1753,15 @@ function draw(now) {
       const halo = (a, b, col, gl) => { for (const [dx, dy, h] of lineSegs(G, a, b)) { const e = px(6, 3, 8); g.fillStyle = rgba(col, .16 * gl); rr(r.x + dx - e * .5, r.y + dy - e, TW + e, Math.max(h, minBand) + e * 2, e); g.fill(); } };
       // one flat colour per line: edits win over reads, and overlapping ranges never stack
       const eU = G.img == null && (LENS === 'activity') ? merged(fs.since) : [], cU = G.img == null && (LENS === 'activity') ? minus(merged(fs.ctx), eU) : [];
-      for (const [a, b] of cU) band(a, b, rgba(COL.accent, .2));
-      for (const [a, b] of eU) band(a, b, rgba(COL.green, .26));
+      for (const [a, b] of cU) band(a, b, rgba(COL.accent, .15));
+      for (const [a, b] of eU) band(a, b, rgba(COL.green, .16));
       if (v && ta < 1 && r.h * z >= 10) {
         if (!vec) { const bmp = minimapBitmap(fi, st.vi[fi]); if (bmp) { g.globalAlpha = r.a * (1 - ta); g.drawImage(bmp, r.x, r.y, G.w, G.h); } }
         else { const m = minimapPaths(fi, st.vi[fi]); if (m) { g.save(); g.translate(r.x, r.y); g.globalAlpha = r.a * (1 - ta) * .75; for (const [col, p] of m.paths) { g.fillStyle = col; g.fill(p); } g.restore(); } }
         g.globalAlpha = r.a;
       }
       if (v && ta > 0) drawText(fi, r, v, vy0, vy1, ta * r.a);
-    } else if (lit || fs.since.length) { g.fillStyle = fs.since.length ? '#244D3B' : '#2A2F55'; g.fill(); }
+    } else if (lit || fs.since.length) { g.fillStyle = fs.since.length ? '#1E362C' : '#252A45'; g.fill(); }
     rr(r.x, r.y, r.w, r.h, 7); g.lineWidth = px(1.4, .8, 1.4);
     g.strokeStyle = fi === hover ? COL.ink : lit ? 'rgba(127,139,255,.75)' : '#2C2C2C'; g.stroke();
     if (fi === rvFi) { rr(r.x - px(4, 2, 5), r.y - px(4, 2, 5), r.w + px(8, 4, 10), r.h + px(8, 4, 10), 10); g.strokeStyle = rgba(COL.accent, .95); g.lineWidth = px(2.5, 2, 3); g.stroke(); rr(r.x, r.y, r.w, r.h, 7); }
@@ -1882,7 +1900,7 @@ function draw(now) {
     // a small box keeps its name: the header grows into a tab wider than the box
     // the tab may spill past a narrow box, but never over the next box to its right
     let room = 1e9; for (const o of L.comps) { const q = V.get('c' + o.id); if (q && q !== r && q.x > r.x && q.y < r.y + 26 / z && q.y + q.h > r.y) room = Math.min(room, (q.x - r.x) * z - 8); }
-    if (!fits) { const tw = Math.max(Math.min(bw, room), Math.min(nw + 18 + (flag ? 14 : 0), bw + 90, room)); rr(x, y, tw, 24, Math.min(10, 18 * z)); g.fillStyle = 'rgba(24,24,24,.97)'; g.fill(); g.strokeStyle = '#3A3A3A'; g.lineWidth = 1; g.stroke(); g.font = nf; g.fillStyle = COL.ink; g.fillText(fit(c.def.name, nf, tw - 18 - (flag ? 14 : 0)), x + 9, y + 16); if (flag) { g.fillStyle = COL.red; g.beginPath(); g.arc(x + tw - 12, y + 12, 4, 0, 7); g.fill(); } }
+    if (!fits && room > 30) { const tw = Math.max(Math.min(bw, room), Math.min(nw + 18 + (flag ? 14 : 0), bw + 90, room)); rr(x, y, tw, 24, Math.min(10, 18 * z)); g.fillStyle = 'rgba(24,24,24,.97)'; g.fill(); g.strokeStyle = '#3A3A3A'; g.lineWidth = 1; g.stroke(); g.font = nf; g.fillStyle = COL.ink; g.fillText(fit(c.def.name, nf, tw - 18 - (flag ? 14 : 0)), x + 9, y + 16); if (flag) { g.fillStyle = COL.red; g.beginPath(); g.arc(x + tw - 12, y + 12, 4, 0, 7); g.fill(); } }
     g.globalAlpha = 1;
   }
   if (treeT > .3) drawTreemapLabels((treeT - .3) / .7);
@@ -2007,6 +2025,11 @@ function updateExt(now) {
         $('extU').textContent = '\u2315  ' + it.s.label.replace(/^Searched the web:\s*/, '');
         const rnd = k => { const v = Math.sin((it.s.t % 997 + k) * 12.9898) * 43758.5453; return v - Math.floor(v); };
         $('extP').innerHTML = '<div class="load"></div>' + [0, 1, 2].map(k => `<div class="res" style="animation-delay:${.5 + k * .22}s"><b style="width:${30 + rnd(k) * 25}%"></b><em style="width:${45 + rnd(k + 9) * 45}%"></em><span style="width:${80 - rnd(k + 3) * 15}%"></span><span style="width:${55 - rnd(k + 5) * 20}%"></span></div>`).join('');
+      } else if (it.kind === 'play') {
+        const pa = playAction(it.s), shot = lastShot(it.i);
+        $('extT').textContent = 'Playtest';
+        $('extU').textContent = playUrl(it.i);
+        $('extP').innerHTML = (shot != null ? `<img class="dim" src="${IMG.list[shot].src}" alt="The game, as last seen">` : '<div class="load"></div><div class="blank"></div>') + `<div class="pa"><i></i>${esc(pa)}</div>`;
       } else {
         $('extT').textContent = 'Screenshot';
         $('extU').textContent = 'what the agent saw';
@@ -2016,7 +2039,7 @@ function updateExt(now) {
     const centre = !L.comps.length, home = centre ? document.querySelector('.body') : $('extHome');
     if (el.parentElement !== home) { if (centre) home.appendChild(el); else home.after(el); el.classList.toggle('center', centre); }
     el.classList.remove('off');
-    const act = S[cur].k === 'web' || S[cur].k === 'image';
+    const act = S[cur].k === 'web' || S[cur].k === 'image' || S[cur].k === 'playtest';
     el.classList.toggle('active', act); $('extS').textContent = act ? 'live' : 'outside the repo';
   } else if (!el.classList.contains('off')) {
     el.classList.remove('active');
@@ -2032,18 +2055,28 @@ function drawEmptyFolder(now) {
   g.beginPath(); g.moveTo(x + 14, y); g.lineTo(x + 92, y); g.lineTo(x + 104, y + 14); g.lineTo(x + w - 14, y + 14); g.arcTo(x + w, y + 14, x + w, y + 28, 14); g.lineTo(x + w, y + h - 14); g.arcTo(x + w, y + h, x + w - 14, y + h, 14); g.lineTo(x + 14, y + h); g.arcTo(x, y + h, x, y + h - 14, 14); g.lineTo(x, y + 14); g.arcTo(x, y, x + 14, y, 14); g.stroke();
   g.setLineDash([]);
   g.font = `600 13px ${MONO}`; g.fillStyle = '#8A8A8A'; g.fillText(D.meta.repo + '/', x + 16, y - 10 + 2);
-  g.font = `13px ${UI}`; g.fillStyle = '#5E5E5E'; g.textAlign = 'center'; g.fillText('Empty folder \u00B7 nothing created yet', cx, y + h - 22); g.textAlign = 'left';
   g.restore();
 }
 /* ---------- (old) a small window under the avatar ---------- */
 // web searches show as a little browser; screenshots and images show as what the agent saw
 const SEE_MS = 4800;
+// what a Playwright step is doing, in words, and where the browser is
+function playAction(s) {
+  const c = (s.cmd || '').split('\n')[0], m = c.match(/playwright[-_]cli(?:\.sh)?\s+(?:-s=\S+\s+)?(\S+)\s*(.*)/);
+  if (!m) return /python3|node|npx|npm/.test(c) ? 'Running a playtest script' : 'Playtesting';
+  const [, v, arg] = m, key = (arg.match(/keyboard\.(?:press|down)\(['"]([^'"]+)/) || [])[1];
+  return v === 'open' || v === 'goto' ? `Opening ${(arg.match(/https?:\/\/\S+/) || ['the game'])[0]}` : v === 'click' ? `Clicking ${arg.split(' ')[0]}` : v === 'run-code' ? (key ? `Pressing ${key}` : 'Running code in the page') : v === 'screenshot' ? 'Taking a screenshot' : v === 'snapshot' ? 'Reading the page' : v === 'resize' ? `Resizing to ${arg.replace(' ', '\u00D7')}` : v === 'eval' ? 'Evaluating in the page' : v === 'console' ? 'Reading the console' : v === '--help' ? 'Checking the Playwright CLI' : `Playwright ${v}`;
+}
+const PLAY_URL = []; { let u = 'http://127.0.0.1:5175'; S.forEach((s, i) => { if (s.k === 'playtest') { const m = (s.cmd || '').match(/\b(?:open|goto)\s+(https?:\/\/\S+)/); if (m) u = m[1]; } PLAY_URL[i] = u; }); }
+const playUrl = i => PLAY_URL[i].replace(/^https?:\/\//, '');
+function lastShot(i) { for (let j = i; j >= Math.max(0, i - 400); j--) { const k = IMG.steps[S[j].t]; if (k != null) return k; } return null; }
 function interaction(now) {
   if (stageFor >= 0) return null;                          // the answer is up: the browser has closed
   for (let i = cur; i >= Math.max(0, cur - 8); i--) {
     const s = S[i], t = seenAt.get(i); if (t == null) continue;
     const age = now - t; if (age > SEE_MS) break;
     if (s.k === 'web') return { kind: 'web', s, age, i };
+    if (s.k === 'playtest') return { kind: 'play', s, age, i };
     const ii = IMG.steps[s.t];
     if (ii != null && s.k === 'image') return { kind: 'img', s, ii, age, i };
   }
@@ -2258,8 +2291,9 @@ function frame(now) {
   stepAnim();
   blendView();
   refreshTip();
-  if (!cv.hidden) draw(now);
-  drawTimeline();
+  // one bad frame must never stop the animation
+  try { if (!cv.hidden) draw(now); drawTimeline(); }
+  catch (err) { if (!frame.warned) { frame.warned = true; console.error('frame', err); } g = gMap; }
   requestAnimationFrame(frame);
 }
 
@@ -2278,6 +2312,9 @@ const INTRO_MS = 2950;
 const modelShown = () => introDone || cur > FIRST_PROMPT ? ACTUAL : 'sol';
 const glowOfModel = (k, a) => `rgba(${MODELS[k].glow.join(',')},${a})`;
 
+// phases advance with the agent's energy: nearly still at rest, lively at work
+const PH = { orb: 0, aura: 0, t: 0, spin: 0 };
+function advancePhase(now) { const dt = Math.min(.05, (now - (PH.t || now)) / 1000); PH.t = now; PH.orb += dt * (.1 + 1.25 * energy + PH.spin); PH.aura += dt * (.12 + .95 * energy + PH.spin * .5); }
 const lerpRGB = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const rgbA = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${Math.max(0, Math.min(1, a))})`;
 // the core: the Codex mark as a body of light, hot at the centre, with a rim
@@ -2305,7 +2342,7 @@ function orbits(x, y, r, col, now, energy, half) {
     g.strokeStyle = rgbA(col, (back ? .16 : .42) * (.7 + .3 * energy)); g.lineWidth = back ? 1 : 1.3;
     g.beginPath(); g.ellipse(x, y, rx, ry, rot, back ? Math.PI : 0, back ? Math.PI * 2 : Math.PI); g.stroke();
     for (let j = 0; j < o.n; j++) {
-      const th = (now / 1000 * o.sp * (.5 + energy) * .9 + j / o.n * Math.PI * 2 + i) % (Math.PI * 2), sn = Math.sin(th);
+      const th = (PH.orb * o.sp + j / o.n * Math.PI * 2 + i) % (Math.PI * 2), sn = Math.sin(th);
       if ((sn < 0) !== back) continue;
       const lx = Math.cos(th) * rx, ly = sn * ry, px2 = x + lx * Math.cos(rot) - ly * Math.sin(rot), py = y + lx * Math.sin(rot) + ly * Math.cos(rot), sz = back ? 1.4 : 2.4;
       g.fillStyle = back ? rgbA(col, .5) : 'rgba(255,255,255,.95)'; g.shadowColor = rgbA(col, 1); g.shadowBlur = back ? 0 : 8;
@@ -2319,19 +2356,30 @@ function aura(x, y, r, k, now, alpha, energy) {
   g.save(); g.globalAlpha *= alpha;
   const sp = .6 + energy, C = MODELS[k].glow;
   if (k === 'astra') {
-    g.save(); g.translate(x, y); g.rotate(now / 14000 * sp); g.beginPath();
-    for (let i = 0; i < 16; i++) { const an = i / 16 * Math.PI * 2, rad = i % 2 ? r * 1.0 : r * (1.55 + .08 * Math.sin(now / 700)); i ? g.lineTo(Math.cos(an) * rad, Math.sin(an) * rad) : g.moveTo(Math.cos(an) * rad, Math.sin(an) * rad); }
-    g.closePath(); g.fillStyle = rgbA(C, .14); g.fill(); g.restore();
-    for (let i = 0; i < 5; i++) {
-      const an = now / 3200 * sp + i * Math.PI * 2 / 5 + .4, tw = .5 + .5 * Math.sin(now / 330 + i * 1.9), d = r * (2.05 + .18 * Math.sin(now / 1100 + i * 2));
-      g.fillStyle = `rgba(236,232,255,${.45 + .55 * tw})`; g.shadowColor = rgbA(C, 1); g.shadowBlur = 6; star4(x + Math.cos(an) * d, y + Math.sin(an) * d, r * (.12 + .12 * tw)); g.shadowBlur = 0;
+    g.save(); g.translate(x, y);
+    // a halo of shifting violet and blue light
+    g.save(); g.rotate(PH.aura * .26);
+    const cg = g.createConicGradient(0, 0, 0); [[0, '#8C9BFF'], [.25, '#C9BEFF'], [.5, '#4B5BFF'], [.75, '#E2D9FF'], [1, '#8C9BFF']].forEach(([o, c]) => cg.addColorStop(o, c));
+    g.strokeStyle = cg; g.globalAlpha *= .55; g.lineWidth = r * .07; g.beginPath(); g.arc(0, 0, r * 1.5, 0, 7); g.stroke(); g.restore();
+    // the flare: long thin spikes, the cardinal ones longer, slowly turning
+    g.save(); g.rotate(PH.aura * .1); g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 8; i++) {
+      const an = i * Math.PI / 4, L = r * (i % 2 ? 1.9 : 3.1) * (1 + .06 * Math.sin(now / 900 + i)), wd = r * (i % 2 ? .05 : .08);
+      const lg = g.createLinearGradient(0, 0, Math.cos(an) * L, Math.sin(an) * L); lg.addColorStop(0, rgbA(C, .5)); lg.addColorStop(.35, 'rgba(230,228,255,.22)'); lg.addColorStop(1, 'rgba(230,228,255,0)');
+      g.fillStyle = lg; g.beginPath(); g.moveTo(Math.cos(an + Math.PI / 2) * wd, Math.sin(an + Math.PI / 2) * wd); g.lineTo(Math.cos(an) * L, Math.sin(an) * L); g.lineTo(Math.cos(an - Math.PI / 2) * wd, Math.sin(an - Math.PI / 2) * wd); g.closePath(); g.fill();
     }
+    g.restore();
+    // a small constellation, drawn faintly between its twinkling stars
+    const pts = []; for (let i = 0; i < 7; i++) { const an = PH.aura * .36 + i * Math.PI * 2 / 7 + .3, d = r * (2.0 + .45 * ((i * 37) % 7) / 7 + .12 * Math.sin(now / 1300 + i * 2)); pts.push([Math.cos(an) * d, Math.sin(an) * d]); }
+    g.strokeStyle = rgbA(C, .22); g.lineWidth = .8; g.beginPath(); pts.forEach(([px2, py], i) => i ? g.lineTo(px2, py) : g.moveTo(px2, py)); g.closePath(); g.stroke();
+    pts.forEach(([px2, py], i) => { const tw = .5 + .5 * Math.sin(now / 330 + i * 1.9); g.fillStyle = `rgba(240,236,255,${.5 + .5 * tw})`; g.shadowColor = rgbA(C, 1); g.shadowBlur = 8; star4(px2, py, r * (.1 + .12 * tw)); });
+    g.shadowBlur = 0; g.restore();
   } else if (k === 'sol') {
     g.strokeStyle = rgbA(C, .55); g.lineCap = 'round';
-    for (let i = 0; i < 16; i++) { const an = i / 16 * Math.PI * 2 + now / 9000 * sp, l = r * (1.5 + .2 * Math.sin(now / 380 + i * 1.3)); g.lineWidth = r * (i % 2 ? .06 : .1); g.beginPath(); g.moveTo(x + Math.cos(an) * r * 1.15, y + Math.sin(an) * r * 1.15); g.lineTo(x + Math.cos(an) * l, y + Math.sin(an) * l); g.stroke(); }
+    for (let i = 0; i < 16; i++) { const an = i / 16 * Math.PI * 2 + PH.aura * .17, l = r * (1.5 + .2 * Math.sin(now / 380 + i * 1.3)); g.lineWidth = r * (i % 2 ? .06 : .1); g.beginPath(); g.moveTo(x + Math.cos(an) * r * 1.15, y + Math.sin(an) * r * 1.15); g.lineTo(x + Math.cos(an) * l, y + Math.sin(an) * l); g.stroke(); }
   } else {
     g.strokeStyle = rgbA(C, .75); g.lineWidth = r * .12; g.lineCap = 'round';
-    g.beginPath(); g.arc(x, y, r * 1.36, -2.3 + now / 7000 * sp, .9 + now / 7000 * sp); g.stroke();
+    g.beginPath(); g.arc(x, y, r * 1.36, -2.3 + PH.aura * .22, .9 + PH.aura * .22); g.stroke();
   }
   g.restore();
 }
@@ -2395,11 +2443,74 @@ function actionPill(x, y, s) {
   if (extra) { g.font = cf; const ax2 = px0 + 30 + tw + 4, p = `+${a.ad}`; g.fillStyle = '#3DDC97'; g.fillText(p, ax2, y + 17); g.fillStyle = '#FF5C6C'; g.fillText(` −${a.dl}`, ax2 + g.measureText(p).width, y + 17); }
 }
 
+/* ---------- the switch: Sol collapses, a flash, Astra is born ---------- */
+const SWITCH_MS = 1900;
+const easeOutBack = (k, c = 2.2) => 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2);
+function drawSwitch(ax, ay, R, now, mk) {
+  const A = MODELS.astra.glow, Sg = MODELS.sol.glow;
+  const collapse = smooth(mk / .26), birth = Math.max(0, (mk - .26) / .74), flash = mk < .26 ? 0 : Math.exp(-(mk - .26) * 9);
+  // the room lights up for an instant
+  if (flash > .01) { g.fillStyle = rgbA(A, .16 * flash); g.fillRect(0, 0, VW, VH); }
+  if (mk < .3) {
+    // Sol draws its light in: rays pulled inward, the core shrinking and whitening
+    const rs = R * (1 - .8 * collapse), heat = collapse;
+    const nb = g.createRadialGradient(ax, ay, 0, ax, ay, R * (4 - 2.5 * collapse)); nb.addColorStop(0, rgbA(lerpRGB(Sg, [255, 255, 255], heat), .5)); nb.addColorStop(1, rgbA(Sg, 0));
+    g.fillStyle = nb; g.beginPath(); g.arc(ax, ay, R * 4, 0, 7); g.fill();
+    g.strokeStyle = rgbA(Sg, .7 * (1 - collapse * .5)); g.lineCap = 'round';
+    for (let i = 0; i < 16; i++) { const an = i / 16 * Math.PI * 2 + collapse * 2, a0 = R * (2.6 - 2.2 * collapse), a1 = a0 + R * (.9 - .7 * collapse); g.lineWidth = R * .08; g.beginPath(); g.moveTo(ax + Math.cos(an) * a0, ay + Math.sin(an) * a0); g.lineTo(ax + Math.cos(an) * a1, ay + Math.sin(an) * a1); g.stroke(); }
+    blob(ax, ay, rs, 'sol', 1, 1);
+    g.fillStyle = `rgba(255,255,255,${collapse})`; g.beginPath(); g.arc(ax, ay, rs * .7, 0, 7); g.fill();
+  }
+  if (mk >= .22) {
+    // the flash: a white point, a lens flare across the room, shockwaves
+    g.save(); g.globalCompositeOperation = 'lighter';
+    const fr = R * (1.2 + 5 * (1 - flash)), fg = g.createRadialGradient(ax, ay, 0, ax, ay, fr);
+    fg.addColorStop(0, `rgba(255,255,255,${flash})`); fg.addColorStop(.3, rgbA(A, .6 * flash)); fg.addColorStop(1, rgbA(A, 0));
+    g.fillStyle = fg; g.beginPath(); g.arc(ax, ay, fr, 0, 7); g.fill();
+    for (const [dx, dy, len] of [[1, 0, 18], [0, 1, 9]]) {
+      const L = R * len * (.4 + .6 * Math.min(1, birth * 3)), lg = g.createLinearGradient(ax - dx * L, ay - dy * L, ax + dx * L, ay + dy * L);
+      lg.addColorStop(0, rgbA(A, 0)); lg.addColorStop(.5, `rgba(235,235,255,${.85 * flash})`); lg.addColorStop(1, rgbA(A, 0));
+      g.fillStyle = lg; const w = R * .12 * (1 + flash); g.fillRect(dx ? ax - L : ax - w / 2, dy ? ay - L : ay - w / 2, dx ? L * 2 : w, dy ? L * 2 : w);
+    }
+    g.restore();
+    for (let j = 0; j < 3; j++) { const q = Math.max(0, birth * 1.3 - j * .16); if (!q || q >= 1) continue; g.strokeStyle = rgbA(j === 1 ? [230, 228, 255] : A, (1 - q) * .95); g.lineWidth = 4 * (1 - q) + .6; g.beginPath(); g.arc(ax, ay, R * (1 + 6.5 * q), 0, 7); g.stroke(); }
+  }
+  if (birth > 0) {
+    // Astra is born: the core overshoots into being, stars spiral out, the orbits spin up and settle
+    const grow = Math.max(0, easeOutBack(Math.min(1, birth * 1.6))), r = R * grow;
+    const nb = g.createRadialGradient(ax, ay, r * .4, ax, ay, R * 4.4); nb.addColorStop(0, rgbA(A, .5)); nb.addColorStop(.35, rgbA(A, .16)); nb.addColorStop(1, rgbA(A, 0));
+    g.fillStyle = nb; g.beginPath(); g.arc(ax, ay, R * 4.4, 0, 7); g.fill();
+    const spin = 1 + 5 * (1 - birth) * (1 - birth);
+    PH.spin = 6 * (1 - birth) * (1 - birth);
+    orbits(ax, ay, R, A, now, 1, 'back');
+    aura(ax, ay, R, 'astra', now, Math.min(1, birth * 1.8), 1);
+    if (r > .5) blob(ax, ay, r, 'astra', 1, 1);
+    orbits(ax, ay, R, A, now, 1, 'front');
+    for (let i = 0; i < 18; i++) {
+      const q = Math.min(1, birth * 1.25), an = i / 18 * Math.PI * 2 + q * 1.6 * (i % 2 ? 1 : -1), d = R * (1 + (4 + (i % 3)) * (1 - Math.pow(1 - q, 2)));
+      g.fillStyle = `rgba(240,236,255,${1 - q})`; g.shadowColor = rgbA(A, 1); g.shadowBlur = 10; star4(ax + Math.cos(an) * d, ay + Math.sin(an) * d, R * (.28 - .18 * q)); g.shadowBlur = 0;
+    }
+  }
+}
+
+// thinking (working, no tool running), listening (you are typing), or idle (waiting for you)
+function statusPill(x, y, st, now, col) {
+  const t = st === 'think' ? 'Thinking' : st === 'listen' ? 'Listening' : 'Waiting for you', f = `500 12px ${UI}`;
+  g.font = f; const w = g.measureText(t).width + (st === 'think' ? 46 : 30), px0 = x - w / 2;
+  rr(px0, y, w, 24, 12); g.fillStyle = st === 'idle' ? 'rgba(16,16,16,.7)' : 'rgba(12,12,12,.9)'; g.fill();
+  g.strokeStyle = st === 'idle' ? 'rgba(255,255,255,.1)' : rgbA(col, .55); g.lineWidth = 1; g.stroke();
+  if (st === 'idle') { g.fillStyle = rgbA(col, .35 + .25 * Math.sin(now / 1700)); g.beginPath(); g.arc(px0 + 13, y + 12, 3.2, 0, 7); g.fill(); }
+  else if (st === 'listen') { g.strokeStyle = rgbA(col, .9); g.lineWidth = 1.4; for (let k = 0; k < 3; k++) { const h = 3 + 4 * Math.abs(Math.sin(now / 180 + k)); g.beginPath(); g.moveTo(px0 + 9 + k * 4, y + 12 - h / 2); g.lineTo(px0 + 9 + k * 4, y + 12 + h / 2); g.stroke(); } }
+  g.fillStyle = st === 'idle' ? '#8A8A8A' : COL.ink; g.fillText(t, px0 + (st === 'listen' ? 24 : 22), y + 16.5);
+  if (st === 'think') for (let k = 0; k < 3; k++) { g.fillStyle = rgbA(col, .35 + .65 * Math.max(0, Math.sin(now / 220 - k * .8))); g.beginPath(); g.arc(px0 + w - 22 + k * 6, y + 12, 1.9, 0, 7); g.fill(); }
+}
+
 /* ---------- the whole body ---------- */
 let energy = 0, recvT = -1e9;
 // it is at work only once the message has reached it: while you type, and while it flies, it waits
 function avatarBusy(now) {
-  if (!ST.running || ST.prompt < ST.turnStart) return false;
+  if (streaming(now)) return true;
+  if (!agentWorking()) return false;
   if (typing.i >= 0 && S[typing.i].k === 'prompt' && !typing.sentAt) return false;
   if (spark && now - spark.t0 < SPARK_MS) return false;
   return true;
@@ -2408,9 +2519,11 @@ function receive(now) { recvT = now; energy = Math.max(energy, .85); }
 function drawAvatarBody(ax, ay, s, now, docked) {
   const busy = avatarBusy(now), empty = !L.comps.length;
   const want = docked ? 9 : empty ? (busy ? 22 : 30) : (busy ? 16 : 20);   // at rest it is bigger and calmer
-  AV_R += (want - AV_R) * .1; energy += ((busy ? 1 : 0) - energy) * .04;
+  AV_R += (want - AV_R) * .1; energy += ((busy ? 1 : 0) - energy) * (busy ? .06 : .05); advancePhase(now);
+  if (!(morphT0 > now - SWITCH_MS)) PH.spin = 0;
   const rk = (now - recvT) / 750, pulse = rk >= 0 && rk < 1 ? Math.sin(Math.PI * Math.min(1, rk * 1.6)) * (1 - rk) : 0;
-  const r = AV_R * (1 + .3 * pulse), k = modelShown(), mk = Math.min(1, (now - morphT0) / 1100), old = mk < 1 ? 'sol' : null;
+  const r = AV_R * (1 + .3 * pulse), k = modelShown(), mk = Math.min(1, (now - morphT0) / SWITCH_MS), old = mk < 1 ? 'sol' : null;
+  if (old && !docked) { drawSwitch(ax, ay, AV_R, now, mk); return; }
   const col = old ? lerpRGB(MODELS[old].glow, MODELS[k].glow, mk) : MODELS[k].glow, breathe = .5 + .5 * Math.sin(now / 1500);
   // a nebula it lives in
   const R3 = r * (docked ? 2.4 : 4.2 + .3 * breathe);
@@ -2419,7 +2532,7 @@ function drawAvatarBody(ax, ay, s, now, docked) {
   g.fillStyle = nb; g.beginPath(); g.arc(ax, ay, R3, 0, 7); g.fill();
   if (!docked) { orbits(ax, ay, r, col, now, energy, 'back'); if (old) aura(ax, ay, r, old, now, 1 - mk, energy); aura(ax, ay, r, k, now, old ? mk : 1, energy); }
   if (old) blob(ax, ay, r, old, 1 - mk, energy);
-  blob(ax, ay, r * (old ? .88 + .12 * mk + .14 * Math.sin(mk * Math.PI) : 1 + .03 * breathe), k, old ? mk : 1, energy);
+  blob(ax, ay, r * (old ? .88 + .12 * mk + .14 * Math.sin(mk * Math.PI) : 1 + (.02 + .05 * (1 - energy)) * Math.sin(now / 1700)), k, old ? mk : 1, energy);
   if (!docked) { orbits(ax, ay, r, col, now, energy, 'front'); motes(ax, ay, r, col, now, energy); }
   if (old) {                                                 // the switch: a shockwave and a burst of the new model's light
     g.strokeStyle = rgbA(MODELS[k].glow, 1 - mk); g.lineWidth = 3 * (1 - mk) + .5; g.beginPath(); g.arc(ax, ay, r * (1 + 4 * mk), 0, 7); g.stroke();
@@ -2430,11 +2543,13 @@ function drawAvatarBody(ax, ay, s, now, docked) {
   }
   if (!docked) contextRing(ax, ay, r, col, now, busy);
   else if (busy) { g.strokeStyle = rgbA(col, .9); g.lineWidth = 2; g.beginPath(); g.arc(ax, ay, r + 5, now / 300, now / 300 + 4); g.stroke(); }
-  if (TOOL.has(s.k) && s.label && !docked && !['web', 'image'].includes(s.k)) actionPill(ax, ay + r * 1.1 + 22, s);
+  if (docked || stageSeat(now)) return;
+  if (TOOL.has(s.k) && s.label && busy && !['web', 'image', 'playtest'].includes(s.k)) actionPill(ax, ay + r * 1.1 + 22, s);
+  else statusPill(ax, ay + r * 1.1 + 22, busy ? 'think' : typing.i >= 0 && !typing.sentAt ? 'listen' : 'idle', now, col);
 }
 
 /* ---------- before there is a project: the answer, in full, in front of you ---------- */
-let stageFor = -1, stageAt = 0, stageOffAt = -1e9;
+let stageFor = -1, stageAt = 0, stageOffAt = -1e9, stream = null;
 // the answer stays up while you read it and while you type the next message; it gives way when
 // that message reaches the agent
 function stageReply() {
@@ -2446,31 +2561,48 @@ function stageReply() {
   }
   return -1;
 }
-const readSeconds = i => Math.max(3, Math.min(8, S[i].text.split(/\s+/).length / 5));
-// like a thread: the agent on the left, its answer beside it with the full height
+const readSeconds = () => 1.6;                                // a beat, not a wait: pause to read
+// like a thread: the answer in the middle with the full height, its author beside the first line
 function stageGeom() {
-  const mapW = VW - panelW, cw = Math.min(720, mapW - 150), x0 = Math.max(20, (mapW - (cw + 84)) / 2);
-  return { ax: x0 + 36, ay: 150, left: x0 + 84, cw };
+  const mapW = VW - panelW, cw = Math.min(740, mapW - 190), x0 = Math.max(24, (mapW - cw) / 2 + 30);
+  return { ax: x0 - 58, ay: 100, left: x0, cw };
 }
 function updateStage(now) {
   const i = stageReply(), el = $('stage');
   if (i !== stageFor) {
     if (i < 0 && stageFor >= 0) stageOffAt = now;
     stageFor = i; stageAt = now;
-    if (i >= 0) { el.innerHTML = `<div class="md">${mdBlock(S[i].text)}</div>`; el.scrollTop = 0; }
+    if (i >= 0) {
+      const done = S.slice(i, i + 5).find(x => x.k === 'done'), m = MODELS[modelShown()].name;
+      el.innerHTML = `<div class="who"><b>Codex</b><span>GPT-6 ${m}${done ? ` \u00B7 worked for ${fmtDur(done.dur || 0)}` : ''}</span></div><div class="md">${mdBlock(S[i].text)}</div>`; el.scrollTop = 0;
+      // while playing, the answer streams in as it is written: paragraph by paragraph, list item by list item
+      stream = null;
+      if (playing) {
+        const units = []; for (const b of el.querySelector('.md').children) { if (b.tagName === 'UL' || b.tagName === 'OL') units.push(...b.children); else units.push(b); }
+        const pace = speed.k === 't' ? (speed.v >= 300 ? .35 : speed.v >= 60 ? .7 : 1) : speed.v >= 8 ? .35 : 1;
+        // what fits on screen is written at a readable pace (about 2.5 s in all); the rest cascades in
+        const vis = el.clientHeight, raw = units.map(u => u.offsetTop < vis ? Math.min(600, 110 + u.textContent.length * 1.8) : 22);
+        const onScreen = raw.reduce((a, r, k) => a + (units[k].offsetTop < vis ? r : 0), 0), sc = Math.min(1, 2500 / Math.max(1, onScreen)) * pace;
+        let t = 380; const due = units.map((u, k) => { u.classList.add('pend'); const d = t; t += raw[k] * (u.offsetTop < vis ? sc : pace); return d; });
+        stream = { units, due, t0: now, end: t, k: 0 };
+      }
+    }
     el.classList.toggle('on', i >= 0);
   }
+  if (stream && i >= 0) { while (stream.k < stream.units.length && now - stream.t0 >= stream.due[stream.k]) stream.units[stream.k++].classList.remove('pend'); if (stream.k >= stream.units.length && now - stream.t0 > stream.end) stream = null; }
+  if (i < 0) stream = null;
   if (i >= 0) {
     const G = stageGeom(), comp = $('composer');
-    el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = '68px';
-    el.style.bottom = (comp.offsetHeight + 30) + 'px';
+    el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = '40px';
+    el.style.bottom = (comp.offsetHeight + 22) + 'px';
   }
 }
 const stageOn = () => stageFor >= 0;
 // the agent keeps its seat beside the answer until the answer has gone
 const stageSeat = now => stageFor >= 0 || now - stageOffAt < 380;
 // long enough to read it, at the watchable speeds
-const stageHolding = now => stageFor >= 0 && playing && (speed.k === 't' ? speed.v <= 60 : speed.v <= 1) && now - stageAt < readSeconds(stageFor) * 1000;
+const streaming = now => !!stream && now - stream.t0 < stream.end;
+const stageHolding = now => stageFor >= 0 && playing && (streaming(now) || ((speed.k === 't' ? speed.v <= 60 : speed.v <= 1) && now - stageAt < (stream ? stream.end : 0) + readSeconds() * 1000));
 
 /* ---------- the model picker, played once before the first prompt ---------- */
 function setModelChip(k, shimmer) {
@@ -2796,6 +2928,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (stuck 
 function setFollow(v) { if (v && !follow) { fzBias = 1; pull = 0; followZ = 0; } follow = v; $('follow').classList.toggle('on', v); if (v) followFrame(false); }
 function setView(map) {
   $('vMap').classList.toggle('on', map); $('vThread').classList.toggle('on', !map);
+  document.querySelector('.app').classList.toggle('threadview', !map);
   $('thread').hidden = map; $('map').hidden = !map; $('fx').hidden = !map; $('layers').hidden = !map; $('level').hidden = !map;
   if (!map) { threadMarked = -1; markThread(); }
 }
