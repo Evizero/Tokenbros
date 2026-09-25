@@ -466,6 +466,51 @@
   .sm-row { cursor: pointer; border-radius: 8px; margin-left: -6px; margin-right: -6px; padding: 4px 6px; } .sm-row:hover { background: #262626; }
 
   [hidden] { display: none !important; }
+
+  /* ---------- a phone ---------- */
+  .mmenu, .mpill, .mback, .mspeed, .mshade, .msheet { display: none; }
+  #map { touch-action: none; }
+  .app.mobile { grid-template-columns: 1fr !important; }
+  .app.mobile .side { position: fixed; left: 0; top: 0; bottom: 0; width: min(82vw, 340px); z-index: 40; transform: translateX(-100%); transition: transform .4s cubic-bezier(.2,.9,.3,1); background: #000; border-right: 0; }
+  .app.mobile.drawer .side { transform: none; }
+  .app.mobile .main { grid-template-rows: 60px 1fr 50px; transition: transform .4s cubic-bezier(.2,.9,.3,1), filter .4s, border-radius .4s; background: var(--bg); }
+  .app.mobile.drawer .main { transform: translateX(min(82vw, 340px)); filter: brightness(.5); border-radius: 30px; overflow: hidden; }
+  .app.mobile .winbar, .app.mobile .review, .app.mobile .panel, .app.mobile .layers, .app.mobile .mapctl, .app.mobile .level { display: none !important; }
+  .app.mobile .title { padding: 0 12px; background: var(--bg); border-bottom: 0; gap: 0; }
+  .app.mobile .title > :not(.mmenu):not(.mpill) { display: none !important; }
+  .app.mobile .mmenu { display: grid; width: 44px; height: 44px; border-radius: 22px; background: #1C1C1C; border: 1px solid #2A2A2A; color: #E6E6E6; }
+  .app.mobile .mmenu svg { width: 20px; height: 20px; stroke-width: 1.8; }
+  .app.mobile .mpill { display: flex; margin-left: auto; background: #1C1C1C; border: 1px solid #2A2A2A; border-radius: 22px; padding: 2px 4px; gap: 2px; }
+  .app.mobile .mpill .ib { width: 40px; height: 40px; border-radius: 20px; color: #E6E6E6; } .app.mobile .mpill svg { width: 20px; height: 20px; stroke-width: 1.7; }
+  #mview .b { display: none; } #mview.thread .a { display: none; } #mview.thread .b { display: block; }
+  .app.mobile .composer { left: 10px; right: 10px; width: auto; transform: none; bottom: 8px; border-radius: 26px; padding: 10px 8px 8px 16px; }
+  .app.mobile .composer .appr, .app.mobile .composer .ring { display: none; }
+  .app.mobile .composer .txt { max-height: 84px; font-size: 15px; }
+  .app.mobile .composer .model { font-size: 12.5px; }
+  .app.mobile .mpick { right: 40px; }
+  .app.mobile .timeline { gap: 10px; padding: 0 12px 0 12px; border-top: 0; background: var(--bg); }
+  .app.mobile .timeline .speed, .app.mobile .timeline .clock { display: none; }
+  .app.mobile .play { width: 34px; height: 34px; }
+  .app.mobile .mspeed { display: block; font: 600 11px var(--mono); color: #D6D6D6; background: #222; border: 1px solid #333; border-radius: 13px; padding: 6px 10px; white-space: nowrap; }
+  .app.mobile #thread { padding: 8px 16px 140px; } .app.mobile .tw { font-size: 15px; }
+  .app.mobile .ext.center { left: 50%; width: calc(100% - 24px); } .app.mobile .ext.center .page { min-height: 200px; }
+  .app.mobile .stagex { top: 50px; }
+  .app.mobile .scrim { right: 0 !important; }
+  .mback { position: absolute; top: 10px; left: 10px; z-index: 4; align-items: center; gap: 4px; height: 34px; padding: 0 14px 0 8px; border-radius: 17px; background: rgba(28,28,30,.95); border: 1px solid #3A3A3A; color: #E6E6E6; font-size: 13.5px;
+    opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity .3s, transform .3s; }
+  .mback svg { width: 17px; height: 17px; }
+  .app.mobile .mback { display: flex; } .app.mobile .mback.on { opacity: 1; pointer-events: auto; transform: none; }
+  .app.mobile.mapanswer .mback { opacity: 0; pointer-events: none; }
+  body.mobile .mshade { display: block; position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.5); opacity: 0; pointer-events: none; transition: opacity .3s; }
+  body.mobile .msheet { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 61; background: #1C1C1C; border-radius: 22px 22px 0 0; padding: 8px 16px calc(18px + env(safe-area-inset-bottom)); transform: translateY(105%); transition: transform .38s cubic-bezier(.2,.9,.3,1); }
+  body.mobile.sheet .mshade { opacity: 1; pointer-events: auto; } body.mobile.sheet .msheet { transform: none; }
+  .msheet .grab { width: 38px; height: 4px; border-radius: 2px; background: #444; margin: 2px auto 12px; }
+  .msheet .row { display: flex; flex-direction: column; gap: 8px; padding: 6px 4px 12px; color: #9B9B9B; font-size: 13px; }
+  .msheet .chips { display: flex; flex-wrap: wrap; gap: 6px; } .msheet .chips button { font: 600 12px var(--mono); color: #CFCFCF; background: #2A2A2A; border-radius: 14px; padding: 7px 12px; } .msheet .chips button.on { background: #ECECEC; color: #111; }
+  .msheet .opt { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 6px; border-top: 1px solid #2A2A2A; color: #E6E6E6; font-size: 15px; text-decoration: none; text-align: left; }
+  .msheet .opt svg { width: 20px; height: 20px; color: #BDBDBD; } .msheet .opt b { margin-left: auto; font-weight: 500; color: #9B9B9B; }
+  body.mobile .cursor svg { display: none; }
+  body.mobile .cursor::before { content: ''; position: absolute; left: -12px; top: -12px; width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.3); border: 2px solid rgba(255,255,255,.75); box-shadow: 0 2px 10px rgba(0,0,0,.5); }
 </style>
 </head>
 <body>
@@ -489,6 +534,7 @@
   <symbol id="i-rightbar" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><path d="M12.5 3.5v13"/></symbol>
   <symbol id="i-close" viewBox="0 0 20 20"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></symbol>
   <symbol id="i-bubble" viewBox="0 0 20 20"><path d="M4.5 4h11A2 2 0 0 1 17.5 6v6a2 2 0 0 1-2 2H9.5l-3.5 3v-3h-1.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 20 20"><path d="M4 7.5h12M4 12.5h7.5"/></symbol>
   <symbol id="i-pen" viewBox="0 0 20 20"><path d="M4 16l1-4 8-8 3 3-8 8z"/></symbol>
   <symbol id="i-pr" viewBox="0 0 20 20"><circle cx="5" cy="4" r="2"/><circle cx="5" cy="16" r="2"/><circle cx="15" cy="16" r="2"/><path d="M5 6v8M15 14V8l-4-3"/></symbol>
   <symbol id="i-clock" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></symbol>
@@ -527,6 +573,7 @@
   </aside>
   <div class="main">
     <header class="title">
+      <button class="ib mmenu" id="mmenu" aria-label="Open the sidebar"><svg><use href="#i-menu"/></svg></button>
       <span class="name"><svg><use href="#i-folder"/></svg><span id="threadTitle">Research AI personality game</span><span class="repo" id="repoName">tokenbros</span></span>
       <span class="grow"></span>
       <div class="viewseg" role="tablist"><button id="vMap" class="on" title="Map (T)"><svg><use href="#i-map"/></svg>Map</button><button id="vThread" title="Thread (T)"><svg><use href="#i-thread"/></svg>Thread</button></div>
@@ -534,10 +581,12 @@
       <a class="tb" href="../" title="Play the game this session built">Play Tokenbros ↗</a>
       <button class="ib" title="More"><svg><use href="#i-dots"/></svg></button>
       <button class="tb" id="share" title="Copy a link to this replay"><svg><use href="#i-share"/></svg><span>Share</span></button>
+      <div class="mpill"><button class="ib" id="mview" aria-label="Map or thread"><svg class="a"><use href="#i-thread"/></svg><svg class="b"><use href="#i-map"/></svg></button><button class="ib" id="mmore" aria-label="More"><svg><use href="#i-dots"/></svg></button></div>
       <div class="views"><button id="tPanel" class="ib on" title="Summary panel"><svg><use href="#i-summary"/></svg></button><button class="ib" title="Terminal"><svg><use href="#i-termpane"/></svg></button><button id="tReview" class="ib" title="Review"><svg><use href="#i-rightbar"/></svg></button></div>
     </header>
     <div class="body">
       <canvas id="fx" aria-hidden="true"></canvas>
+      <button class="mback" id="mback"><svg><use href="#i-back"/></svg>Overview</button>
       <div class="scrim" id="scrim" title="Back to the map"></div>
       <div class="stage" id="stage" aria-live="polite"></div>
       <button class="stagex" id="stageX" title="Back to the map (Esc)"><svg><use href="#i-close"/></svg>Back to map</button>
@@ -570,11 +619,13 @@
       <div class="speed" id="speed"></div>
       <canvas id="tl" aria-label="Timeline"></canvas>
       <span class="clock" id="clock"></span>
+      <button class="mspeed" id="mspeed" aria-label="Playback speed"></button>
     </footer>
   </div>
   <aside class="review" id="review" aria-label="Review"></aside>
 </div>
 <div class="tip fc" id="tip" hidden></div>
+<div class="mshade" id="mshade"></div><div class="msheet" id="msheet"></div>
 <div class="cursor" id="cursor" hidden><svg viewBox="0 0 24 24"><path d="M4 2.5l14.5 9.2-6.3 1.3 3.6 7.1-2.8 1.4-3.6-7.2L4 19z" fill="#fff" stroke="#111" stroke-width="1.3" stroke-linejoin="round"/></svg></div>
 <div class="pasteview" id="pasteView" hidden></div>
 <div class="pull" id="pull"><span>Keep scrolling to stop following</span><i><b id="pullBar"></b></i></div>
@@ -1385,9 +1436,10 @@ function placeLabels(edges) {
 function resize() {
   const oldC = VW ? cx0() : null;
   DPR = Math.min(2, window.devicePixelRatio || 1);
+  if (typeof applyMobile === 'function') applyMobile();
   VW = cv.clientWidth; VH = cv.clientHeight; cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
   fxc.width = cv.width; fxc.height = cv.height;
-  const ac = document.querySelector('.app').classList; panelW = VW > 900 && !ac.contains('rv-on') && !ac.contains('nopanel') ? 376 : 0;   // Review takes over the right
+  const ac = document.querySelector('.app').classList; panelW = VW > 900 && !MOBILE && !ac.contains('rv-on') && !ac.contains('nopanel') ? 376 : 0;   // Review takes over the right
   if (oldC != null) { const d = (cx0() - oldC) / cam.z; cam.x += d; camT.x += d; }
   if (ST && typeof frameOnce === 'function') frameOnce();
 }
@@ -1470,7 +1522,7 @@ function squarify(items, x, y, w, h, out) {
 }
 // screen-space layout: components by total lines, files inside by their own lines
 function treemapLayout() {
-  const X0 = 16, Y0 = 56, X1 = VW - panelW - 10, Y1 = VH - 126, key = LKEY + '|' + VW + 'x' + VH;
+  const X0 = MOBILE ? 10 : 16, Y0 = MOBILE ? 8 : 56, X1 = VW - panelW - 10, Y1 = MOBILE ? viewFrame().bot - 6 : VH - 126, key = LKEY + '|' + VW + 'x' + VH + (MOBILE ? 'm' : '');
   if (TM.key === key) return; TM.key = key;
   const val = fi => Math.max(14, F[fi].v[ST.vi[fi]] ? F[fi].v[ST.vi[fi]][1] : 0);
   const comps = L.comps.filter(c => c.files.length).map(c => ({ id: 'c' + c.id, c, v: c.files.reduce((s, fi) => s + val(fi), 0) })).sort((p, q) => q.v - p.v);
@@ -1494,21 +1546,39 @@ let tmOn = false, tmLin = 0, tbOn = false, tbLin = 0, tbT = 0, treeT = 0, tmLast
 const TB_IN = .3, TB_OUT = .36, STAG = .45;
 const smooth = k => { k = Math.min(1, Math.max(0, k)); return k * k * (3 - 2 * k); };
 const tmVal = fi => Math.max(14, F[fi].v[ST.vi[fi]] ? F[fi].v[ST.vi[fi]][1] : 0);
+// treemap tiles move like the map's own layout: a changed place starts one eased move from where
+// the tile is drawn now, so a re-flow never jumps
+const TWN = new Map(), TW_MS = 480;
+function tw(key, t, tol, now) {
+  let e = TWN.get(key);
+  const at = e => { const k = Math.min(1, (now - e.t0) / TW_MS), q = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; return e.to.map((v, i) => e.from[i] + (v - e.from[i]) * q); };
+  if (!e) { TWN.set(key, { from: t, to: t, t0: 0 }); return t; }
+  if (t.some((v, i) => Math.abs(v - e.to[i]) > tol)) { e.from = at(e); e.to = t; e.t0 = now; }
+  return at(e);
+}
 function compTreemap() {
   const out = {}, z = cam.z;
   for (const c of L.comps) {
     const r = R.get('c' + c.id); if (!r || !c.files.length) continue;
     const top = Math.min(r.h * .45, 44 / z), pad = 6 / z, gap = 2 / z;
-    const fr = squarify(c.files.map(fi => ({ id: 'f' + fi, v: tmVal(fi) })).sort((p, q) => q.v - p.v), r.x + pad, r.y + top, Math.max(1, r.w - pad * 2), Math.max(1, r.h - top - pad), {});
-    for (const [k, q] of Object.entries(fr)) out[k] = { x: q.x + gap / 2, y: q.y + gap / 2, w: Math.max(.1, q.w - gap), h: Math.max(.1, q.h - gap) };
+    const ix = r.x + pad, iy = r.y + top, iw = Math.max(1, r.w - pad * 2), ih = Math.max(1, r.h - top - pad), now = performance.now();
+    const fr = squarify(c.files.map(fi => ({ id: 'f' + fi, v: tmVal(fi) })).sort((p, q) => q.v - p.v), ix, iy, iw, ih, {});
+    for (const [k, q] of Object.entries(fr)) {
+      // tween the tile's place as a fraction of its component, so zooming stays exact
+      const [u, v, fw, fh] = tw('c' + k, [(q.x - ix) / iw, (q.y - iy) / ih, q.w / iw, q.h / ih], .004, now);
+      out[k] = { x: ix + u * iw + gap / 2, y: iy + v * ih + gap / 2, w: Math.max(.1, fw * iw - gap), h: Math.max(.1, fh * ih - gap) };
+    }
   }
   return out;
 }
 function blendView() {
   const fz = fitZoom(), now = performance.now(), dt = Math.min(50, now - (tmLast || now)); tmLast = now;
   // the treemaps answer your zoom, not the follow camera's
+  if (MOBILE) { tmOn = !mfocus && !!L.comps.length; tbOn = false; }        // a phone: the overview is the treemap
+  else {
   if (!tmOn && !follow && cam.z < fz * .5) tmOn = true; else if (tmOn && (follow || cam.z > fz * .56)) tmOn = false;
   if (!tbOn && !follow && cam.z < fz * .78) tbOn = true; else if (tbOn && (follow || cam.z > fz * .86)) tbOn = false;
+  }
   tmLin = Math.min(1, Math.max(0, tmLin + (tmOn ? 1 : -1) * dt / 800));
   tbLin = Math.min(1, Math.max(0, tbLin + (tbOn ? 1 : -1) * dt / 700));
   tmT = smooth(tmLin); tbT = smooth(tbLin); treeT = Math.max(tbT, tmT);
@@ -1522,7 +1592,7 @@ function blendView() {
     let x = r.x, y = r.y, w = r.w, h = r.h, a = r.a, tm = false;
     const cq = CT && CT[k];
     if (cq) { const t = lt(tbLin); x += (cq.x - x) * t; y += (cq.y - y) * t; w += (cq.w - w) * t; h += (cq.h - h) * t; tm = t > 0; }
-    const q = tmLin > 0 ? TM.rects[k] : null;
+    const q0 = tmLin > 0 ? TM.rects[k] : null, q = q0 && (() => { const [qx, qy, qw, qh] = tw('T' + k, [q0.x, q0.y, q0.w, q0.h], .5, performance.now()); return { x: qx, y: qy, w: qw, h: qh }; })();
     if (q) { const t = lt(tmLin), [wx, wy] = s2w(q.x, q.y); x += (wx - x) * t; y += (wy - y) * t; w += (q.w / cam.z - w) * t; h += (q.h / cam.z - h) * t; tm = tm || t > 0; }
     else if (tmLin > 0) a *= 1 - tmT;
     V.set(k, { x, y, w, h, a, tm, glob: !!q });
@@ -1633,6 +1703,7 @@ function resting(now) { return turnOver(now); }
 // parked beside the composer; while you type it turns to you, hovering just above the text box
 function restPoint() {
   const c = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(), bob = Math.sin(performance.now() / 1300) * 4;
+  if (MOBILE) return s2w(typing.i >= 0 && !typing.sentAt || spark && !spark.got ? c.left - m.left + c.width / 2 : c.left - m.left + 40, c.top - m.top - 46 + bob);
   if (typing.i >= 0 && !typing.sentAt || spark && !spark.got) return s2w(c.left - m.left + c.width / 2, c.top - m.top - 70 + bob);
   return s2w(c.left - m.left - 72, c.top - m.top + 14 + bob);
 }
@@ -1980,11 +2051,12 @@ function draw(now) {
       for (const [dx, dy, h] of lineSegs(G, bm.a, upto)) g.fillRect(r.x + dx + 2, r.y + dy, TW - 4, Math.max(h, minBand));
       g.restore(); g.globalAlpha = 1;
     }
-    const bA = p < 1 ? Math.min(1, el / 90) : Math.max(0, 1 - post / 200);
-    if (bA > 0) {
+    const bA = p < 1 ? Math.min(1, el / 90) : Math.max(0, 1 - post / (bm.write ? 200 : 520));
+    if (bA > 0 && !bm.write) drawReadFlow(bm, el, at, p, bA, ap, now);
+    else if (bA > 0) {
       const l = Math.min(bm.b + .999, at), L0 = linePt(bm.fi, l, .02), L1 = linePt(bm.fi, l, .98); if (!L0 || !L1) continue;
       const mx = (L0[0] + L1[0]) / 2, grd = g.createLinearGradient(ap[0], ap[1], mx, L0[1]);
-      grd.addColorStop(0, rgba(bm.col, 0)); grd.addColorStop(1, rgba(bm.col, (bm.write ? .32 : .2) * bA));
+      grd.addColorStop(0, rgba(bm.col, 0)); grd.addColorStop(1, rgba(bm.col, .32 * bA));
       g.fillStyle = grd; g.beginPath(); g.moveTo(ap[0], ap[1]); g.lineTo(L0[0], L0[1]); g.lineTo(L1[0], L1[1]); g.closePath(); g.fill();
       g.save(); g.shadowColor = bm.col; g.shadowBlur = 10 * DPR;
       g.strokeStyle = rgba('#FFFFFF', .85 * bA); g.lineWidth = px(1.1, .8, 1.4); g.beginPath(); g.moveTo(ap[0], ap[1]); g.lineTo(mx, L0[1]); g.stroke();
@@ -2003,28 +2075,27 @@ function draw(now) {
   }
   // ---- screen space: far-out headers, then the agent with its bubbles ----
   screen();
+  // zoomed out: a header strip per box whose text shrinks with the box (it never spills out of it)
   if (z < LOD_TEXT) for (const c of L.comps) {
     const r = V.get('c' + c.id); if (!r || tmT > .6) continue;
     const [x, y] = w2s(r.x, r.y), bw = r.w * z, bh = r.h * z;
-    if (bw < 28 || x > VW || y > VH || x + bw < 0 || y + bh < 0) continue;
-    const m = compMetrics(c), two = bh > 58 && bw > 120 && (m || c.def.desc), sh = two ? 38 : Math.min(24, bh);
+    if (bw < 24 || x > VW || y > VH || x + bw < 0 || y + bh < 0) continue;
+    const m = compMetrics(c), flag = (LENS !== 'activity') && m && m.flag;
+    g.font = `700 10px ${UI}`; const w10 = g.measureText(c.def.name).width / 10;          // name width per px of type
+    const fs = Math.min(12.5, 12.5 * z / .32, (bw - (flag ? 24 : 16)) / Math.max(1, w10));   // follows the zoom, and the box
+    if (fs < 4.2) continue;
+    const items = m ? [[`${c.files.length} files`, '#8A8A8A'], [`cx ${m.cx}`, m.cx > 600 ? COL.red : m.cx > 250 ? COL.warn : COL.green], [m.cov == null ? 'no tests' : `cov ${m.cov}%`, m.cov == null ? COL.warn : m.cov < 65 ? COL.warn : COL.green]] : c.def.desc ? [[c.def.desc, '#8A8A8A']] : [];
+    const ms = Math.min(10.5, fs * .84), two = items.length && ms >= 5.2 && bh > fs * 4, pad = Math.max(3, fs * .6), sh = Math.min(bh, pad + fs * 1.15 + (two ? ms * 1.35 : 0) + pad * .8);
     g.globalAlpha = r.a * (1 - tmT / .6);
     g.save(); rr(x, y, bw, bh, Math.min(10, 18 * z)); g.clip();
     g.fillStyle = 'rgba(20,20,20,.94)'; g.fillRect(x, y, bw, sh); g.fillStyle = '#2A2A2A'; g.fillRect(x, y + sh, bw, 1);
-    const flag = (LENS !== 'activity') && m && m.flag;
-    const nf = `700 12.5px ${UI}`; g.font = nf; const nw = g.measureText(c.def.name).width, fits = nw <= bw - (flag ? 30 : 16);
-    if (fits) g.fillStyle = COL.ink, g.fillText(c.def.name, x + 9, y + 16);
-    if (flag) { g.fillStyle = COL.red; g.beginPath(); g.arc(x + bw - 12, y + 12, 4, 0, 7); g.fill(); }
+    g.font = `700 ${fs.toFixed(2)}px ${UI}`; g.fillStyle = COL.ink; g.fillText(c.def.name, x + pad * 1.3, y + pad + fs * .9);
+    if (flag) { g.fillStyle = COL.red; g.beginPath(); g.arc(x + bw - pad * 1.6, y + pad + fs * .5, Math.max(2, fs * .32), 0, 7); g.fill(); }
     if (two) {
-      let tx = x + 9; const mf = `10.5px ${MONO}`; g.font = mf;
-      const items = m ? [[`${c.files.length} files`, '#8A8A8A'], [`cx ${m.cx}`, m.cx > 600 ? COL.red : m.cx > 250 ? COL.warn : COL.green], [m.cov == null ? 'no tests' : `cov ${m.cov}%`, m.cov == null ? COL.warn : m.cov < 65 ? COL.warn : COL.green]] : [[c.def.desc, '#8A8A8A']];
-      for (const [t, col] of items) { const w = g.measureText(t).width; if (tx + w > x + bw - 8) break; g.fillStyle = col; g.fillText(t, tx, y + 31); tx += w + 9; }
+      let tx = x + pad * 1.3; g.font = `${ms.toFixed(2)}px ${MONO}`;
+      for (const [t, col] of items) { const w = g.measureText(t).width; if (tx + w > x + bw - pad) break; g.fillStyle = col; g.fillText(t, tx, y + pad + fs * 1.15 + ms * 1.05); tx += w + ms * .9; }
     }
     g.restore();
-    // a small box keeps its name: the header grows into a tab wider than the box
-    // the tab may spill past a narrow box, but never over the next box to its right
-    let room = 1e9; for (const o of L.comps) { const q = V.get('c' + o.id); if (q && q !== r && q.x > r.x && q.y < r.y + 26 / z && q.y + q.h > r.y) room = Math.min(room, (q.x - r.x) * z - 8); }
-    if (!fits && room > 30) { const tw = Math.max(Math.min(bw, room), Math.min(nw + 18 + (flag ? 14 : 0), bw + 90, room)); rr(x, y, tw, 24, Math.min(10, 18 * z)); g.fillStyle = 'rgba(24,24,24,.97)'; g.fill(); g.strokeStyle = '#3A3A3A'; g.lineWidth = 1; g.stroke(); g.font = nf; g.fillStyle = COL.ink; g.fillText(fit(c.def.name, nf, tw - 18 - (flag ? 14 : 0)), x + 9, y + 16); if (flag) { g.fillStyle = COL.red; g.beginPath(); g.arc(x + tw - 12, y + 12, 4, 0, 7); g.fill(); } }
     g.globalAlpha = 1;
   }
   if (treeT > .3) drawTreemapLabels((treeT - .3) / .7);
@@ -2160,7 +2231,7 @@ function updateExt(now) {
         $('extP').innerHTML = `<img src="${IMG.list[it.ii].src}" alt="Screenshot the agent looked at">`;
       }
     }
-    const centre = !L.comps.length, parent = centre ? document.querySelector('.body') : $('extHome').parentElement;
+    const centre = !L.comps.length || MOBILE, parent = centre ? document.querySelector('.body') : $('extHome').parentElement;
     if (el.parentElement !== parent) { el.classList.add('off'); if (centre) parent.appendChild(el); else $('extHome').after(el); el.classList.toggle('center', centre); void el.offsetWidth; }
     el.classList.remove('off');
     const act = S[cur].k === 'web' || S[cur].k === 'image' || S[cur].k === 'playtest';
@@ -2297,7 +2368,9 @@ function drawAgent(now, ap, s) {
   drawSpark(now, ax, ay);
   drawWriteBeam(now, ax, ay);
   updateStage(now);
-  const o = AV_R - 15, bb0 = bubbles(now), thought = SHOW_BUBBLES ? bb0.thought : null, tFade = bb0.tf, sFade = bb0.sf, said = !SHOW_BUBBLES || stageOn() || (L.comps.length && turnOver(now)) ? null : bb0.said;
+  // a bubble belongs to its agent: none while the agent is out of view (or you are reading code on a phone)
+  const inView = ax > -30 && ax < VW - panelW + 30 && ay > -30 && ay < VH + 30 && !(MOBILE && mfocus && mfocus.deep);
+  const o = AV_R - 15, bb0 = bubbles(now), thought = SHOW_BUBBLES && inView ? bb0.thought : null, tFade = bb0.tf, sFade = bb0.sf, said = !SHOW_BUBBLES || !inView || stageOn() || (L.comps.length && turnOver(now)) ? null : bb0.said;
   updateReopen(ax, ay);
   const newT = thought !== pop.t, sk = said ? said.text : '', newS = sk !== pop.s;
   if (newT) { pop.t = thought; pop.tt = now; } if (newS) { pop.s = sk; pop.st = now; }
@@ -2307,9 +2380,9 @@ function drawAgent(now, ap, s) {
   // which side and whether above: decided with some hysteresis, so they do not flip back and forth
   const mapW0 = VW - panelW; if (BUB.left == null || !said && !thought) BUB.left = ax > mapW0 * .62; else if (BUB.left && ax < mapW0 * .5) BUB.left = false; else if (!BUB.left && ax > mapW0 * .72) BUB.left = true;
   const left = BUB.left;
-  const sl = said ? richWrap(said.text, { size: 13, weight: said.final ? 600 : 500 }, 320, 6) : [];
+  const sl = said ? richWrap(said.text, { size: 13, weight: said.final ? 600 : 500 }, Math.min(320, VW - 120), 6) : [];
   const sw = said ? Math.max(...sl.map(l => l.w)) + 26 : 0, sh = sl.length * 18 + 16;
-  const tl = thought ? richWrap(thought, { size: 13, weight: 400, italic: true }, 280, 4) : [];
+  const tl = thought ? richWrap(thought, { size: 13, weight: 400, italic: true }, Math.min(280, VW - 120), 4) : [];
   const tw = thought ? Math.max(...tl.map(l => l.w)) + 26 : 0, th = tl.length * 17 + 14;
   // the thought mirrors the speech on the other side of the avatar; if that side is off-canvas
   // it stacks beyond the speech instead
@@ -2326,7 +2399,8 @@ function drawAgent(now, ap, s) {
   if (dockedNow) drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, tFade, sFade);
   else {
   if (thought) withPop(ax, ay, pop.tt, now, tFade, () => {
-    const [x, y] = glideBub('t', mirrored ? tx0 : left ? ax - tw - 18 - o : ax + 18 + o, ty, ax, ay, newT), fp = fluffy(x, y, tw, th);
+    let [x, y] = glideBub('t', mirrored ? tx0 : left ? ax - tw - 18 - o : ax + 18 + o, ty, ax, ay, newT); if (MOBILE) { x = Math.max(8, Math.min(VW - 8 - tw, x)); y = Math.max(8, y); }
+    const fp = fluffy(x, y, tw, th);
     g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 14; g.shadowOffsetY = 3; g.fillStyle = THINK.fill; g.fill(fp); g.restore();
     g.strokeStyle = THINK.line; g.lineWidth = 1.2; g.stroke(fp);
     const ex = Math.max(x + 16, Math.min(x + tw - 16, ax)), ey = y + th / 2 > ay ? y - 4 : y + th + 4;
@@ -2334,7 +2408,8 @@ function drawAgent(now, ap, s) {
     drawRich(tl, x + 13, y + 19, 17, THINK.ink, '#D6D0FA');
   });
   if (said) withPop(ax, ay, pop.st, now, sFade, () => {
-    const [x, y] = glideBub('s', left ? ax - sw - 34 - o : ax + 34 + o, sy, ax, ay, newS), up = y + sh / 2 > ay;
+    let [x, y] = glideBub('s', left ? ax - sw - 34 - o : ax + 34 + o, sy, ax, ay, newS); if (MOBILE) { x = Math.max(8, Math.min(VW - 8 - sw, x)); y = Math.max(8, y); }
+    const up = y + sh / 2 > ay;
     const bx = Math.max(x + 24, Math.min(x + sw - 24, x + sw / 2 < ax ? x + sw - 34 : x + 34)), dir = up ? -1 : 1;
     const base = up ? y + 8 : y + sh - 8, edge = up ? y : y + sh;      // the tail starts inside the body: no seam
     g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 16; g.shadowOffsetY = 4;
@@ -2371,10 +2446,38 @@ function updateReopen(ax, ay) {
   b.classList.toggle('on', !!on);
   if (on) { b.style.left = Math.round(ax - b.offsetWidth / 2) + 'px'; b.style.top = Math.round(ay - AV_R * 1.2 - 44) + 'px'; }
 }
+// reading: the text flows the other way. Fragments of the lines it passes (coloured like the code
+// they come from) lift off and stream along a narrowing beam into the agent, which takes them in.
+function drawReadFlow(bm, el, at, p, bA, ap, now) {
+  const l = Math.min(bm.b + .999, at), L0 = linePt(bm.fi, l, .02), L1 = linePt(bm.fi, l, .98); if (!L0 || !L1) return;
+  const mx = (L0[0] + L1[0]) / 2, my = L0[1];
+  // the beam: wide at the lines, gathering to a point at the agent, brightest where it arrives
+  const grd = g.createLinearGradient(mx, my, ap[0], ap[1]); grd.addColorStop(0, rgba(bm.col, .05 * bA)); grd.addColorStop(1, rgba(bm.col, .3 * bA));
+  g.fillStyle = grd; g.beginPath(); g.moveTo(L0[0], L0[1]); g.lineTo(L1[0], L1[1]); g.lineTo(ap[0], ap[1]); g.closePath(); g.fill();
+  // the read head: a thin line that has only touched the text, nothing painted
+  g.strokeStyle = rgba(bm.col, .8 * bA); g.lineWidth = px(1.4, 1, 2); g.beginPath(); g.moveTo(L0[0], L0[1]); g.lineTo(L1[0], L1[1]); g.stroke();
+  // fragments of the text, pulled in
+  const v = F[bm.fi].v[ST.vi[bm.fi]], ls = v ? linesOf(v[5]) : null, md = isMd(bm.fi);
+  const n = 14, span = Math.max(1, Math.ceil(at) - bm.a);
+  g.save(); g.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < n; i++) {
+    const t0 = i * (bm.dur / n) * .9, ph = (el - t0) / 620; if (ph < 0 || ph > 1) continue;
+    const line = bm.a + ((i * 7) % span), tk = ls && ls[line - 1] ? tokens(ls[line - 1].slice(0, 120), md).filter(x => x[1].trim()) : [];
+    const tok = tk.length ? tk[(i * 3) % tk.length] : [0, 'x', '#C8C8C8'];
+    const S0 = linePt(bm.fi, line, Math.min(.9, .06 + tok[0] * CW / TW)); if (!S0) continue;
+    const e = ph * ph, cx = (S0[0] + ap[0]) / 2 + (i % 2 ? 1 : -1) * 24 / cam.z, cy = (S0[1] + ap[1]) / 2 - 30 / cam.z;
+    const x = (1 - e) * (1 - e) * S0[0] + 2 * (1 - e) * e * cx + e * e * ap[0], y = (1 - e) * (1 - e) * S0[1] + 2 * (1 - e) * e * cy + e * e * ap[1];
+    const w = Math.max(3, Math.min(10, tok[1].length)) * CW * (1 - .75 * e), h = px(2.2, 1.6, 3) * (1 - .4 * e), a = Math.min(1, ph * 5) * (1 - e * .6) * bA;
+    g.fillStyle = rgba(tok[2], .9 * a); g.fillRect(x - w / 2, y - h / 2, w, h);
+    if (ph > .85) { g.fillStyle = rgba(bm.col, (1 - ph) / .15 * .8 * bA); g.beginPath(); g.arc(ap[0], ap[1], px(3, 2, 4) + 6 * (ph - .85) / cam.z, 0, 7); g.fill(); }
+  }
+  g.restore();
+}
 /* ---------- interaction ---------- */
 let drag = null;
-cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false }; cv.setPointerCapture(e.pointerId); cv.classList.add('drag'); });
+cv.addEventListener('pointerdown', e => { if (MOBILE) return; drag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false }; cv.setPointerCapture(e.pointerId); cv.classList.add('drag'); });
 cv.addEventListener('pointermove', e => {
+  if (MOBILE) return;
   const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
   if (drag) { const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 3) { setFollow(false); drag.moved = true; } cam.x = camT.x = drag.cx - dx / cam.z; cam.y = camT.y = drag.cy - dy / cam.z; }
   const [wx, wy] = s2w(mx, my);
@@ -2383,6 +2486,7 @@ cv.addEventListener('pointermove', e => {
   showTip(e.clientX, e.clientY);
 });
 cv.addEventListener('pointerup', e => {
+  if (MOBILE) return;
   if (drag && !drag.moved) {
     const r = cv.getBoundingClientRect(), [gx, gy] = w2s(agent.x, agent.y);
     if (canReopen() && Math.hypot(e.clientX - r.left - gx, e.clientY - r.top - gy) < AV_R * 1.6) reopenAnswer();
@@ -2411,7 +2515,7 @@ function tickPull(now) {
   const el = $('pull'); el.classList.toggle('on', pull > .02); if (pull > .02) $('pullBar').style.width = Math.min(100, pull / PULL_MAX * 100) + '%';
 }
 cv.addEventListener('wheel', e => {
-  e.preventDefault();
+  e.preventDefault(); if (MOBILE) return;
   if (follow) { followWheel(e); return; }
   const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top, [wx, wy] = s2w(mx, my);
   let nz = Math.max(.04, Math.min(ZMAX, cam.z * Math.exp(-e.deltaY * .0016)));
@@ -2753,8 +2857,9 @@ const canReopen = () => L.comps.length && stageFor < 0 && lastFinal() >= 0 && la
 const readSeconds = () => 1.6;                                // a beat, not a wait: pause to read
 // like a thread: the answer in the middle with the full height, its author beside the first line
 function stageGeom() {
+  if (MOBILE) return { ax: 40, ay: 44, left: 16, cw: VW - 32, top: 88 };     // a phone: the agent above, the answer below it
   const mapW = VW - panelW, cw = Math.min(740, mapW - 190), x0 = Math.max(24, (mapW - cw) / 2 + 30);
-  return { ax: x0 - 58, ay: 100, left: x0, cw };
+  return { ax: x0 - 58, ay: 100, left: x0, cw, top: 40 };
 }
 const WRITE_TAIL = 520;
 // how far the writing has got through unit k (0..1), and the unit's time slot
@@ -2769,7 +2874,7 @@ function updateStage(now) {
       const done = S.slice(i, i + 5).find(x => x.k === 'done'), m = MODELS[modelShown()].name;
       el.innerHTML = `<div class="who"><b>Codex</b><span>GPT-6 ${m}${done ? ` · worked for ${fmtDur(done.dur || 0)}` : ''}</span></div><div class="md">${mdBlock(S[i].text)}</div>`; el.scrollTop = 0;
       el.classList.toggle('reveal', reopen);
-      { const G = stageGeom(); el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = '40px'; el.style.bottom = ($('composer').offsetHeight + 22) + 'px'; }
+      { const G = stageGeom(); el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = G.top + 'px'; el.style.bottom = ($('composer').offsetHeight + 22) + 'px'; }
       void el.offsetWidth;
       // while playing, it is written as you watch: the scan line sweeps down each paragraph in turn,
       // and only what it has passed is there
@@ -2816,7 +2921,7 @@ function updateStage(now) {
   if (i < 0 && stream) { stream.units.forEach(u => { u.classList.remove('pend', 'writing'); const tb = u.tagName === 'TR' && u.closest('.tbl'); if (tb) { tb.classList.remove('pend'); tb.style.clipPath = ''; } }); stream = null; }
   if (i >= 0) {
     const G = stageGeom(), comp = $('composer');
-    el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = '40px';
+    el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = G.top + 'px';
     el.style.bottom = (comp.offsetHeight + 22) + 'px';
     const x = $('stageX'); x.style.left = (G.left + G.cw - 14) + 'px';
   }
@@ -2859,6 +2964,7 @@ function drawWriteBeam(now, ax, ay) {
 }
 // where the writing is now (screen y, within the answer), or null when it is not writing
 function writingY(now) {
+  if (MOBILE) return null;                                  // on a phone it writes from its seat above
   if (!stream || !stream.k || stageFor < 0) return null;
   const k = stream.k - 1, el = stream.units[k], t = now - stream.t0; if (k === stream.units.length - 1 && t > stream.due[k] + stream.slot[k] + WRITE_TAIL) return null;
   const st = $('stage').getBoundingClientRect(), fr = fxc.getBoundingClientRect(), r = el.getBoundingClientRect(), y = (r.top + r.bottom) / 2 - fr.top;
@@ -3068,6 +3174,7 @@ function showTip(px, py) {
 }
 function unstick() { if (stuck < 0) return; stuck = -1; const t = $('tip'); t.classList.remove('stuck'); t.hidden = true; $('tipx').hidden = true; tipFor = -1; hoverFi = -1; }
 function tickTip(now) {
+  if (MOBILE) { $('tip').hidden = true; return; }
   const tip = $('tip');
   if (stuck >= 0) return;                        // what you pinned stays exactly as it was
   if (hoverFi < 0 || drag || tipQuiet || hoverFi === rvFi) { tip.hidden = true; return; }
@@ -3176,7 +3283,7 @@ function flyToReview(fi) {
     { left: x1 + 'px', top: y1 + 'px', width: w1 + 'px', height: h1 + 'px', opacity: 0 }], { duration: 560 * Math.max(1, calm() * .7), easing: 'cubic-bezier(.3,.8,.3,1)' });
   a.onfinish = () => gh.remove();
 }
-function openReview(fi) { $('tReview').classList.add('on');
+function openReview(fi) { if (MOBILE) return; $('tReview').classList.add('on');
   unstick(); const was = rvFi >= 0; rvFi = fi; renderReview(false);
   if (!was) flyToReview(fi);
   document.querySelector('.app').classList.add('rv-on'); focusFile(fi);
@@ -3198,6 +3305,125 @@ $('review').addEventListener('click', e => {
 });
 $('smDiff').addEventListener('click', () => { const l = changedFiles(); if (l.length) openReview(l[0]); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (stuck >= 0) unstick(); else closeReview(); } });
+
+/* ---------- on a phone: the whole project at a glance, and a tap to look closer ----------
+   The overview is the treemap of the whole project, fitted to the screen; the agent flies over it
+   as on the desktop. Tap a file and the map morphs back around it, zoomed onto that file; tap it
+   again to read its code; drag or pinch to look around; tap empty space or Overview to go back. */
+let MOBILE = false, mfocus = null;
+const isMobile = () => window.matchMedia('(max-width: 760px)').matches;
+function applyMobile() {
+  const was = MOBILE; MOBILE = isMobile();
+  document.querySelector('.app').classList.toggle('mobile', MOBILE); document.body.classList.toggle('mobile', MOBILE);
+  if (MOBILE && !was) { setFollow(false); mfocus = null; closeReview(); closeDrawer(); }
+  if (!MOBILE && was) { mfocus = null; setFollow(true); closeDrawer(); }
+  $('mback').classList.toggle('on', MOBILE && !!mfocus);
+}
+
+/* focus: a file (or a component) on the real map; null is the overview */
+function focusOn(k, sx, sy, deep) {
+  const r = R.get(k); if (!r) return;
+  const VF = viewFrame(), fw = VW - 24, fh = VF.h - 20;
+  focusS = [sx, sy];                                      // the morph ripples out from your finger
+  let z, cx, cy;
+  if (k[0] === 'f' && deep) {                             // read the code, where you tapped
+    // readable (about 9 px type), the text's first column at the left edge, the tapped line in the middle
+    const [wx, wy] = s2w(sx, sy), col = wx > r.x + TW ? Math.floor((wx - r.x) / (TW + TG)) : 0;
+    z = Math.min(ZMAX, 9 / FS); cx = r.x + col * (TW + TG) + 2 + (VW / 2 - 6) / z; cy = Math.max(r.y + fh / 2 / z, Math.min(r.y + r.h - fh / 2 / z, wy));
+  } else if (k[0] === 'f') {
+    const fi = +k.slice(1), last = [...TOUCH[fi]].reverse().find(t => t[0] <= cur);
+    z = Math.max(.6, Math.min(3, fw / (r.w + 24), fh / (r.h + 40)));
+    cx = r.x + r.w / 2;
+    // a long file: open where the agent last worked in it
+    if (r.h * z > fh && last) { const G = geoOf(fi), sg = lineSegs(G, last[2], last[3])[0]; cy = sg ? r.y + sg[1] : r.y + fh / 2 / z; cy = Math.max(r.y + fh / 2 / z - 10, Math.min(r.y + r.h - fh / 2 / z + 10, cy)); }
+    else cy = r.y + r.h / 2;
+  } else {
+    z = Math.max(.12, Math.min(1.4, fw / (r.w + 30), fh / (r.h + 30))); cx = r.x + r.w / 2; cy = r.y + r.h / 2;
+  }
+  mfocus = { k, deep: !!deep };
+  camT.z = z; camT.x = cx; camT.y = cy - (VF.cy - cy0()) / z;
+  $('mback').classList.add('on');
+}
+function overview(sx, sy) {
+  if (!mfocus) return; mfocus = null; focusS = sx != null ? [sx, sy] : null;
+  $('mback').classList.remove('on');
+}
+
+/* touch: tap, drag, pinch */
+const pts = new Map(); let mdrag = null, pinch = null;
+function mDown(e) {
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); cv.setPointerCapture(e.pointerId);
+  if (pts.size === 1) mdrag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false, t: performance.now() };
+  if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: cam.z, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 }; if (mdrag) mdrag.moved = true; }
+}
+function mMove(e) {
+  if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const r = cv.getBoundingClientRect();
+  if (pinch && pts.size >= 2) {
+    const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+    if (!mfocus) { if (d / pinch.d > 1.25) { const hit = hitTile(...s2w(mx, my)); if (hit) focusOn(hit.k, mx, my); pinch = null; } return; }
+    const [wx, wy] = s2w(mx, my), nz = Math.max(.08, Math.min(ZMAX, pinch.z * d / pinch.d));
+    cam.z = camT.z = nz; cam.x = camT.x = wx - (mx - cx0()) / nz; cam.y = camT.y = wy - (my - cy0()) / nz;
+    if (d / pinch.d < .6 && pinch.z < 1.2) { overview(mx, my); pinch = null; }
+    return;
+  }
+  if (!mdrag) return;
+  const dx = e.clientX - mdrag.x, dy = e.clientY - mdrag.y;
+  if (Math.abs(dx) + Math.abs(dy) > 9) mdrag.moved = true;
+  if (mdrag.moved && mfocus) { cam.x = camT.x = mdrag.cx - dx / cam.z; cam.y = camT.y = mdrag.cy - dy / cam.z; }
+}
+function mUp(e) {
+  pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
+  if (!mdrag || pts.size) return;
+  const d = mdrag; mdrag = null; if (d.moved) return;
+  const r = cv.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top, [gx, gy] = w2s(agent.x, agent.y);
+  if (canReopen() && Math.hypot(sx - gx, sy - gy) < AV_R * 1.8) { reopenAnswer(); return; }
+  const hit = hitTile(...s2w(sx, sy));
+  if (!hit) { overview(sx, sy); return; }
+  if (!mfocus) { focusOn(hit.k, sx, sy); return; }
+  if (hit.k === mfocus.k && hit.k[0] === 'f' && !mfocus.deep) { focusOn(hit.k, sx, sy, true); return; }
+  if (hit.k[0] === 'f') { focusOn(hit.k, sx, sy); return; }
+  overview(sx, sy);
+}
+cv.addEventListener('pointerdown', e => { if (MOBILE) mDown(e); });
+cv.addEventListener('pointermove', e => { if (MOBILE) mMove(e); });
+cv.addEventListener('pointerup', e => { if (MOBILE) mUp(e); });
+cv.addEventListener('pointercancel', e => { pts.delete(e.pointerId); mdrag = null; pinch = null; });
+
+/* the drawer: the sidebar slides in and pushes the view aside, as in the app */
+function openDrawer() { document.querySelector('.app').classList.add('drawer'); }
+function closeDrawer() { document.querySelector('.app').classList.remove('drawer'); }
+$('mmenu').addEventListener('click', e => { e.stopPropagation(); openDrawer(); });
+document.querySelector('.main').addEventListener('click', e => { if (document.querySelector('.app').classList.contains('drawer')) { e.stopPropagation(); e.preventDefault(); closeDrawer(); } }, true);
+$('mback').addEventListener('click', () => overview());
+
+/* the ··· sheet: views, speed, bubbles */
+function buildSheet() {
+  const sp = SPEEDS.map((v, i) => `<button data-sp="${i}" class="${v === speed ? 'on' : ''}">${v.n}</button>`).join('');
+  $('msheet').innerHTML = `<div class="grab"></div>
+    <div class="row"><span>Speed</span><div class="chips">${sp}</div></div>
+    <button class="opt" data-o="bubbles"><svg><use href="#i-bubble"/></svg>Thought and speech bubbles<b>${SHOW_BUBBLES ? 'On' : 'Off'}</b></button>
+    <button class="opt" data-o="share"><svg><use href="#i-share"/></svg>Share this replay</button>
+    ${document.querySelector('.tb[href]') ? `<a class="opt" href="../"><svg><use href="#i-play"/></svg>Play Tokenbros</a>` : ''}`;
+}
+function openSheet() { buildSheet(); document.body.classList.add('sheet'); }
+function closeSheet() { document.body.classList.remove('sheet'); }
+$('mmore').addEventListener('click', e => { e.stopPropagation(); openSheet(); });
+$('mshade').addEventListener('click', closeSheet);
+$('msheet').addEventListener('click', async e => {
+  const s = e.target.closest('[data-sp]'); if (s) { speed = SPEEDS[+s.dataset.sp]; acc = 0; $('speed').querySelectorAll('button').forEach((x, i) => x.classList.toggle('on', i === +s.dataset.sp)); $('mspeed').textContent = speed.n; buildSheet(); return; }
+  const o = e.target.closest('[data-o]'); if (!o) return;
+  if (o.dataset.o === 'bubbles') { setBubbles(!SHOW_BUBBLES); buildSheet(); }
+  if (o.dataset.o === 'share') { try { if (navigator.share) await navigator.share({ title: document.title, url: location.href }); else { await navigator.clipboard.writeText(location.href); o.lastChild.textContent = 'Link copied'; } } catch {} }
+});
+// the speed chip in the player cycles through the watchable speeds
+const MOBILE_SPEEDS = [4, 5, 2, 3];
+$('mspeed').addEventListener('click', () => {
+  const i = MOBILE_SPEEDS.indexOf(SPEEDS.indexOf(speed)), next = SPEEDS[MOBILE_SPEEDS[(i + 1) % MOBILE_SPEEDS.length]];
+  speed = next; acc = 0; $('mspeed').textContent = next.n; $('speed').querySelectorAll('button').forEach((x, k) => x.classList.toggle('on', SPEEDS[k] === next));
+});
+$('mspeed').textContent = speed.n;
+$('mview').addEventListener('click', () => { const toMap = !$('thread').hidden; setView(toMap); $('mview').classList.toggle('thread', !toMap); });
 
 /* ---------- controls and start-up ---------- */
 function setFollow(v) { if (v && !follow) { fzBias = 1; pull = 0; followZ = 0; } follow = v; $('follow').classList.toggle('on', v); if (v) followFrame(false); }
@@ -3258,7 +3484,7 @@ setStep(0, false);
 // start playing on arrival, at a watchable pace
 setTimeout(() => { if (!playing && cur === 0) setPlaying(true); }, 900);
 requestAnimationFrame(frame);
-window.__rp = { st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ energy: +energy.toFixed(2), streamingNow: streaming(performance.now()), ag: w2s(agent.x, agent.y).map(Math.round), vf: viewFrame(), ty: typing.i, tsent: typing.sentAt, tearly: typing.early, spark: !!spark, sgot: spark && spark.got, rest: resting(performance.now()), busy: avatarBusy(performance.now()), stage: stageFor, tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
+window.__rp = { vrect: k => { const r = V.get(k); if (!r) return null; const [x, y] = w2s(r.x, r.y); return [x, y, r.w * cam.z, r.h * cam.z]; }, st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ energy: +energy.toFixed(2), streamingNow: streaming(performance.now()), ag: w2s(agent.x, agent.y).map(Math.round), vf: viewFrame(), ty: typing.i, tsent: typing.sentAt, tearly: typing.early, spark: !!spark, sgot: spark && spark.got, rest: resting(performance.now()), busy: avatarBusy(performance.now()), stage: stageFor, tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
 
 })();
 </script>
