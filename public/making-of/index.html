@@ -2317,18 +2317,10 @@ function drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, t
     const dx = ax - bx, dy = ay - by, l = Math.hypot(dx, dy) || 1, nx = -dy / l * 8, ny = dx / l * 8, tipx = ax - dx / l * 14, tipy = ay - dy / l * 14;
     g.beginPath(); g.moveTo(bx + nx, by + ny); g.quadraticCurveTo((bx + tipx) / 2 + nx * .3, (by + tipy) / 2 + ny * .3, tipx, tipy); g.quadraticCurveTo((bx + tipx) / 2 - nx * .3, (by + tipy) / 2 - ny * .3, bx - nx, by - ny); g.closePath(); g.fillStyle = fill; g.fill();
   };
-  if (thought) withPop(ax, ay, pop.tt, now, tFade, () => {
-    [tx, ty] = holdBub('t', tx, ty, tw, th, ax, ay, now, pop.tx, true);
-    const fp = fluffy(tx, ty, tw, th);
-    g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 14; g.shadowOffsetY = 3; g.fillStyle = THINK.fill; g.fill(fp); g.restore();
-    g.strokeStyle = THINK.line; g.lineWidth = 1.2; g.stroke(fp);
-    if (!said) { const ex = side ? tx + tw + 4 : Math.min(tx + tw - 16, Math.max(tx + 16, ax)), ey = side ? ty + th / 2 : ay < ty ? ty - 4 : ty + th + 4;
-      for (const [f, rad] of [[.3, 4.2], [.6, 3], [.84, 2]]) { g.beginPath(); g.arc(ex + (ax - ex) * f, ey + (ay - ey) * f, rad, 0, 7); g.fillStyle = THINK.fill; g.fill(); g.strokeStyle = THINK.line; g.lineWidth = 1; g.stroke(); } }
-    drawRich(tl, tx + 13, ty + 19, 17, THINK.ink, '#D6D0FA');
-  });
+  if (thought) withPop(ax, ay, pop.tt, now, tFade, () => drawThought(tl, tx, ty, tw, th, ax, ay, now));
   if (said) withPop(ax, ay, pop.st, now, sFade, () => {
     const fill = said.final ? '#FFFFFF' : '#E9E9E9';
-    [sx, sy] = holdBub('s', sx, sy, sw, sh, ax, ay, now, pop.sx, true);
+    const hb = holdBub('s', sx, sy, sw, sh, ax, ay, now, pop.sx, true); [sx, sy] = hb; g.globalAlpha *= hb[5];
     g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 16; g.shadowOffsetY = 4; g.fillStyle = fill; rr(sx, sy, sw, sh, 14); g.fill(); g.restore();
     tail(sx, sy, sw, sh, fill);
     drawRich(sl, sx + 13, sy + 21, 18, '#111', '#000');
@@ -2509,40 +2501,24 @@ function drawAgent(now, ap, s) {
   if (newT) { if (!pop.t || now - pop.tSeen > 250) pop.tt = now; pop.tx = now; pop.t = thought; } if (thought) pop.tSeen = now;
   if (newS) { if (!pop.s || now - pop.sSeen > 250) pop.st = now; pop.sx = now; pop.s = sk; } if (said) pop.sSeen = now;
   BUB.dt = Math.min(50, now - (BUB.t0 || now)); BUB.t0 = now;
-  // measure both, then stack them on the free side of the avatar: above it, or below when the
-  // avatar is near the top edge. The speech sits nearest; the thought floats beyond it.
-  // which side and whether above: decided with some hysteresis, so they do not flip back and forth
+  // which side of the agent the bubble takes, and whether above: decided with some hysteresis, so it
+  // does not flip back and forth
   const mapW0 = VW - panelW; if (BUB.left == null || !said && !thought) BUB.left = ax > mapW0 * .62; else if (BUB.left && ax < mapW0 * .5) BUB.left = false; else if (!BUB.left && ax > mapW0 * .72) BUB.left = true;
   const left = BUB.left;
   const sl = said ? richWrap(said.text, { size: MOBILE ? 12.5 : 13, weight: said.final ? 600 : 500 }, Math.min(320, VW - 120), MOBILE ? 4 : 6) : [];
   const sw = said ? Math.max(...sl.map(l => l.w)) + 26 : 0, sh = sl.length * 18 + 16;
-  const tl = thought ? richWrap(thought, { size: MOBILE ? 12.5 : 13, weight: 400, italic: true }, Math.min(280, VW - 120), MOBILE ? 2 : 4) : [];
-  const tw = thought ? Math.max(...tl.map(l => l.w)) + 26 : 0, th = tl.length * 17 + 14;
-  // the thought mirrors the speech on the other side of the avatar; if that side is off-canvas
-  // it stacks beyond the speech instead
-  const mapW = VW - panelW, tLeft = !left, tx0 = tLeft ? ax - tw - 34 - o : ax + 34 + o, fits = m => tx0 > m && tx0 + tw < mapW - m;
-  if (BUB.mir == null || !thought) BUB.mir = fits(8); else if (BUB.mir && !fits(0)) BUB.mir = false; else if (!BUB.mir && fits(40)) BUB.mir = true;
-  const mirrored = BUB.mir;
-  const need = mirrored ? Math.max(said ? sh + 40 : 0, thought ? th + 40 : 0) : (said ? sh + 40 : 0) + (thought ? th + 34 : 0);
+  const tl = thought ? richWrap(thought, { size: 11, weight: 400, italic: true }, Math.min(MOBILE ? 180 : 210, VW - 140), 2) : [];
+  const tw = thought ? Math.max(...tl.map(l => l.w)) + 18 : 0, th = tl.length * 14 + 10;
+  // one bubble at a time: above the agent, or below it near the top edge (with hysteresis)
+  const need = said ? sh + 40 : thought ? th + 30 : 0;
   if (BUB.below == null || !said && !thought) BUB.below = ay - need < 70; else if (!BUB.below && ay - need < 60) BUB.below = true; else if (BUB.below && ay - need > 130) BUB.below = false;
-  const below = BUB.below;
-  let sy = 0, ty = 0;
-  if (!below) { sy = ay - 36 - o - sh; ty = mirrored ? ay - 36 - o - th : (said ? sy - 16 : ay - 46 - o) - th; }
-  else { sy = ay + 64 + o; ty = mirrored ? ay + 64 + o : said ? sy + sh + 16 : ay + 70 + o; }
+  const below = BUB.below, sy = below ? ay + 64 + o : ay - 36 - o - sh;
   const dockedNow = agent.anchors.length && agent.anchors[0][0] === 'ext' && !agent.leaving;
   if (dockedNow) drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, tFade, sFade);
   else {
-  if (thought) withPop(ax, ay, pop.tt, now, tFade, () => {
-    const [x, y, bw, bh, ta] = holdBub('t', mirrored ? tx0 : left ? ax - tw - 18 - o : ax + 18 + o, ty, tw, th, ax, ay, now, pop.tx);
-    const fp = fluffy(x, y, bw, bh);
-    g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 14; g.shadowOffsetY = 3; g.fillStyle = THINK.fill; g.fill(fp); g.restore();
-    g.strokeStyle = THINK.line; g.lineWidth = 1.2; g.stroke(fp);
-    const ex = Math.max(x + 16, Math.min(x + bw - 16, ax)), ey = y + bh / 2 > ay ? y - 4 : y + bh + 4;
-    for (const [f, rad] of [[.3, 4.2], [.6, 3], [.84, 2]]) { g.beginPath(); g.arc(ex + (ax - ex) * f, ey + (ay - ey) * f, rad, 0, 7); g.fillStyle = THINK.fill; g.fill(); g.strokeStyle = THINK.line; g.lineWidth = 1; g.stroke(); }
-    g.save(); g.globalAlpha *= ta; g.beginPath(); g.rect(x, y, bw, bh); g.clip(); drawRich(tl, x + 13, y + 19, 17, THINK.ink, '#D6D0FA'); g.restore();
-  });
+  if (thought) withPop(ax, ay, pop.tt, now, tFade, () => drawThought(tl, left ? ax - tw - AV_R * 1.25 - 6 : ax + AV_R * 1.25 + 6, below ? ay + AV_R * .7 + 8 : ay - AV_R * .7 - th - 6, tw, th, ax, ay, now));
   if (said) withPop(ax, ay, pop.st, now, sFade, () => {
-    const [x, y, bw, bh, ta] = holdBub('s', left ? ax - sw - 34 - o : ax + 34 + o, sy, sw, sh, ax, ay, now, pop.sx);
+    const [x, y, bw, bh, ta, al] = holdBub('s', left ? ax - sw - 34 - o : ax + 34 + o, sy, sw, sh, ax, ay, now, pop.sx); g.globalAlpha *= al;
     const up = y + bh / 2 > ay;
     const bx = Math.max(x + 24, Math.min(x + bw - 24, ax)), dir = up ? -1 : 1;
     const base = up ? y + 8 : y + bh - 8, edge = up ? y : y + bh;      // the tail starts inside the body: no seam
@@ -2566,14 +2542,14 @@ function drawAgent(now, ap, s) {
 let SHOW_BUBBLES = true; try { SHOW_BUBBLES = localStorage.getItem('replay.bubbles') !== 'off'; } catch {}
 function setBubbles(v) { SHOW_BUBBLES = v; $('bubblesT').classList.toggle('on', v); try { localStorage.setItem('replay.bubbles', v ? 'on' : 'off'); } catch {} }
 // a bubble's box glides to a new place relative to the agent (never lagging the agent itself)
-const BUB = { left: null, mir: null, below: null, t0: 0, dt: 16 };
+const BUB = { left: null, below: null, t0: 0, dt: 16 };
 // A bubble you are reading stays where it is. It moves only when it has to (off screen, over the
 // agent, or the agent has gone too far from it), and then glides there on a critically damped
 // spring. A new text in a showing bubble resizes the box smoothly and fades the words in.
 function holdBub(key, tx, ty, w, h, ax, ay, now, swapT, pinned) {
   let b = BUB[key + 'p'];
   const dt = Math.min(50, BUB.dt || 16) / 1000, gap = b ? now - b.seen : 1e9;
-  const mapW = VW - panelW, bot = MOBILE ? viewFrame().bot : VH - 12, top = MOBILE ? 70 : 8;
+  const mapW = VW - panelW, bot = MOBILE ? viewFrame().bot : VH - 12, top = MOBILE ? 70 : 58;   // (desktop: below the map's controls)
   // a phone has little room: bubbles sit in the middle of the screen, above or below the agent
   const wantX = MOBILE ? Math.max(8, (mapW - w) / 2) : tx, wantY = MOBILE ? Math.max(top, Math.min(bot - h - 8, ty)) : ty;
   // a new bubble appears where it will stay, well inside the screen: it never slides in from an edge
@@ -2588,22 +2564,47 @@ function holdBub(key, tx, ty, w, h, ax, ay, now, swapT, pinned) {
   const onScreen = b.x > 2 && b.y > top - 4 && b.x + b.w < mapW - 2 && b.y + b.h < bot;
   const covers = ax > b.x - AV_R * .5 && ax < b.x + b.w + AV_R * .5 && ay > b.y - AV_R * .5 && ay < b.y + b.h + AV_R * .5;
   // it stays put unless it must move: off screen, over the agent, or the agent far away from it
-  if (!b.moving && (!onScreen || covers || far > (MOBILE ? 330 : 380))) { b.moving = true; b.gx = wantX; b.gy = wantY; }
+  if (!b.moving && (!onScreen || covers || far > (MOBILE ? 330 : 260))) { b.moving = true; b.gx = wantX; b.gy = wantY; }
   // a move picks its spot once and goes there; it does not chase the agent (docked ones follow the card)
   if (pinned || b.gx == null) { b.gx = wantX; b.gy = wantY; }
   const tX = b.gx, tY = b.gy;
-  // a move is one eased glide that ends crisply: no long settling tail, and never faster than about
-  // 20 px a frame, so a long way takes a little longer instead of turning into a jump
+  // a short move is one eased glide that ends crisply: no long settling tail, never faster than about
+  // 20 px a frame. A long one does not travel across the screen at all: the bubble fades out where it
+  // was and fades in where it is going (to and from the browser, say)
+  if (b.al == null) b.al = 1;
   if (b.moving) {
-    // a goal that drifts (a docked card sliding) is followed; a goal that jumps starts a new glide from here
-    if (!b.m0 || Math.hypot(tX - b.m0.gx, tY - b.m0.gy) > 12) { const d = Math.hypot(tX - b.x, tY - b.y); b.m0 = { x: b.x, y: b.y, gx: tX, gy: tY, t: now, T: Math.min(1000, Math.max(220 + d * .5, d * 1.4)) }; }
+    const fadingOut = b.m0 && b.m0.hop && now - b.m0.t < 120;       // still fading out: just aim anew
+    // a goal that drifts (a docked card sliding) is followed; a goal that jumps starts a new move from here
+    if (!b.m0 || (!fadingOut && Math.hypot(tX - b.m0.gx, tY - b.m0.gy) > 12)) { const d = Math.hypot(tX - b.x, tY - b.y); b.m0 = { x: b.x, y: b.y, gx: tX, gy: tY, t: now, T: Math.min(1000, Math.max(220 + d * .5, d * 1.4)), hop: d > (MOBILE ? 200 : 240), a0: b.al }; }
     else { b.m0.gx = tX; b.m0.gy = tY; }
-    const k = Math.min(1, (now - b.m0.t) / b.m0.T), e = (1 - Math.cos(Math.PI * k)) / 2;   // gentle at both ends, peak speed 1.6x the average
-    b.x = b.m0.x + (tX - b.m0.x) * e; b.y = b.m0.y + (tY - b.m0.y) * e;
-    if (k >= 1) { b.moving = false; b.m0 = null; b.gx = null; }
-  }
+    const t = now - b.m0.t;
+    if (b.m0.hop) {
+      if (t < 120) b.al = b.m0.a0 * (1 - t / 120);
+      else { b.x = tX; b.y = tY; b.al = Math.min(1, (t - 120) / 200); if (t >= 320) { b.moving = false; b.m0 = null; b.gx = null; } }
+    } else {
+      const k = Math.min(1, t / b.m0.T), e = (1 - Math.cos(Math.PI * k)) / 2;   // gentle at both ends, peak speed 1.6x the average
+      b.x = b.m0.x + (tX - b.m0.x) * e; b.y = b.m0.y + (tY - b.m0.y) * e; b.al = Math.min(1, b.al + dt / .2);
+      if (k >= 1) { b.moving = false; b.m0 = null; b.gx = null; }
+    }
+  } else b.al = Math.min(1, b.al + dt / .2);
   const ta = swapT ? Math.min(1, Math.max(0, (now - swapT - 60) / 220)) : 1;
-  return [b.x, b.y, b.w, b.h, ta];
+  return [b.x, b.y, b.w, b.h, ta, b.al];
+}
+// a thought is a passing glimpse: small, faint, and it stays with the agent wherever it goes
+function drawThought(tl, tx, ty, tw, th, ax, ay, now) {
+  const mapW = VW - panelW, top = MOBILE ? 70 : 58, bot = MOBILE ? viewFrame().bot : VH - 12;
+  const Z = BUB.tz || (BUB.tz = { w: tw, h: th }), kz = 1 - Math.exp(-(BUB.dt || 16) / 140); Z.w += (tw - Z.w) * kz; Z.h += (th - Z.h) * kz;
+  let [x, y] = glideBub('t', tx, ty, ax, ay); const w = Z.w, h = Z.h;
+  x = Math.max(8, Math.min(mapW - w - 8, x)); y = Math.max(top, Math.min(bot - h - 4, y));
+  const ta = pop.tx ? Math.min(1, Math.max(0, (now - pop.tx - 60) / 220)) : 1; BUB.tSeen = now;
+  g.save(); g.globalAlpha *= .8;
+  const fp = fluffy(x, y, w, h);
+  g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 10; g.shadowOffsetY = 2; g.fillStyle = THINK.fill; g.fill(fp); g.restore();
+  g.strokeStyle = THINK.line; g.lineWidth = 1; g.stroke(fp);
+  const ex = Math.max(x + 12, Math.min(x + w - 12, ax)), ey = y + h / 2 > ay ? y - 3 : y + h + 3;
+  for (const [f, rad] of [[.34, 2.8], [.6, 2], [.8, 1.4]]) { g.beginPath(); g.arc(ex + (ax - ex) * f, ey + (ay - ey) * f, rad, 0, 7); g.fillStyle = THINK.fill; g.fill(); g.strokeStyle = THINK.line; g.lineWidth = 1; g.stroke(); }
+  g.save(); g.globalAlpha *= ta; g.beginPath(); g.rect(x, y, w, h); g.clip(); drawRich(tl, x + 9, y + 15, 14, THINK.ink, '#CFC8F5'); g.restore();
+  g.restore();
 }
 function glideBub(key, tx, ty, ax, ay, snap) {
   const o = BUB[key + 'o'], dx = tx - ax, dy = ty - ay;
@@ -3818,7 +3819,8 @@ setStep(0, false);
 // start playing on arrival, at a watchable pace
 setTimeout(() => { if (!playing && cur === 0) setPlaying(true); }, 900);
 requestAnimationFrame(frame);
-window.__bubS = () => BUB.sp && performance.now() - BUB.sp.seen < 50 ? [BUB.sp.x, BUB.sp.y, BUB.sp.id || (BUB.sp.id = Math.random()), BUB.sp.w, BUB.sp.h, BUB.sp.pin, BUB.sp.moving, BUB.sp.m0 ? BUB.sp.m0.T : 0] : null;
+window.__bubT = () => performance.now() - (BUB.tSeen || 0) < 50;
+window.__bubS = () => BUB.sp && performance.now() - BUB.sp.seen < 50 ? [BUB.sp.x, BUB.sp.y, BUB.sp.id || (BUB.sp.id = Math.random()), BUB.sp.w, BUB.sp.h, BUB.sp.pin, BUB.sp.moving, BUB.sp.m0 ? BUB.sp.m0.T : 0, BUB.sp.al] : null;
 window.__why = () => ({ why: BUB.why || {}, gaps: BUB.gaps || 0 });
 window.__rp = { find: (k, from = 0) => S.findIndex((s, i) => i >= from && s.k === k), finals: () => S.map((s, i) => s.k === "reply" && s.final ? i : -1).filter(i => i >= 0), vrect: k => { const r = V.get(k); if (!r) return null; const [x, y] = w2s(r.x, r.y); return [x, y, r.w * cam.z, r.h * cam.z]; }, st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ energy: +energy.toFixed(2), streamingNow: streaming(performance.now()), ag: w2s(agent.x, agent.y).map(Math.round), vf: viewFrame(), ty: typing.i, tsent: typing.sentAt, tearly: typing.early, spark: !!spark, sgot: spark && spark.got, rest: resting(performance.now()), busy: avatarBusy(performance.now()), stage: stageFor, tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
 
