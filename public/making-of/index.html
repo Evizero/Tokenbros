@@ -191,7 +191,7 @@
   .composer.sent .txt, .composer.sent .catt { animation: condense .3s cubic-bezier(.5,0,.8,.4) forwards; transform-origin: 50% 60%; }
   @keyframes condense { to { opacity: 0; transform: scale(.55); filter: blur(3px) brightness(2); } }
   .composer .crow { display: flex; align-items: center; gap: 10px; margin-top: 8px; color: #8A8A8A; font-size: 12.5px; }
-  .composer .plus { width: 24px; height: 24px; display: grid; place-items: center; font-size: 21px; font-weight: 300; color: #D6D6D6; }
+  .composer .plus { width: 24px; height: 24px; display: grid; place-items: center; color: #D6D6D6; } .composer .plus svg { width: 18px; height: 18px; stroke-width: 1.6; }
   .composer .appr { display: flex; align-items: center; gap: 6px; color: #8A8A8A; font-size: 13px; }
   .composer .appr svg, .composer .mic svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   .composer .ring { width: 18px; height: 18px; display: grid; place-items: center; }
@@ -235,9 +235,15 @@
   .scrim { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3; background: radial-gradient(ellipse 70% 80% at 45% 45%, rgba(10,10,12,.9), rgba(10,10,12,.7)); -webkit-backdrop-filter: blur(3px) saturate(.8); backdrop-filter: blur(3px) saturate(.8);
     opacity: 0; pointer-events: none; transition: opacity .5s ease; cursor: pointer; }
   .app.mapanswer .scrim { opacity: 1; pointer-events: auto; }
-  .stagex { position: absolute; top: 18px; z-index: 5; transform: translateX(-100%); display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 9px; border-radius: 15px; background: rgba(40,40,44,.95); border: 1px solid #444; color: #D6D6D6; font-size: 12.5px;
+  /* over the map: a quiet close at the top right, and a way back at the end of the answer */
+  .stagex { position: absolute; top: 14px; z-index: 5; transform: translateX(-100%); width: 34px; height: 34px; border-radius: 17px; display: grid; place-items: center; background: rgba(40,40,44,.92); border: 1px solid #444; color: #D6D6D6;
     opacity: 0; pointer-events: none; transition: opacity .3s; }
-  .stagex svg { width: 15px; height: 15px; } .stagex:hover { background: #3A3A42; color: #fff; }
+  .stagex svg { width: 16px; height: 16px; stroke-width: 1.8; } .stagex:hover { background: #3A3A42; color: #fff; }
+  .stage .toMap { display: none; }
+  .app.mapanswer .stage .toMap { display: flex; align-items: center; gap: 8px; margin: 26px auto 6px; padding: 10px 18px 10px 14px; border-radius: 22px; background: #242428; border: 1px solid #3A3A42; color: #E6E6E6; font-size: 14px; }
+  .app.mapanswer .stage .toMap:hover { background: #2E2E34; } .stage .toMap svg { width: 17px; height: 17px; color: var(--accent); }
+  .app.mobile .stagex { top: 76px; width: 38px; height: 38px; border-radius: 19px; }
+  .app.mobile.mapanswer .stage .toMap { font-size: 16px; padding: 12px 20px 12px 16px; }
   .app.mapanswer .stagex { opacity: 1; pointer-events: auto; }
   .reopen { position: absolute; z-index: 5; display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px 0 9px; border-radius: 14px; background: rgba(28,28,34,.95); border: 1px solid rgba(127,139,255,.45); color: #DADDFF; font-size: 12.5px; white-space: nowrap;
     opacity: 0; pointer-events: none; transform: translateY(6px); transition: opacity .3s, transform .3s; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
@@ -395,7 +401,7 @@
   .tipx .xh em { font-style: normal; color: var(--faint); } .tipx .xh .a { color: var(--green); font-weight: 500; } .tipx .xh .d { color: var(--red); font-weight: 500; }
   .tipx .xh small { color: var(--faint); margin-left: auto; }
   .tipx .xb { font: 11.5px/1.6 var(--mono); padding: 4px 0 8px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
-  .tipx .l span { white-space: pre-wrap; word-break: break-word; min-width: 0; } .tipx .l i { width: 38px; padding-right: 10px; }
+  .tipx .l > span { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; } .tipx .l i { width: 38px; padding-right: 10px; }
   .tipx .gap { color: #6E6E96; padding: 3px 14px; } .tipx .ph { display: block; color: var(--faint); padding: 12px; }
   .fc .evs { padding: 0 8px 6px; }
   .fc .ev { display: grid; grid-template-columns: 16px 1fr auto; gap: 0 8px; align-items: center; padding: 4px 6px; border-radius: 7px; }
@@ -534,7 +540,8 @@
   .app.mobile .composer { left: 30px; right: 30px; bottom: 8px; border-radius: 24px; padding: 0 6px 0 10px; min-height: 48px; justify-content: center; font-size: 17px;
     transition: left .35s cubic-bezier(.2,.9,.3,1), right .35s cubic-bezier(.2,.9,.3,1), border-radius .35s, padding .35s, border-color .2s, box-shadow .3s; }
   .app.mobile .composer .crow { margin-top: 0; gap: 6px; }
-  .app.mobile .composer .plus { width: 34px; height: 34px; font-size: 26px; }
+  .app.mobile .composer .plus { width: 34px; height: 34px; } .app.mobile .composer .plus svg { width: 22px; height: 22px; stroke-width: 1.7; }
+  .app.mobile .composer .crow { align-items: center; }
   .app.mobile .composer .mic { width: 34px; } .app.mobile .composer .mic svg { width: 20px; height: 20px; }
   .app.mobile .composer .send { width: 34px; height: 34px; border-radius: 17px; } .app.mobile .composer .send svg { width: 16px; height: 16px; }
   .app.mobile .composer .txt { font-size: 17px; line-height: 23px; }
@@ -558,6 +565,35 @@
   .app.mobile .me { font-size: 16px; padding: 14px 16px 18px 22px; }
   .app.mobile .mback { height: 36px; font-size: 15px; top: 70px; }
   body.mobile .msheet .opt { font-size: 17px; }
+
+  /* a phone: the preview sheet for a file or a component */
+  .fview, .fviewshade { display: none; }
+  body.mobile .fviewshade { display: block; position: fixed; inset: 0; z-index: 62; background: rgba(0,0,0,.5); opacity: 0; pointer-events: none; transition: opacity .3s; }
+  body.mobile .fview { display: flex; flex-direction: column; position: fixed; left: 0; right: 0; bottom: 0; top: 44px; z-index: 63; background: #161616; border-radius: 22px 22px 0 0; border-top: 1px solid #2A2A2A;
+    transform: translateY(102%); transition: transform .42s cubic-bezier(.2,.9,.3,1); }
+  body.mobile.viewing .fviewshade { opacity: 1; pointer-events: auto; } body.mobile.viewing .fview { transform: none; }
+  .fview .mv-grab { flex: none; width: 38px; height: 4px; border-radius: 2px; background: #444; margin: 8px auto 2px; }
+  .fview .mv-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 0 40px; font-size: 17px; }
+  .fview .mv-hd { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 18px; background: #161616; }
+  .fview .mv-nm { flex: 1; min-width: 0; display: flex; flex-direction: column; } .fview .mv-nm b { font: 600 17px var(--mono); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fview .mv-nm small { font-size: 13px; color: #8A8A8A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fview .mv-x, .fview .mv-back { width: 40px; height: 40px; border-radius: 20px; background: #242424; display: grid; place-items: center; color: #E6E6E6; flex: none; } .fview .mv-x svg, .fview .mv-back svg { width: 20px; height: 20px; stroke-width: 1.8; }
+  .fview .mv-stats { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 8px; padding: 4px 18px 12px; }
+  .fview .st { display: flex; flex-direction: column; gap: 2px; } .fview .st small { font-size: 12px; color: #7A7A7A; } .fview .st b { font: 500 15px var(--mono); color: var(--ink); } .fview .st b em { font-style: normal; color: var(--red); }
+  .fview .st b.g { color: var(--green); } .fview .st b.b { color: #9AA3FF; }
+  .fview .mv-evs { padding: 0 10px 8px; border-top: 1px solid #262626; padding-top: 6px; } .fview .mv-evs .ev { padding: 7px 8px; } .fview .mv-evs .what { font-size: 13px; } .fview .mv-evs .why { font-size: 13px; white-space: normal; }
+  .fview .mv-tabs { display: flex; gap: 2px; margin: 4px 18px 10px; background: #222; border-radius: 12px; padding: 3px; }
+  .fview .mv-tabs button { flex: 1; padding: 7px 0; border-radius: 9px; color: #9B9B9B; font-size: 15px; } .fview .mv-tabs button.on { background: #3A3A3A; color: var(--ink); font-weight: 600; }
+  .fview .mv-code { font: 12.5px/1.6 var(--mono); border-top: 1px solid #262626; }
+  .fview .mv-code .l > span { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; padding-right: 12px; } .fview .mv-code .l i { width: 40px; padding-right: 10px; }
+  .fview .mv-code .gap { color: #6E6E96; padding: 6px 18px; }
+  .fview .mv-img { display: block; width: calc(100% - 36px); margin: 8px 18px; border-radius: 10px; }
+  .fview .mv-list { border-top: 1px solid #262626; }
+  .fview .mv-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 18px; border-bottom: 1px solid #222; text-align: left; }
+  .fview .mv-row span { flex: 1; min-width: 0; display: flex; flex-direction: column; } .fview .mv-row b { font: 500 15px var(--mono); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fview .mv-row small { font-size: 12.5px; color: #7A7A7A; } .fview .mv-row em { font: 13px var(--mono); font-style: normal; color: #8A8A8A; white-space: nowrap; }
+  .fview .mv-row .a { font-style: normal; color: var(--green); } .fview .mv-row .d { font-style: normal; color: var(--red); }
+  .fview .mv-row.hot { background: rgba(124,255,196,.07); } .fview .mv-row.hot b { color: #BFFFE2; }
 </style>
 </head>
 <body>
@@ -636,7 +672,7 @@
       <button class="mback" id="mback"><svg><use href="#i-back"/></svg>Overview</button>
       <div class="scrim" id="scrim" title="Back to the map"></div>
       <div class="stage" id="stage" aria-live="polite"></div>
-      <button class="stagex" id="stageX" title="Back to the map (Esc)"><svg><use href="#i-close"/></svg>Back to map</button>
+      <button class="stagex" id="stageX" title="Back to the map (Esc)" aria-label="Back to the map"><svg><use href="#i-close"/></svg></button>
       <button class="reopen" id="reopen" title="Read the last answer again"><svg><use href="#i-thread"/></svg>Last answer</button>
       <canvas id="map" aria-label="Map of the repository as it was at this point, with the agent's reads and edits"></canvas>
       <div id="thread" hidden><div class="tw" id="tw"></div></div>
@@ -656,7 +692,7 @@
           <div class="win"><div class="chrome"><i></i><i></i><i></i><div class="url" id="extU"></div></div><div class="page" id="extP"></div></div></div>
       </div>
       <div class="composer" id="composer"><div class="ctag">Steering &middot; Codex is still working</div><div class="catt att" id="catt" hidden></div><div class="txt" id="prompt"></div>
-        <div class="crow"><span class="plus">+</span><span class="appr"><svg viewBox="0 0 16 16"><path d="M8 1.8l5 2v4c0 3-2.2 5.2-5 6.4C5.2 13 3 10.8 3 7.8v-4z"/><path d="M6 6.5l1.8 1.5L6 9.5M8.8 9.8h1.6"/></svg>Approve for me</span><span class="grow"></span>
+        <div class="crow"><span class="plus"><svg viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg></span><span class="appr"><svg viewBox="0 0 16 16"><path d="M8 1.8l5 2v4c0 3-2.2 5.2-5 6.4C5.2 13 3 10.8 3 7.8v-4z"/><path d="M6 6.5l1.8 1.5L6 9.5M8.8 9.8h1.6"/></svg>Approve for me</span><span class="grow"></span>
           <span class="ring" id="ring"><svg viewBox="0 0 20 20"><circle class="bg" cx="10" cy="10" r="7"/><circle class="fg" id="ringFg" cx="10" cy="10" r="7" stroke-dasharray="0 44"/></svg></span>
           <span class="model" id="cmodel"></span><div class="mpick" id="mpick"></div><span class="mic"><svg viewBox="0 0 16 16"><rect x="5.5" y="1.8" width="5" height="8" rx="2.5"/><path d="M3.2 7.5a4.8 4.8 0 0 0 9.6 0M8 12.3v2"/></svg></span>
           <span class="send" id="send"><svg class="wave" viewBox="0 0 14 14"><path d="M3 5.5v3M5.3 3.5v7M7.6 2v10M9.9 4v6M12 6v2"/></svg><svg class="up" viewBox="0 0 14 14"><path d="M7 12V2.5M2.8 6.5L7 2.3l4.2 4.2"/></svg><svg class="stop" viewBox="0 0 14 14"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/></svg></span></div></div>
@@ -673,6 +709,7 @@
 </div>
 <div class="tip fc" id="tip" hidden></div>
 <div class="mshade" id="mshade"></div><div class="msheet" id="msheet"></div>
+<div class="fviewshade" id="fviewShade"></div><div class="fview" id="fview" role="dialog" aria-label="File preview"></div>
 <div class="cursor" id="cursor" hidden><svg viewBox="0 0 24 24"><path d="M4 2.5l14.5 9.2-6.3 1.3 3.6 7.1-2.8 1.4-3.6-7.2L4 19z" fill="#fff" stroke="#111" stroke-width="1.3" stroke-linejoin="round"/></svg></div>
 <div class="pasteview" id="pasteView" hidden></div>
 <div class="pull" id="pull"><span>Keep scrolling to stop following</span><i><b id="pullBar"></b></i></div>
@@ -2422,7 +2459,8 @@ function drawAgent(now, ap, s) {
   updateStage(now);
   // a bubble belongs to its agent: none while the agent is out of view (or you are reading code on a phone)
   const inView = ax > -30 && ax < VW - panelW + 30 && ay > -30 && ay < VH + 30 && !(MOBILE && mfocus && mfocus.deep);
-  const o = AV_R - 15, bb0 = bubbles(now), thought = SHOW_BUBBLES && inView ? bb0.thought : null, tFade = bb0.tf, sFade = bb0.sf, said = !SHOW_BUBBLES || !inView || stageOn() || (L.comps.length && turnOver(now)) ? null : bb0.said;
+  const o = AV_R - 15, bb0 = bubbles(now), tFade = bb0.tf, sFade = bb0.sf, said = !SHOW_BUBBLES || !inView || stageOn() || (L.comps.length && turnOver(now)) ? null : bb0.said;
+  const thought = SHOW_BUBBLES && inView && !said ? bb0.thought : null;          // one bubble at a time: speech wins
   updateReopen(ax, ay);
   const newT = thought !== pop.t, sk = said ? said.text : '', newS = sk !== pop.s;
   if (newT) { pop.t = thought; pop.tt = now; } if (newS) { pop.s = sk; pop.st = now; }
@@ -2602,7 +2640,8 @@ function frame(now) {
   tickPlayback(now);
   stepAnim();
   blendView();
-  refreshTip();
+  refreshTip(); if (MOBILE) tickView(now);
+  { const busyNow = agentWorking() || streaming(now), c = $('composer'); if (c.classList.contains('running') !== busyNow) c.classList.toggle('running', busyNow); }
   // one bad frame must never stop the animation
   try { if (!cv.hidden) draw(now); drawTimeline(); }
   catch (err) { if (!frame.warned) { frame.warned = true; console.error('frame', err); } g = gMap; }
@@ -2924,7 +2963,7 @@ function updateStage(now) {
     stageFor = i; stageAt = now;
     if (i >= 0) {
       const done = S.slice(i, i + 5).find(x => x.k === 'done'), m = MODELS[modelShown()].name;
-      el.innerHTML = `<div class="who"><b>Codex</b><span>GPT-6 ${m}${done ? ` · worked for ${fmtDur(done.dur || 0)}` : ''}</span></div><div class="md">${mdBlock(S[i].text)}</div>`; el.scrollTop = 0;
+      el.innerHTML = `<div class="who"><b>Codex</b><span>GPT-6 ${m}${done ? ` · worked for ${fmtDur(done.dur || 0)}` : ''}</span></div><div class="md">${mdBlock(S[i].text)}</div><button class="toMap"><svg><use href="#i-map"/></svg>Back to the map</button>`; el.scrollTop = 0;
       el.classList.toggle('reveal', reopen);
       { const G = stageGeom(); el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = G.top + 'px'; el.style.bottom = ($('composer').offsetHeight + 22) + 'px'; }
       void el.offsetWidth;
@@ -2975,7 +3014,7 @@ function updateStage(now) {
     const G = stageGeom(), comp = $('composer');
     el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = G.top + 'px';
     el.style.bottom = (comp.offsetHeight + 22) + 'px';
-    const x = $('stageX'); x.style.left = (G.left + G.cw - 14) + 'px';
+    const x = $('stageX'); x.style.left = (MOBILE ? VW - 12 : G.left + G.cw - 6) + 'px';
   }
   // with a map behind it: dim the map, offer a way back to it
   const app = document.querySelector('.app'); app.classList.toggle('mapanswer', i >= 0 && map);
@@ -3400,47 +3439,77 @@ function overview(sx, sy) {
   $('mback').classList.remove('on');
 }
 
-/* touch: tap, drag, pinch */
+/* touch: on a phone the overview stays put; a tap opens a preview instead of zooming the canvas */
 const pts = new Map(); let mdrag = null, pinch = null;
-function mDown(e) {
-  pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); cv.setPointerCapture(e.pointerId);
-  if (pts.size === 1) mdrag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false, t: performance.now() };
-  if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: cam.z, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 }; if (mdrag) mdrag.moved = true; }
-}
-function mMove(e) {
-  if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  const r = cv.getBoundingClientRect();
-  if (pinch && pts.size >= 2) {
-    const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
-    if (!mfocus) { if (d / pinch.d > 1.25) { const hit = hitTile(...s2w(mx, my)); if (hit) focusOn(hit.k, mx, my); pinch = null; } return; }
-    const [wx, wy] = s2w(mx, my), nz = Math.max(.08, Math.min(ZMAX, pinch.z * d / pinch.d));
-    cam.z = camT.z = nz; cam.x = camT.x = wx - (mx - cx0()) / nz; cam.y = camT.y = wy - (my - cy0()) / nz;
-    if (d / pinch.d < .6 && pinch.z < 1.2) { overview(mx, my); pinch = null; }
-    return;
-  }
-  if (!mdrag) return;
-  const dx = e.clientX - mdrag.x, dy = e.clientY - mdrag.y;
-  if (Math.abs(dx) + Math.abs(dy) > 9) mdrag.moved = true;
-  if (mdrag.moved && mfocus) { cam.x = camT.x = mdrag.cx - dx / cam.z; cam.y = camT.y = mdrag.cy - dy / cam.z; }
-}
+function mDown(e) { mdrag = { x: e.clientX, y: e.clientY, moved: false }; }
+function mMove(e) { if (mdrag && Math.abs(e.clientX - mdrag.x) + Math.abs(e.clientY - mdrag.y) > 9) mdrag.moved = true; }
 function mUp(e) {
-  pts.delete(e.pointerId); if (pts.size < 2) pinch = null;
-  if (!mdrag || pts.size) return;
-  const d = mdrag; mdrag = null; if (d.moved) return;
+  const d = mdrag; mdrag = null; if (!d || d.moved) return;
   if ($('ext').classList.contains('open')) { $('ext').classList.remove('open'); return; }
   const r = cv.getBoundingClientRect(), sx = e.clientX - r.left, sy = e.clientY - r.top, [gx, gy] = w2s(agent.x, agent.y);
   if (canReopen() && Math.hypot(sx - gx, sy - gy) < AV_R * 1.8) { reopenAnswer(); return; }
-  const hit = hitTile(...s2w(sx, sy));
-  if (!hit) { overview(sx, sy); return; }
-  if (!mfocus) { focusOn(hit.k, sx, sy); return; }
-  if (hit.k === mfocus.k && hit.k[0] === 'f' && !mfocus.deep) { focusOn(hit.k, sx, sy, true); return; }
-  if (hit.k[0] === 'f') { focusOn(hit.k, sx, sy); return; }
-  overview(sx, sy);
+  const hit = hitTile(...s2w(sx, sy)); if (!hit) return;
+  if (hit.k[0] === 'f') openFileView(+hit.k.slice(1)); else openCompView(hit.k.slice(1));
 }
 cv.addEventListener('pointerdown', e => { if (MOBILE) mDown(e); });
 cv.addEventListener('pointermove', e => { if (MOBILE) mMove(e); });
 cv.addEventListener('pointerup', e => { if (MOBILE) mUp(e); });
-cv.addEventListener('pointercancel', e => { pts.delete(e.pointerId); mdrag = null; pinch = null; });
+cv.addEventListener('pointercancel', () => { mdrag = null; });
+
+/* the preview sheet: a file (its changes, or the whole file) or a component's files */
+let mview = null, mviewAt = -1, mviewT = 0;
+const lastTouch = fi => { const t = [...TOUCH[fi]].reverse().find(t => t[0] <= cur); return t ? t[0] : -1; };
+function compViewHtml(id) {
+  const c = L.comps.find(x => x.id === id); if (!c) return '';
+  const files = [...c.files].sort((a, b) => lastTouch(b) - lastTouch(a));
+  return `<div class="mv-hd"><div class="mv-nm"><b>${esc(c.def.name)}</b><small>${esc(c.def.kind === 'component' ? 'Component · ' + c.def.tech : c.def.tech)} · ${plural(files.length, 'file')}</small></div><button class="mv-x" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+    <div class="mv-list">${files.map(fi => { const p = F[fi].path, k = p.lastIndexOf('/'), [ad, dl] = fileDelta(fi), v = F[fi].v[ST.vi[fi]], lt = lastTouch(fi), hot = lt >= 0 && holdGlow(seenAt.get(lt) ?? -1e9, performance.now()) > 0;
+      return `<button class="mv-row${hot ? ' hot' : ''}" data-f="${fi}"><span><b>${esc(p.slice(k + 1))}</b><small>${esc(p.slice(0, k + 1) || './')}</small></span><em>${ad || dl ? `<i class="a">+${ad}</i> <i class="d">−${dl}</i>` : `${v ? v[1] : 0} lines`}</em></button>`; }).join('')}</div>`;
+}
+function fileViewHtml(fi, tab) {
+  const f = F[fi], vi = ST.vi[fi], v = f.v[vi], G = fgeo(fi, vi), k = f.path.lastIndexOf('/'), comp = CD.find(c => c.id === f.comp), fs = ST.fs[fi];
+  const { base, name: baseName } = baseInfo(), [ad, dl] = fileDelta(fi), cf = ctxFrac(fi), m = metricOf(fi), changed = fs.since.length > 0;
+  const t = tab === 'changes' && changed ? 'changes' : 'file', mdn = isMd(fi);
+  const stat = (l, val, cls = '') => `<div class="st"><small>${l}</small><b class="${cls}">${val}</b></div>`;
+  let body = '';
+  if (G.img != null) body = `<img class="mv-img" src="${IMG.list[G.img].src}" alt="">`;
+  else if (t === 'changes') {
+    const lastW = [...TOUCH[fi]].reverse().find(x => x[1] === 'w' && x[0] <= cur), fresh = lastW && holdGlow(seenAt.get(lastW[0]) ?? -1e9, performance.now()) > 0;
+    const fr = fresh ? TOUCH[fi].filter(x => x[0] === lastW[0] && x[1] === 'w').map(x => [x[2], x[3]]) : [];
+    body = `<div class="mv-code">${rvDiff(fi, textAt(fi, verAt(f, base)), textAt(fi, vi), fr, 500) || '<div class="gap">Back to how it was</div>'}</div>`;
+  } else {
+    const ls = textAt(fi, vi), inR = rs => { const s = new Set(); for (const [a, b] of merged(rs)) for (let n = a; n <= b && n <= ls.length; n++) s.add(n); return s; }, ch = inR(fs.since), cx = inR(fs.ctx);
+    body = `<div class="mv-code">${ls.slice(0, 1500).map((l, i) => `<div class="l${ch.has(i + 1) ? ' add' : cx.has(i + 1) ? ' rd' : ''}" data-n="${i + 1}"><i>${i + 1}</i><span>${hl(l, mdn)}</span></div>`).join('')}${ls.length > 1500 ? `<div class="gap">\u2026 ${(ls.length - 1500).toLocaleString('en-US')} more lines</div>` : ''}</div>`;
+  }
+  const tch = touchesOf(fi, 3);
+  return `<div class="mv-hd">${mview.back ? '<button class="mv-back" aria-label="Back"><svg><use href="#i-back"/></svg></button>' : ''}<div class="mv-nm"><b>${esc(f.path.slice(k + 1))}</b><small>${esc(f.path.slice(0, k + 1) || './')}${comp ? ' · ' + esc(comp.name) : ''}</small></div><button class="mv-x" aria-label="Close"><svg><use href="#i-close"/></svg></button></div>
+    ${G.img != null ? '' : `<div class="mv-stats">${stat('lines', v ? v[1].toLocaleString('en-US') : 0)}${stat(`since ${baseName}`, f.v[0][0] > base && changed ? 'new file' : ad || dl ? `+${ad} <em>−${dl}</em>` : '—', ad || dl ? 'g' : '')}${stat('in context', cf ? Math.max(1, Math.round(cf * 100)) + '%' : '—', cf ? 'b' : '')}${m ? stat('cx · cov', `${m[1]}${m[2] != null ? ' · ' + m[2] + '%' : ''}`) : ''}</div>`}
+    ${tch.length ? `<div class="mv-evs fc">${tch.map(([i, ts]) => touchRow(fi, i, ts)).join('')}</div>` : ''}
+    ${G.img == null && changed ? `<div class="mv-tabs"><button data-t="changes" class="${t === 'changes' ? 'on' : ''}">Changes</button><button data-t="file" class="${t === 'file' ? 'on' : ''}">File</button></div>` : ''}
+    ${body}`;
+}
+function renderView(keep) {
+  const el = $('fview'), sc = el.querySelector('.mv-body'), top = keep && sc ? sc.scrollTop : 0;
+  el.innerHTML = `<div class="mv-grab"></div><div class="mv-body">${mview.kind === 'file' ? fileViewHtml(mview.fi, mview.tab) : compViewHtml(mview.id)}</div>`;
+  mviewAt = cur; mviewT = performance.now();
+  const nb = el.querySelector('.mv-body');
+  if (keep) nb.scrollTop = top;
+  else if (mview.kind === 'file' && mview.tab === 'file') {       // open where the agent last worked in it
+    const lt = [...TOUCH[mview.fi]].reverse().find(x => x[0] <= cur), row = lt && nb.querySelector(`.l[data-n="${Math.max(1, lt[2] - 3)}"]`); if (row) nb.scrollTop = row.offsetTop - 80;
+  }
+}
+function openFileView(fi, back) { const fs = ST.fs[fi]; mview = { kind: 'file', fi, tab: fs.since.length ? 'changes' : 'file', back: back || null }; renderView(false); document.body.classList.add('viewing'); }
+function openCompView(id) { mview = { kind: 'comp', id }; renderView(false); document.body.classList.add('viewing'); }
+function closeView() { document.body.classList.remove('viewing'); mview = null; }
+$('fview').addEventListener('click', e => {
+  if (e.target.closest('.mv-x')) { closeView(); return; }
+  if (e.target.closest('.mv-back')) { const b = mview.back; mview = { kind: 'comp', id: b }; renderView(false); return; }
+  const tb = e.target.closest('[data-t]'); if (tb) { mview.tab = tb.dataset.t; renderView(false); return; }
+  const row = e.target.closest('.mv-row'); if (row) { openFileView(+row.dataset.f, mview.id); return; }
+  const ev = e.target.closest('.ev'); if (ev) setStep(+ev.dataset.s, false);
+});
+$('fviewShade').addEventListener('click', () => { if (performance.now() - mviewT > 400) closeView(); });   // not the tap that opened it
+function tickView(now) { if (mview && mviewAt !== cur && now - mviewT > 700) renderView(true); }
 
 /* the drawer: the sidebar slides in and pushes the view aside, as in the app */
 function openDrawer() { document.querySelector('.app').classList.add('drawer'); }
@@ -3448,6 +3517,7 @@ function closeDrawer() { document.querySelector('.app').classList.remove('drawer
 $('mmenu').addEventListener('click', e => { e.stopPropagation(); openDrawer(); });
 document.querySelector('.main').addEventListener('click', e => { if (document.querySelector('.app').classList.contains('drawer')) { e.stopPropagation(); e.preventDefault(); closeDrawer(); } }, true);
 $('mback').addEventListener('click', () => overview());
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && mview) closeView(); });
 // the small browser card: tap to open it, tap again (or the map) to put it back
 $('ext').addEventListener('click', e => { if (!MOBILE) return; e.stopPropagation(); $('ext').classList.toggle('open'); });
 
@@ -3515,6 +3585,7 @@ resize(); sizeTimeline(); buildThread(); buildSide();
 // "gpt-6-astra" + "high" reads as the app shows it: GPT-6 Astra High
 buildPicker(); tickModel(performance.now());
 $('stageX').addEventListener('click', dismissAnswer);
+$('stage').addEventListener('click', e => { if (e.target.closest('.toMap')) dismissAnswer(); });
 setBubbles(SHOW_BUBBLES);
 $('bubblesT').addEventListener('click', () => setBubbles(!SHOW_BUBBLES));
 document.addEventListener('keydown', e => { if (e.key === 'b' && !e.metaKey && !e.ctrlKey && e.target === document.body) setBubbles(!SHOW_BUBBLES); });
