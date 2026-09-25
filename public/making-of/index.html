@@ -27,44 +27,59 @@
 
   /* today's Codex sidebar */
   .side { background: var(--side); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
-  .lights { display: flex; gap: 8px; padding: 18px 18px 0; }
-  .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
-  .brand { display: flex; align-items: center; justify-content: space-between; padding: 22px 16px 12px 20px; font-size: 20px; font-weight: 600; }
-  .brand .bell { width: 30px; height: 30px; border-radius: 8px; background: #1E3A5F; display: grid; place-items: center; }
-  .brand .bell::before { content: ""; width: 12px; height: 12px; border: 1.6px solid #6CB4FF; border-radius: 6px 6px 2px 2px; }
-  .nav { padding: 0 8px 6px; }
-  .nav div { padding: 7px 12px; display: flex; gap: 12px; align-items: center; color: var(--ink); }
-  .nav svg { width: 17px; height: 17px; stroke: #BDBDBD; fill: none; stroke-width: 1.6; }
-  .sec { color: #8E8E8E; padding: 16px 20px 8px; font-size: 13px; display: flex; justify-content: space-between; }
+  /* the app's chrome: thin line icons, quiet type */
+  svg { fill: none; stroke: currentColor; stroke-width: 1.45; stroke-linecap: round; stroke-linejoin: round; }
+  .ib { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: #A8A8A8; flex: none; }
+  .ib:hover { background: #262626; color: var(--ink); } .ib svg { width: 18px; height: 18px; } .ib.off { color: #555; pointer-events: none; }
+  .side { font-size: 14.5px; letter-spacing: -.005em; }
+  .winbar { display: flex; gap: 6px; padding: 10px 12px 0 14px; height: 30px; }
+  .brand { display: flex; align-items: center; justify-content: space-between; padding: 14px 12px 10px 20px; }
+  .brand > span:first-child { display: flex; align-items: center; gap: 5px; font-size: 20px; font-weight: 600; letter-spacing: -.015em; }
+  .brand .chev { width: 13px; height: 13px; color: #9B9B9B; stroke-width: 1.6; margin-top: 2px; }
+  .brand .bi { display: flex; gap: 4px; } .brand .bell { background: #1B2E4A; color: #6FB2FF; } .brand .bell:hover { background: #22395A; color: #8CC4FF; }
+  .nav { padding: 2px 8px 6px; }
+  .nav div { padding: 7px 12px; display: flex; gap: 12px; align-items: center; color: #E6E6E6; border-radius: 9px; }
+  .nav div:hover { background: #222; }
+  .nav svg { width: 18px; height: 18px; color: #C8C8C8; flex: none; } .nav .end { margin-left: auto; color: #8A8A8A; }
+  .sec { color: #8A8A8A; padding: 18px 20px 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .sec .more { width: 18px; height: 18px; color: #8A8A8A; }
   .prio { margin: 0 8px; padding: 9px 12px; border-radius: 10px; }
   .prio.live { background: rgba(61,220,151,.1); }
-  .prio .t { color: var(--ink); font-weight: 500; display: flex; gap: 8px; align-items: center; }
+  .prio .t { color: var(--ink); font-weight: 400; display: flex; gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .prio .t i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.2s infinite; }
-  .prio .s { color: var(--green); font-size: 12px; margin-left: 16px; }
+  .prio .s { color: var(--green); font-size: 12.5px; margin: 2px 0 0 16px; display: flex; align-items: center; gap: 5px; } .prio .s svg { width: 13px; height: 13px; flex: none; opacity: .8; }
   .prio.idle { background: #242424; } .prio.idle .t i { background: #6A6A6A; animation: none; } .prio.idle .s { color: #7A7A7A; }
   @keyframes pulse { 50% { opacity: .35; } }
   .item { margin: 0 8px; padding: 9px 12px; border-radius: 10px; }
   .item.on { background: #2A2A2A; }
   .item b { font-weight: 400; display: block; }
-  .item small { color: #8E8E8E; font-size: 12px; }
+  .item small { color: #8A8A8A; font-size: 12.5px; display: flex; align-items: center; gap: 5px; margin-top: 2px; } .item small svg { width: 13px; height: 13px; flex: none; }
   .item.egg { cursor: pointer; position: relative; } .item.egg:hover { background: #222; }
   .item.egg b { color: #BDBDBD; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .egg .peek { display: none; margin-top: 6px; font-size: 12px; color: var(--lav); line-height: 1.4; }
   .egg.open .peek { display: block; animation: stIn .3s ease-out; }
   .spacer { flex: 1; }
-  .me { padding: 14px 20px; display: flex; gap: 10px; align-items: center; color: var(--dim); }
+  .me { padding: 10px 12px 12px 20px; display: flex; gap: 10px; align-items: center; color: #D0D0D0; border-top: 1px solid var(--line); }
+  .me .help { margin-left: auto; }
+  .note { padding: 0 20px 10px; font-size: 11px; line-height: 1.4; color: #5E5E5E; }
   .me i { width: 24px; height: 24px; border-radius: 50%; background: #5A5A5A; display: grid; place-items: center; font-style: normal; color: var(--ink); font-size: 11px; }
 
   .main { display: grid; grid-template-rows: 52px 1fr 60px; min-width: 0; min-height: 0; }
-  .title { background: var(--main); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 14px; padding: 0 18px; }
-  .title .name { font-weight: 600; font-size: 15px; display: flex; gap: 8px; align-items: center; }
-  .title .name svg { width: 17px; height: 17px; stroke: #BDBDBD; fill: none; stroke-width: 1.6; }
-  .seg { margin: 0 auto; background: #2A2A2A; border-radius: 10px; padding: 3px; display: flex; gap: 2px; }
-  .seg button { padding: 5px 22px; border-radius: 7px; color: var(--dim); }
-  .seg button.on { background: #3A3A3A; color: var(--ink); font-weight: 600; }
-  .tag { font: 700 10px var(--ui); letter-spacing: .05em; background: var(--accent); color: #fff; border-radius: 9px; padding: 3px 8px; }
-  .ctl { color: #BDBDBD; padding: 6px 11px; border-radius: 8px; border: 1px solid var(--line2); font-size: 13px; text-decoration: none; }
-  .ctl.on { color: var(--ink); border-color: rgba(127,139,255,.6); background: rgba(127,139,255,.12); }
+  .title { background: var(--main); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 6px; padding: 0 12px 0 20px; }
+  .title .name { font-weight: 500; font-size: 15px; letter-spacing: -.01em; display: flex; gap: 10px; align-items: center; min-width: 0; white-space: nowrap; }
+  .title .name svg { width: 18px; height: 18px; color: #C8C8C8; flex: none; }
+  .title .name .repo { color: #6E6E6E; font-weight: 400; font-size: 13.5px; }
+  .title .grow { flex: 1; }
+  .tb { display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 10px; border-radius: 8px; color: #B8B8B8; font-size: 14px; text-decoration: none; white-space: nowrap; }
+  .tb:hover { background: #262626; color: var(--ink); } .tb svg { width: 17px; height: 17px; }
+  .views { display: flex; gap: 2px; margin-left: 6px; } .views .ib.on { background: #2E2E2E; color: var(--ink); }
+  /* follow and fit belong to the map */
+  .mapctl { position: absolute; top: 12px; right: 388px; z-index: 3; display: flex; gap: 2px; background: rgba(24,24,24,.95); border: 1px solid #333; border-radius: 18px; padding: 3px; transition: opacity .4s, right .32s; }
+  .mapctl button { display: flex; align-items: center; gap: 6px; border-radius: 14px; padding: 4px 11px 4px 8px; font-size: 12.5px; font-weight: 500; color: var(--faint); white-space: nowrap; }
+  .mapctl button:hover { color: #BDBDBD; } .mapctl button svg { width: 15px; height: 15px; }
+  .mapctl button.on { background: #2E2E2E; color: var(--ink); } .mapctl button.on svg { color: var(--accent); }
+  .app.rv-on .mapctl { right: 16px; } .app.empty .mapctl { opacity: 0; pointer-events: none; }
+  #follow.snapped { animation: fsnap .6s ease-out; }
 
   .body { position: relative; min-height: 0; overflow: hidden; background: var(--bg); }
   #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
@@ -377,7 +392,7 @@
   .snap { position: fixed; top: 110px; left: calc(272px + (100vw - 272px - 380px) / 2); transform: translateX(-50%); z-index: 9; background: #ECECEC; color: #111; border-radius: 12px; padding: 8px 14px; font-size: 12.5px; font-weight: 500; opacity: 0; pointer-events: none; }
   .snap.on { animation: snap 1.8s ease-out; }
   @keyframes snap { 0% { opacity: 0; transform: translateX(-50%) scale(.9); } 8% { opacity: 1; transform: translateX(-50%) scale(1.04); } 16% { transform: translateX(-50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
-  #follow.snapped { animation: fsnap .6s ease-out; } @keyframes fsnap { 30% { background: rgba(127,139,255,.35); } }
+  @keyframes fsnap { 30% { background: rgba(127,139,255,.35); } }
   /* Review: a sidebar, as in the app */
   .review { min-width: 0; overflow: hidden; background: #181818; border-left: 1px solid var(--line); display: flex; flex-direction: column; font-size: 13px; }
   .review > * { flex: none; }
@@ -424,6 +439,20 @@
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute">
+  <symbol id="i-sidebar" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><path d="M7.5 3.5v13"/></symbol>
+  <symbol id="i-back" viewBox="0 0 20 20"><path d="M16 10H4.5M9 5.5L4.5 10 9 14.5"/></symbol>
+  <symbol id="i-fwd" viewBox="0 0 20 20"><path d="M4 10h11.5M11 5.5l4.5 4.5-4.5 4.5"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 12 12"><path d="M3 4.5l3 3 3-3"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 20 20"><path d="M6 14V9a4 4 0 0 1 8 0v5l1.5 1.5h-11z"/><path d="M8.5 17.5h3"/></symbol>
+  <symbol id="i-compose" viewBox="0 0 20 20"><path d="M10.5 3.5H6a2.5 2.5 0 0 0-2.5 2.5v8A2.5 2.5 0 0 0 6 16.5h8a2.5 2.5 0 0 0 2.5-2.5V9.5"/><path d="M14.4 3.1a1.5 1.5 0 0 1 2.1 2.1L10.6 11.1 8 11.8l.7-2.6z"/></symbol>
+  <symbol id="i-pluscircle" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 7v6M7 10h6"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 20 20"><circle cx="5" cy="10" r=".9"/><circle cx="10" cy="10" r=".9"/><circle cx="15" cy="10" r=".9"/></symbol>
+  <symbol id="i-help" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M7.9 8a2.2 2.2 0 1 1 3 2c-.6.3-.9.7-.9 1.3v.4"/><circle cx="10" cy="14.2" r=".5"/></symbol>
+  <symbol id="i-share" viewBox="0 0 20 20"><path d="M10 12.5V3.5M6.5 7L10 3.5 13.5 7"/><path d="M4.5 11v3.5A2 2 0 0 0 6.5 16.5h7a2 2 0 0 0 2-2V11"/></symbol>
+  <symbol id="i-map" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="6" height="5" rx="1.5"/><rect x="11.5" y="3.5" width="6" height="5" rx="1.5"/><rect x="7" y="12" width="6" height="5" rx="1.5"/><path d="M5.5 8.5v1.7h4.5V12M14.5 8.5v1.7H10"/></symbol>
+  <symbol id="i-thread" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><path d="M6 8h8M6 11h5"/></symbol>
+  <symbol id="i-target" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="1.6"/><path d="M10 1.8v2.4M10 15.8v2.4M1.8 10h2.4M15.8 10h2.4"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 20 20"><path d="M3.5 7.5v-4h4M16.5 7.5v-4h-4M3.5 12.5v4h4M16.5 12.5v4h-4"/></symbol>
   <symbol id="i-pen" viewBox="0 0 20 20"><path d="M4 16l1-4 8-8 3 3-8 8z"/></symbol>
   <symbol id="i-pr" viewBox="0 0 20 20"><circle cx="5" cy="4" r="2"/><circle cx="5" cy="16" r="2"/><circle cx="15" cy="16" r="2"/><path d="M5 6v8M15 14V8l-4-3"/></symbol>
   <symbol id="i-clock" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></symbol>
@@ -440,31 +469,34 @@
 </svg>
 <div class="app">
   <aside class="side">
-    <div class="lights"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div>
-    <div class="brand">Codex &#8964;<span class="bell"></span></div>
-    <div class="nav">
-      <div><svg><use href="#i-pen"/></svg>New chat</div>
+    <div class="winbar"><button class="ib" title="Toggle sidebar"><svg><use href="#i-sidebar"/></svg></button><button class="ib" title="Back"><svg><use href="#i-back"/></svg></button><button class="ib off" title="Forward"><svg><use href="#i-fwd"/></svg></button></div>
+    <div class="brand"><span>Codex<svg class="chev"><use href="#i-chev"/></svg></span><span class="bi"><button class="ib" title="Search"><svg><use href="#i-search"/></svg></button><button class="ib bell" title="Notifications"><svg><use href="#i-bell"/></svg></button></span></div>
+    <nav class="nav">
+      <div><svg><use href="#i-compose"/></svg>New chat<svg class="end"><use href="#i-pluscircle"/></svg></div>
       <div><svg><use href="#i-pr"/></svg>Pull requests</div>
       <div><svg><use href="#i-clock"/></svg>Scheduled</div>
       <div><svg><use href="#i-at"/></svg>Plugins</div>
-    </div>
-    <div class="sec">Priority</div>
-    <div class="prio idle" id="prio"><div class="t"><i></i><span id="prioT">Nothing needs attention</span></div><div class="s" id="prioS"></div></div>
+      <div><svg><use href="#i-dots"/></svg>Explore</div>
+    </nav>
+    <div class="sec">Priority<svg class="more"><use href="#i-dots"/></svg></div>
+    <div class="prio idle" id="prio"><div class="t"><i></i><span id="prioT">Research AI personality game</span></div><div class="s"><svg><use href="#i-folder"/></svg><span id="prioS"></span></div></div>
     <div class="sec">Yesterday</div>
-    <div class="item egg"><b>Project Stargate: bootstrap AGI (don't merge)</b><small>3 turns · Wed 02:14</small><div class="peek">Blocked: the agent asked for a bigger GPU and a hug. We said "later".</div></div>
-    <div class="item egg"><b>Make the model 1% more humble</b><small>1 turn · Wed 18:40</small><div class="peek">Worked for 3s · "Done. I am now the humblest model ever made."</div></div>
-    <div class="item egg"><b>Fix off-by-one in universe.ts</b><small>12 turns · Wed 11:05</small><div class="peek">Tests pass. Reality now starts at index 0. Please report any glitches.</div></div>
-    <div class="item egg"><b>Teach Codex to take a weekend off</b><small>0 turns · Wed 17:59</small><div class="peek">Still thinking…</div></div>
+    <div class="item egg"><b>Project Stargate: bootstrap AGI (don't merge)</b><small><svg><use href="#i-folder"/></svg>stargate</small><div class="peek">Blocked: the agent asked for a bigger GPU and a hug. We said "later".</div></div>
+    <div class="item egg"><b>Make the model 1% more humble</b><small><svg><use href="#i-folder"/></svg>alignment</small><div class="peek">Worked for 3s · "Done. I am now the humblest model ever made."</div></div>
+    <div class="item egg"><b>Fix off-by-one in universe.ts</b><small><svg><use href="#i-folder"/></svg>universe</small><div class="peek">Tests pass. Reality now starts at index 0. Please report any glitches.</div></div>
+    <div class="item egg"><b>Teach Codex to take a weekend off</b><small><svg><use href="#i-folder"/></svg>codex</small><div class="peek">Still thinking…</div></div>
     <div class="spacer"></div>
-    <div class="me"><i>C</i>CSto</div>
+    <div class="note">An unofficial concept by Christof Salis, replaying the real Codex session that built Tokenbros. Not an OpenAI product.</div>
+    <div class="me"><i>C</i>CSto<button class="ib help" title="Help"><svg><use href="#i-help"/></svg></button></div>
   </aside>
   <div class="main">
     <header class="title">
-      <span class="name"><svg><use href="#i-folder"/></svg><span id="repoName">tokenbros</span></span>
-      <div class="seg" role="tablist"><button id="vThread">Thread</button><button id="vMap" class="on">Map</button></div>
-      <span class="tag" title="Not an OpenAI product. A concept by Christof Salis, replaying the actual Codex session that built Tokenbros.">UNOFFICIAL CONCEPT</span><a class="ctl" href="../" title="Play the game this session built">Play Tokenbros ↗</a>
-      <button class="ctl on" id="follow" title="Follow the agent (F)">Follow agent</button>
-      <button class="ctl" id="fit" title="Fit the whole map (0)">Fit</button>
+      <span class="name"><svg><use href="#i-folder"/></svg><span id="threadTitle">Research AI personality game</span><span class="repo" id="repoName">tokenbros</span></span>
+      <span class="grow"></span>
+      <a class="tb" href="../" title="Play the game this session built">Play Tokenbros ↗</a>
+      <button class="ib" title="More"><svg><use href="#i-dots"/></svg></button>
+      <button class="tb" id="share" title="Copy a link to this replay"><svg><use href="#i-share"/></svg><span>Share</span></button>
+      <div class="views" role="tablist"><button id="vMap" class="ib on" title="Map"><svg><use href="#i-map"/></svg></button><button id="vThread" class="ib" title="Thread"><svg><use href="#i-thread"/></svg></button></div>
     </header>
     <div class="body">
       <canvas id="fx" aria-hidden="true"></canvas>
@@ -472,6 +504,7 @@
       <canvas id="map" aria-label="Map of the repository as it was at this point, with the agent's reads and edits"></canvas>
       <div id="thread" hidden><div class="tw" id="tw"></div></div>
       <div class="layers" id="layers"></div>
+      <div class="mapctl" id="mapctl"><button class="on" id="follow" title="Follow the agent (F)"><svg><use href="#i-target"/></svg>Follow</button><button id="fit" title="Fit the whole map (0)"><svg><use href="#i-fit"/></svg>Fit</button></div>
       <div class="level" id="level"></div>
       <div class="panel">
         <div class="card sm">
@@ -600,7 +633,7 @@ function setStep(n, animated) {
   if (!animated) vt = S[n].at;
   enterAt = animated && forward ? performance.now() : -1e9;
   // the user's own messages are typed into the composer and sent before the agent reacts
-  if (animated && forward && (S[n].k === 'prompt' || S[n].k === 'steer')) startTyping(n); else if (!animated) { stopTyping(); if (n <= FIRST_PROMPT) resetIntro(); }
+  if (animated && forward && (S[n].k === 'prompt' || S[n].k === 'steer')) startTyping(n); else if (!animated) { stopTyping(); if (n <= FIRST_PROMPT) resetIntro(); else finishIntro(); }
   onState(animated && forward);
   updatePanels();
 }
@@ -871,8 +904,8 @@ function updatePanels() {
   const working = agentWorking();
   pr.className = 'prio ' + (working ? 'live' : 'idle');
   // the thread lives here, running or idle: never listed twice
-  $('prioT').textContent = D.meta.repo;
-  $('prioS').textContent = working ? `Working · ${fmtDur(s.t - S[ST.turnStart].t)}` : (() => { let d = 0; for (let j = 0; j <= cur; j++) if (S[j].k === 'done') d++; if (!working && S[cur].k === 'reply' && S[cur].final) d++; return `Waiting for you · ${d ? `turn ${d} done` : 'new thread'}`; })();
+  $('prioT').textContent = $('threadTitle').textContent;
+  $('prioS').textContent = working ? `${D.meta.repo} · working ${fmtDur(s.t - S[ST.turnStart].t)}` : (() => { let d = 0; for (let j = 0; j <= cur; j++) if (S[j].k === 'done') d++; if (!working && S[cur].k === 'reply' && S[cur].final) d++; return `${D.meta.repo} · ${d ? `turn ${d} done` : 'new thread'}`; })();
   // composer: idle unless a message is being typed; a stop button while the agent runs
   $('composer').classList.toggle('running', working);
   if (typing.i < 0) idleComposer();
@@ -2667,6 +2700,8 @@ function tickModel(now) {
   if (k !== chipModel) { setModelChip(k, chipModel != null); chipModel = k; }
 }
 function startIntro(now) { introT0 = now; pickStage = -1; }
+// jumping past the opening finishes it at once
+function finishIntro() { if (introT0 < 0 && introDone) return; introDone = true; introT0 = -1; pickStage = -1; morphT0 = -1e9; $('mpick').classList.remove('open'); $('cursor').hidden = true; $('cursor').classList.remove('down'); $('cmodel').classList.remove('press'); }
 function resetIntro() { introDone = false; introT0 = -1; morphT0 = -1e9; $('mpick').classList.remove('open'); $('cursor').hidden = true; }
 
 /* ---------- the file card: hover a file to see what is going on with it, click to pin ---------- */
@@ -2997,6 +3032,11 @@ resize(); sizeTimeline(); buildThread(); buildSide();
 // "gpt-6-astra" + "high" reads as the app shows it: GPT-6 Astra High
 buildPicker(); tickModel(performance.now());
 $('repoName').textContent = D.meta.repo; $('smRepo').textContent = D.meta.repo;
+// share: copy a link to this replay
+$('share').addEventListener('click', async () => {
+  const lbl = $('share').querySelector('span'); try { await navigator.clipboard.writeText(location.href); lbl.textContent = 'Link copied'; } catch { lbl.textContent = location.href; }
+  setTimeout(() => { lbl.textContent = 'Share'; }, 1600);
+});
 // yesterday's threads are little easter eggs: click to peek
 document.querySelectorAll('.egg').forEach(el => el.addEventListener('click', () => el.classList.toggle('open')));
 setStep(0, false);
