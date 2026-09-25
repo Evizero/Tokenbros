@@ -1542,8 +1542,16 @@ const s2w = (x, y) => [(x - cx0()) / cam.z + cam.x, (y - cy0()) / cam.z + cam.y]
    every move is a critically damped glide. */
 const FZ_MIN = .32, FZ_MAX = .78;
 // the part of the canvas you can actually see: below the map controls, above the composer
+// the composer at rest: a long message grows over the map, it never reflows it
+let restComposer = null;
+function composerRest() {
+  const el = $('composer'), c = el.getBoundingClientRect(), m = cv.getBoundingClientRect();
+  const resting = !el.classList.contains('typing') && !el.classList.contains('sent') && !el.style.height;
+  if (resting || !restComposer || restComposer.vh !== VH || restComposer.m !== MOBILE) restComposer = { top: c.top - m.top, h: c.height, vh: VH, m: MOBILE };
+  return restComposer;
+}
 function viewFrame() {
-  const c = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(), top = MOBILE ? 68 : 64, bot = Math.min(VH - 12, c.top - m.top - 16);
+  const m = cv.getBoundingClientRect(), top = MOBILE ? 68 : 64, bot = Math.min(VH - 12, composerRest().top - 16);
   return { top, bot, h: Math.max(160, bot - top), cy: (top + bot) / 2, w: Math.max(200, VW - panelW - 80) };
 }
 let followZ = 0;
@@ -1803,9 +1811,9 @@ function turnOver(now) { return !!ST.turnK && !avatarBusy(now) && !(typing.i >= 
 function resting(now) { return turnOver(now); }
 // parked beside the composer; while you type it turns to you, hovering just above the text box
 function restPoint() {
-  const c = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(), bob = Math.sin(performance.now() / 1300) * 4;
-  if (MOBILE) return s2w(typing.i >= 0 && !typing.sentAt || spark && !spark.got ? c.left - m.left + c.width / 2 : c.left - m.left + 40, c.top - m.top - 46 + bob);
-  if (typing.i >= 0 && !typing.sentAt || spark && !spark.got) return s2w(c.left - m.left + c.width / 2, c.top - m.top - 70 + bob);
+  const c0 = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(), bob = Math.sin(performance.now() / 1300) * 4, rest = composerRest(), c = { left: c0.left, width: c0.width, top: rest.top + m.top, height: rest.h };
+  if (MOBILE) return s2w(typing.i >= 0 && !typing.sentAt || spark && !spark.got ? c.left - m.left + c.width / 2 : c.left - m.left + 40, (typing.i >= 0 && !typing.sentAt ? c0.top : c.top) - m.top - 46 + bob);
+  if (typing.i >= 0 && !typing.sentAt || spark && !spark.got) return s2w(c0.left - m.left + c0.width / 2, c0.top - m.top - 70 + bob);   // listening: just above the box as it grows
   return s2w(c.left - m.left - 72, c.top - m.top + 14 + bob);
 }
 function agentPos(now) {
@@ -2993,7 +3001,7 @@ const canReopen = () => L.comps.length && stageFor < 0 && lastFinal() >= 0 && la
 const readSeconds = () => 1.6;                                // a beat, not a wait: pause to read
 // like a thread: the answer in the middle with the full height, its author beside the first line
 function stageGeom() {
-  if (MOBILE) { const c = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(); return { ax: VW - 30, ay: c.top - m.top - 34, left: 16, cw: VW - 32, top: 68 }; }   // a phone: the answer is the screen; the agent floats at its right edge
+  if (MOBILE) return { ax: VW - 30, ay: composerRest().top - 34, left: 16, cw: VW - 32, top: 68 };   // a phone: the answer is the screen; the agent floats at its right edge
   const mapW = VW - panelW, cw = Math.min(740, mapW - 190), x0 = Math.max(24, (mapW - cw) / 2 + 30);
   return { ax: x0 - 58, ay: 100, left: x0, cw, top: 40 };
 }
@@ -3010,7 +3018,7 @@ function updateStage(now) {
       const done = S.slice(i, i + 5).find(x => x.k === 'done'), m = MODELS[modelShown()].name;
       el.innerHTML = `<div class="who"><b>Codex</b><span>GPT-6 ${m}${done ? ` · worked for ${fmtDur(done.dur || 0)}` : ''}</span></div><div class="md">${mdBlock(S[i].text)}</div><button class="toMap"><svg><use href="#i-map"/></svg>Back to the map</button>`; el.scrollTop = 0;
       el.classList.toggle('reveal', reopen);
-      { const G = stageGeom(); el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = G.top + 'px'; el.style.bottom = ($('composer').offsetHeight + 22) + 'px'; }
+      { const G = stageGeom(); el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = G.top + 'px'; el.style.bottom = (composerRest().h + 22) + 'px'; }
       void el.offsetWidth;
       // while playing, it is written as you watch: the scan line sweeps down each paragraph in turn,
       // and only what it has passed is there
@@ -3058,7 +3066,7 @@ function updateStage(now) {
   if (i >= 0) {
     const G = stageGeom(), comp = $('composer');
     el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = G.top + 'px';
-    el.style.bottom = (comp.offsetHeight + 22) + 'px';
+    el.style.bottom = (composerRest().h + 22) + 'px';
     const x = $('stageX'); x.style.left = (MOBILE ? VW - 12 : G.left + G.cw - 6) + 'px';
   }
   // with a map behind it: dim the map, offer a way back to it
