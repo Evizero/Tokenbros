@@ -344,9 +344,13 @@
   .fc .ring circle { fill: none; stroke-width: 2; } .fc .ring .bg { stroke: #333; } .fc .ring .fg { stroke: var(--accent); stroke-linecap: round; }
   .fc .ring .pin { fill: none; stroke: #111; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: rotate(90deg); transform-origin: 9px 9px; }
   .tip.stuck .ring .bg { fill: var(--accent); stroke: var(--accent); } .tip.stuck .ring .pin { opacity: 1; }
-  .tipx { position: fixed; z-index: 11; width: 440px; background: #141414; border: 1px solid #3A3A3A; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,.55); overflow: hidden; pointer-events: none; animation: stIn .14s ease-out; }
-  .tipx .xh { padding: 8px 12px; font: 11.5px var(--mono); color: var(--ink); border-bottom: 1px solid #262626; } .tipx .xh small { color: var(--faint); margin-left: 6px; }
-  .tipx .xb { font: 11px/1.6 var(--mono); padding: 4px 0; max-height: 240px; overflow: hidden; } .tipx .l i { width: 36px; padding-right: 8px; } .tipx .ph { display: block; color: var(--faint); padding: 12px; }
+  .tipx { position: fixed; z-index: 11; width: 560px; max-height: min(72vh, 640px); display: flex; flex-direction: column; pointer-events: auto !important; cursor: pointer; background: #141414; border: 1px solid #3A3A3A; border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,.55); overflow: hidden; pointer-events: none; animation: stIn .14s ease-out; }
+  .tipx .xh { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 9px 14px; font: 11.5px var(--mono); color: var(--ink); border-bottom: 1px solid #262626; flex: none; }
+  .tipx .xh em { font-style: normal; color: var(--faint); } .tipx .xh .a { color: var(--green); font-weight: 500; } .tipx .xh .d { color: var(--red); font-weight: 500; }
+  .tipx .xh small { color: var(--faint); margin-left: auto; }
+  .tipx .xb { font: 11.5px/1.6 var(--mono); padding: 4px 0 8px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+  .tipx .l span { white-space: pre-wrap; word-break: break-word; min-width: 0; } .tipx .l i { width: 38px; padding-right: 10px; }
+  .tipx .gap { color: #6E6E96; padding: 3px 14px; } .tipx .ph { display: block; color: var(--faint); padding: 12px; }
   .fc .evs { padding: 0 8px 6px; }
   .fc .ev { display: grid; grid-template-columns: 16px 1fr auto; gap: 0 8px; align-items: center; padding: 4px 6px; border-radius: 7px; }
   .fc .ev svg { width: 13px; height: 13px; stroke: var(--c); fill: none; stroke-width: 1.7; }
@@ -2383,6 +2387,26 @@ function aura(x, y, r, k, now, alpha, energy) {
   }
   g.restore();
 }
+// while it thinks, sparks arc between points around the core, like synapses firing
+function synapses(x, y, r, col, now, amt) {
+  if (amt < .03) return;
+  g.save(); g.globalCompositeOperation = 'lighter'; g.lineCap = 'round';
+  for (let i = 0; i < 9; i++) {
+    const per = 520 + (i * 97) % 380, cyc = now / per + i * .37, ph = cyc % 1, seed = Math.floor(cyc) * 13 + i * 7;
+    const rnd = k => { const v = Math.sin((seed + k) * 12.9898) * 43758.5453; return v - Math.floor(v); };
+    const a0 = rnd(1) * Math.PI * 2, a1 = a0 + (.6 + rnd(2) * 1.6) * (rnd(3) > .5 ? 1 : -1), d0 = r * (1.15 + rnd(4) * 1.1), d1 = r * (1.15 + rnd(5) * 1.1);
+    const x0 = x + Math.cos(a0) * d0, y0 = y + Math.sin(a0) * d0, x1 = x + Math.cos(a1) * d1, y1 = y + Math.sin(a1) * d1, am = (a0 + a1) / 2, dm = r * (1.9 + rnd(6) * 1.2);
+    const cx = x + Math.cos(am) * dm, cy = y + Math.sin(am) * dm, a = Math.sin(Math.PI * ph) * amt, head = Math.min(1, ph * 1.8);
+    // the spark travels along its arc, leaving a fading trail
+    g.strokeStyle = rgbA(col, .55 * a); g.lineWidth = 1.2; g.beginPath(); g.moveTo(x0, y0);
+    for (let k = 1; k <= 12; k++) { const t = head * k / 12, u = 1 - t; g.lineTo(u * u * x0 + 2 * u * t * cx + t * t * x1, u * u * y0 + 2 * u * t * cy + t * t * y1); }
+    g.stroke();
+    const t = head, u = 1 - t, hx = u * u * x0 + 2 * u * t * cx + t * t * x1, hy = u * u * y0 + 2 * u * t * cy + t * t * y1;
+    g.fillStyle = `rgba(245,242,255,${a})`; g.beginPath(); g.arc(hx, hy, 1.8, 0, 7); g.fill();
+    g.fillStyle = rgbA(col, .7 * a); g.beginPath(); g.arc(x0, y0, 1.4, 0, 7); g.fill();
+  }
+  g.restore();
+}
 // while it works, specks of light stream in towards the core
 function motes(x, y, r, col, now, energy) {
   if (energy < .05) return;
@@ -2506,7 +2530,7 @@ function statusPill(x, y, st, now, col) {
 }
 
 /* ---------- the whole body ---------- */
-let energy = 0, recvT = -1e9;
+let energy = 0, recvT = -1e9, thinkAmt = 0;
 // it is at work only once the message has reached it: while you type, and while it flies, it waits
 function avatarBusy(now) {
   if (streaming(now)) return true;
@@ -2520,6 +2544,9 @@ function drawAvatarBody(ax, ay, s, now, docked) {
   const busy = avatarBusy(now), empty = !L.comps.length;
   const want = docked ? 9 : empty ? (busy ? 22 : 30) : (busy ? 16 : 20);   // at rest it is bigger and calmer
   AV_R += (want - AV_R) * .1; energy += ((busy ? 1 : 0) - energy) * (busy ? .06 : .05); advancePhase(now);
+  // thinking: reasoning between tool steps, or while a thought is showing
+  const thinking = busy && !streaming(now) && (!TOOL.has(s.k) || !!bubbles(now).thought);
+  thinkAmt += ((thinking ? 1 : 0) - thinkAmt) * .06;
   if (!(morphT0 > now - SWITCH_MS)) PH.spin = 0;
   const rk = (now - recvT) / 750, pulse = rk >= 0 && rk < 1 ? Math.sin(Math.PI * Math.min(1, rk * 1.6)) * (1 - rk) : 0;
   const r = AV_R * (1 + .3 * pulse), k = modelShown(), mk = Math.min(1, (now - morphT0) / SWITCH_MS), old = mk < 1 ? 'sol' : null;
@@ -2532,8 +2559,8 @@ function drawAvatarBody(ax, ay, s, now, docked) {
   g.fillStyle = nb; g.beginPath(); g.arc(ax, ay, R3, 0, 7); g.fill();
   if (!docked) { orbits(ax, ay, r, col, now, energy, 'back'); if (old) aura(ax, ay, r, old, now, 1 - mk, energy); aura(ax, ay, r, k, now, old ? mk : 1, energy); }
   if (old) blob(ax, ay, r, old, 1 - mk, energy);
-  blob(ax, ay, r * (old ? .88 + .12 * mk + .14 * Math.sin(mk * Math.PI) : 1 + (.02 + .05 * (1 - energy)) * Math.sin(now / 1700)), k, old ? mk : 1, energy);
-  if (!docked) { orbits(ax, ay, r, col, now, energy, 'front'); motes(ax, ay, r, col, now, energy); }
+  blob(ax, ay, r * (old ? .88 + .12 * mk + .14 * Math.sin(mk * Math.PI) : 1 + (.02 + .05 * (1 - energy)) * Math.sin(now / 1700) + .05 * thinkAmt * Math.max(0, Math.sin(now / 260))), k, old ? mk : 1, energy + .6 * thinkAmt * Math.max(0, Math.sin(now / 260)));
+  if (!docked) { orbits(ax, ay, r, col, now, energy, 'front'); motes(ax, ay, r, col, now, energy * (1 - thinkAmt * .7)); synapses(ax, ay, r, col, now, thinkAmt); }
   if (old) {                                                 // the switch: a shockwave and a burst of the new model's light
     g.strokeStyle = rgbA(MODELS[k].glow, 1 - mk); g.lineWidth = 3 * (1 - mk) + .5; g.beginPath(); g.arc(ax, ay, r * (1 + 4 * mk), 0, 7); g.stroke();
     for (let i = 0; i < 12; i++) { const an = i / 12 * Math.PI * 2, d = r * (1 + 3 * mk); g.fillStyle = `rgba(236,232,255,${1 - mk})`; star4(ax + Math.cos(an) * d, ay + Math.sin(an) * d, r * .22 * (1 - mk)); }
@@ -2773,15 +2800,18 @@ function cardHtml(fi, stuck) {
     ;
 }
 // one touch, previewed: the diff that edit made, or the lines that read covered
+// one touch, previewed in full: every hunk that edit made to this file (with context), or the
+// lines that read covered
 function touchPreview(fi, i) {
   const f = F[fi], ts = TOUCH[fi].filter(t => t[0] === i), mdn = isMd(fi);
   if (ts.some(t => t[1] === 'w')) {
-    const A = textAt(fi, verAt(f, i - 1)), B = textAt(fi, verAt(f, i)), ops = diffLines(A, B), rows = [];
-    for (let k = 0; k < ops.length && rows.length < 9; k++) { const [t, oi, ni] = ops[k]; if (t === '=') continue; rows.push(`<div class="l ${t === '+' ? 'add' : 'del'}"><i>${(t === '+' ? ni : oi) + 1}</i><span>${hl(t === '+' ? B[ni] : A[oi], mdn)}</span></div>`); }
-    return rows.join('') || '<span class="ph">no line changes</span>';
+    const A = textAt(fi, verAt(f, i - 1)), B = textAt(fi, verAt(f, i));
+    const html = rvDiff(fi, A, B, [], 400); if (!html) return '<span class="ph">no line changes</span>';
+    let ad = 0, dl = 0; for (const [t] of diffLines(A, B)) { if (t === '+') ad++; else if (t === '-') dl++; }
+    return { html, ad, dl, created: !A.length };
   }
-  const t = ts[0], ls = textAt(fi, verAt(f, i)), a = Math.max(1, t[2]), b = Math.min(ls.length, t[3], a + 8);
-  return ls.slice(a - 1, b).map((l, k) => `<div class="l rd"><i>${a + k}</i><span>${hl(l, mdn)}</span></div>`).join('');
+  const t = ts[0], ls = textAt(fi, verAt(f, i)), a = Math.max(1, t[2] - 2), b = Math.min(ls.length, Math.max(t[3] + 2, a + 6), a + 60);
+  return ls.slice(a - 1, b).map((l, k) => `<div class="l${a + k >= t[2] && a + k <= t[3] ? ' rd' : ''}"><i>${a + k}</i><span>${hl(l, mdn)}</span></div>`).join('');
 }
 
 // hover a moment: the card. Keep hovering and a bar fills; when it is full the card sticks and
@@ -2812,13 +2842,20 @@ function tickTip(now) {
 // hovering an entry of a pinned card opens its preview beside the card; the card itself stays put
 $('tip').addEventListener('mouseover', e => {
   const ev = e.target.closest('.ev'), x = $('tipx'); if (stuck < 0 || !ev) return;
-  x.innerHTML = `<div class="xh">${esc(ev.querySelector('.what').textContent)} <small>${esc(ev.querySelector('.when').textContent)} \u00B7 click to jump there</small></div><div class="xb">${touchPreview(+ev.dataset.f, +ev.dataset.s)}</div>`;
+  if (x.dataset.k === ev.dataset.s + ':' + ev.dataset.f && !x.hidden) return;
+  const pv = touchPreview(+ev.dataset.f, +ev.dataset.s), body = typeof pv === 'string' ? pv : pv.html;
+  const stat = typeof pv === 'string' ? '' : `<em>${pv.created ? 'new file \u00B7 ' : ''}<b class="a">+${pv.ad}</b> <b class="d">\u2212${pv.dl}</b></em>`;
+  x.innerHTML = `<div class="xh"><span>${esc(shortName(F[+ev.dataset.f].path))} \u00B7 ${esc(ev.querySelector('.what').textContent)}</span>${stat}<small>${esc(ev.querySelector('.when').textContent)} \u00B7 click to jump there</small></div><div class="xb">${body}</div>`;
+  x.dataset.k = ev.dataset.s + ':' + ev.dataset.f; x.dataset.s = ev.dataset.s; x.scrollTop = 0;
   x.hidden = false;
   const tr = $('tip').getBoundingClientRect(), er = ev.getBoundingClientRect(), w = x.offsetWidth;
-  x.style.left = (tr.right + 8 + w < window.innerWidth ? tr.right + 8 : tr.left - 8 - w) + 'px';
+  x.style.left = (tr.right - 4 + w < window.innerWidth ? tr.right - 4 : tr.left + 4 - w) + 'px';   // touching, so the pointer can cross
   x.style.top = Math.max(8, Math.min(window.innerHeight - x.offsetHeight - 8, er.top - 8)) + 'px';
 });
-$('tip').addEventListener('mouseleave', () => { $('tipx').hidden = true; });
+// the preview stays while the pointer moves between the card and it, so it can be scrolled
+$('tip').addEventListener('mouseleave', e => { if (!(e.relatedTarget && e.relatedTarget.closest('#tipx'))) $('tipx').hidden = true; });
+$('tipx').addEventListener('mouseleave', e => { if (!(e.relatedTarget && e.relatedTarget.closest('#tip'))) $('tipx').hidden = true; });
+$('tipx').addEventListener('click', () => { const s = +$('tipx').dataset.s; if (!isNaN(s)) setStep(s, false); });
 $('tip').addEventListener('click', e => {
   if (stuck < 0) return;
   if (e.target.closest('.rv')) { const fi = stuck; unstick(); openReview(fi); return; }
