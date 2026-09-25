@@ -2305,14 +2305,15 @@ function drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, t
   const cr = $('ext').getBoundingClientRect(), mr = fxc.getBoundingClientRect(), card = { x: cr.left - mr.left, y: cr.top - mr.top, w: cr.width, h: cr.height };
   const W = Math.max(said ? sw : 0, thought ? tw : 0), side = !MOBILE && card.x - 20 - W >= 12;
   let sx, sy, tx, ty;
-  if (MOBILE && !L.comps.length) {                          // the browser fills the middle: speak from above it
-    sx = Math.max(8, Math.min(VW - 8 - sw, card.x + 6)); tx = Math.max(8, Math.min(VW - 8 - tw, card.x + 6));
-    const need = (said ? sh + 12 : 0) + (thought ? th + 12 : 0), top = Math.max(76, card.y - 12 - need); sy = top + (thought && said ? th + 12 : 0); ty = top;
+  if (MOBILE && !L.comps.length) {                          // the browser is the screen: speak over the top of its page, never over the address
+    const ch = $('ext').querySelector('.chrome'), top = ch ? ch.getBoundingClientRect().bottom - mr.top + 12 : card.y + 80;
+    sx = Math.max(8, Math.min(VW - 8 - sw, card.x + 10)); tx = Math.max(8, Math.min(VW - 8 - tw, card.x + 10));
+    sy = top + (thought && said ? th + 12 : 0); ty = top;
   } else if (MOBILE) { sx = Math.max(8, VW - 8 - sw); tx = Math.max(8, VW - 8 - tw); sy = card.y + card.h + 14; ty = said ? sy + sh + 12 : sy; }
   else if (side) { const right = card.x - 20; sx = right - sw; tx = right - tw; sy = Math.max(64, ay - 18); ty = said ? sy + sh + 14 : sy; }
   else { sx = tx = Math.max(12, card.x + 10); sy = card.y - 18 - sh; ty = (said ? sy - 14 : card.y - 18) - th; }
   const tail = (x, y, w, h, fill) => {                    // a tapered tail from the bubble's nearest edge to the icon
-    const bx = side ? x + w - 2 : Math.min(x + w - 24, Math.max(x + 24, ax)), by = side ? Math.min(y + h - 14, Math.max(y + 14, ay)) : y + h - 2;
+    const bx = side ? x + w - 2 : Math.min(x + w - 24, Math.max(x + 24, ax)), by = side ? Math.min(y + h - 14, Math.max(y + 14, ay)) : ay < y ? y + 2 : y + h - 2;   // from the edge facing the agent
     const dx = ax - bx, dy = ay - by, l = Math.hypot(dx, dy) || 1, nx = -dy / l * 8, ny = dx / l * 8, tipx = ax - dx / l * 14, tipy = ay - dy / l * 14;
     g.beginPath(); g.moveTo(bx + nx, by + ny); g.quadraticCurveTo((bx + tipx) / 2 + nx * .3, (by + tipy) / 2 + ny * .3, tipx, tipy); g.quadraticCurveTo((bx + tipx) / 2 - nx * .3, (by + tipy) / 2 - ny * .3, bx - nx, by - ny); g.closePath(); g.fillStyle = fill; g.fill();
   };
@@ -2321,7 +2322,7 @@ function drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, t
     const fp = fluffy(tx, ty, tw, th);
     g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 14; g.shadowOffsetY = 3; g.fillStyle = THINK.fill; g.fill(fp); g.restore();
     g.strokeStyle = THINK.line; g.lineWidth = 1.2; g.stroke(fp);
-    if (!said) { const ex = side ? tx + tw + 4 : Math.min(tx + tw - 16, Math.max(tx + 16, ax)), ey = side ? ty + th / 2 : ty + th + 4;
+    if (!said) { const ex = side ? tx + tw + 4 : Math.min(tx + tw - 16, Math.max(tx + 16, ax)), ey = side ? ty + th / 2 : ay < ty ? ty - 4 : ty + th + 4;
       for (const [f, rad] of [[.3, 4.2], [.6, 3], [.84, 2]]) { g.beginPath(); g.arc(ex + (ax - ex) * f, ey + (ay - ey) * f, rad, 0, 7); g.fillStyle = THINK.fill; g.fill(); g.strokeStyle = THINK.line; g.lineWidth = 1; g.stroke(); } }
     drawRich(tl, tx + 13, ty + 19, 17, THINK.ink, '#D6D0FA');
   });
