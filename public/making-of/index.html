@@ -2545,7 +2545,7 @@ function drawAvatarBody(ax, ay, s, now, docked) {
   else if (busy) { g.strokeStyle = rgbA(col, .9); g.lineWidth = 2; g.beginPath(); g.arc(ax, ay, r + 5, now / 300, now / 300 + 4); g.stroke(); }
   if (docked || stageSeat(now)) return;
   if (TOOL.has(s.k) && s.label && busy && !['web', 'image', 'playtest'].includes(s.k)) actionPill(ax, ay + r * 1.1 + 22, s);
-  else statusPill(ax, ay + r * 1.1 + 22, busy ? 'think' : typing.i >= 0 && !typing.sentAt ? 'listen' : 'idle', now, col);
+  else if (!busy && !(typing.i >= 0 && !typing.sentAt) && !(spark && !spark.got)) statusPill(ax, ay + r * 1.1 + 22, 'idle', now, col);   // thinking has its bubbles
 }
 
 /* ---------- before there is a project: the answer, in full, in front of you ---------- */
