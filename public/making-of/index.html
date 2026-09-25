@@ -1551,7 +1551,7 @@ const s2w = (x, y) => [(x - cx0()) / cam.z + cam.x, (y - cy0()) / cam.z + cam.y]
    It holds a file-level overview of the component being worked on, and only moves when the work
    leaves the middle of the view. Zoom changes need a real reason (a different part of the map);
    every move is a critically damped glide. */
-const FZ_MIN = .32, FZ_MAX = .78;
+const FZ_MAX = .78;
 // the part of the canvas you can actually see: below the map controls, above the composer
 // the composer at rest: a long message grows over the map, it never reflows it
 let restComposer = null;
@@ -1565,17 +1565,19 @@ function viewFrame() {
   const m = cv.getBoundingClientRect(), top = MOBILE ? 68 : 64, bot = Math.min(VH - 12, composerRest().top - 16);
   return { top, bot, h: Math.max(160, bot - top), cy: (top + bot) / 2, w: Math.max(200, VW - panelW - 80) };
 }
-let followZ = 0;
+let followZ = 0, followZt = 0;
 function followFrame(snap) {
   const sp = stepSpots(S[cur]);
   if (!sp.length) { if (snap) { fitRect(worldRect(), 120, FZ_MAX, true); followZ = camT.z; } return; }
-  const u = union(sp.slice(0, 40)), comps = [...new Set(S[cur].targets.map(fi => F[fi].comp))].map(id => tgtRect('c' + id)).filter(Boolean);
-  const VF = viewFrame(), aw = VF.w, ah = VF.h - 40;
-  // zoom: the touched components, as far as they fit, but never closer than files or further than tiles
-  const area = comps.length ? union(comps) : u, zFit = Math.min(aw / (area.w + 160), ah / (area.h + 160));
-  const zNeed = Math.min(aw / (u.w + 120), ah / (u.h + 120));          // the touched lines themselves must fit
-  const zD = Math.max(FZ_MIN, Math.min(FZ_MAX, zFit, zNeed));
-  if (snap || !followZ || Math.abs(Math.log(zD / followZ)) > .35 || zNeed < followZ * .95) followZ = zD;
+  const u = union(sp), VF = viewFrame(), aw = VF.w, ah = VF.h - 40, now = performance.now();
+  // zoom: an overview of the system, not a close-up of the file being edited. However big the map
+  // gets, following never comes closer than about half of it in view; it goes further out whenever
+  // the agent reaches across the map (everything it touches must be in view), up to the whole map
+  const zAll = Math.min(FZ_MAX, fitZoom()), zCap = Math.min(FZ_MAX, zAll * 2.2);
+  const zNeed = Math.min(aw / (u.w + 160), ah / (u.h + 160));
+  const zD = Math.max(zAll * .92, Math.min(zCap, zNeed));
+  // and it holds its zoom: out at once when something would not fit, back in only after a while
+  if (snap || !followZ || zD < followZ * .94 || (zD > followZ * 1.3 && now - followZt > 6000)) { if (Math.abs(zD - followZ) > 1e-4) followZt = now; followZ = zD; }
   camT.z = followZ;
   // pan: toward the agent's centre of mass (where it will be), only when that leaves the calm
   // middle of what you can see, then settle it back into the middle of that
@@ -2093,6 +2095,19 @@ function draw(now) {
     }
     g.globalAlpha = 1;
   }
+  // zoomed out: the names stay readable, at a fixed size on screen inside the header band (which is
+  // narrower once the files fold into a treemap), so the band never sits there empty. (The treemap of
+  // lines, further out, labels its groups itself.)
+  if (z < LOD_TEXT) for (const c of L.comps) {
+    const r = V.get('c' + c.id); if (!r || r.x > vx1 || r.y > vy1 || r.x + r.w < vx0 || r.y + HEAD < vy0) continue;
+    const band = (HEAD + (Math.min(r.h * .45, 44 / z) - HEAD) * tbT) * z, fs = Math.min(14, band * .46);
+    if (fs < 7.5 || r.w * z < 34 || tmT > .98) continue;
+    g.globalAlpha = r.a * (1 - tmT); const nf = `700 ${(fs / z).toFixed(3)}px ${UI}`; g.font = nf; g.fillStyle = COL.ink;
+    const base = Math.min(23, band * .5 + fs * .38);
+    g.fillText(fit(c.def.name, nf, r.w - 20 / z), r.x + 10 / z, r.y + base / z);
+    if (band >= 40 && c.files.length) { const mf = `${(10 / z).toFixed(3)}px ${MONO}`; g.font = mf; g.fillStyle = '#7A7A7A'; g.fillText(fit(`${c.files.length} files`, mf, r.w - 20 / z), r.x + 10 / z, r.y + (base + 14) / z); }
+    g.globalAlpha = 1;
+  }
   // component headers: world units inside the header band
   if (z >= LOD_TEXT) for (const c of L.comps) {
     const r = V.get('c' + c.id); if (!r || r.x > vx1 || r.y > vy1 || r.x + r.w < vx0 || r.y + HEAD < vy0) continue;
@@ -2311,7 +2326,11 @@ function drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, t
     sy = top + (thought && said ? th + 12 : 0); ty = top;
   } else if (MOBILE) { sx = Math.max(8, VW - 8 - sw); tx = Math.max(8, VW - 8 - tw); sy = card.y + card.h + 14; ty = said ? sy + sh + 12 : sy; }
   else if (side) { const right = card.x - 20; sx = right - sw; tx = right - tw; sy = Math.max(64, ay - 18); ty = said ? sy + sh + 14 : sy; }
-  else { sx = tx = Math.max(12, card.x + 10); sy = card.y - 18 - sh; ty = (said ? sy - 14 : card.y - 18) - th; }
+  else if (card.y - 18 - (said ? sh : 0) - (thought ? th + (said ? 14 : 0) : 0) >= bubTop()) { sx = tx = Math.max(12, card.x + 10); sy = card.y - 18 - sh; ty = (said ? sy - 14 : card.y - 18) - th; }
+  else {                                                    // no room above it: over the top of its page, below the address
+    const ch = $('ext').querySelector('.chrome'), top = ch ? ch.getBoundingClientRect().bottom - mr.top + 12 : card.y + 80;
+    sx = tx = Math.max(12, card.x + 16); ty = top; sy = top + (thought && said ? th + 12 : 0);
+  }
   const tail = (x, y, w, h, fill) => {                    // a tapered tail from the bubble's nearest edge to the icon
     const bx = side ? x + w - 2 : Math.min(x + w - 24, Math.max(x + 24, ax)), by = side ? Math.min(y + h - 14, Math.max(y + 14, ay)) : ay < y ? y + 2 : y + h - 2;   // from the edge facing the agent
     const dx = ax - bx, dy = ay - by, l = Math.hypot(dx, dy) || 1, nx = -dy / l * 8, ny = dx / l * 8, tipx = ax - dx / l * 14, tipy = ay - dy / l * 14;
@@ -2338,7 +2357,7 @@ function updateExt(now) {
         $('extT').textContent = 'Browser';
         $('extU').textContent = '\u2315  ' + it.s.label.replace(/^Searched the web:\s*/, '');
         const rnd = k => { const v = Math.sin((it.s.t % 997 + k) * 12.9898) * 43758.5453; return v - Math.floor(v); };
-        $('extP').innerHTML = '<div class="load"></div>' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<div class="res" style="animation-delay:${.5 + k * .12}s"><b style="width:${30 + rnd(k) * 25}%"></b><em style="width:${45 + rnd(k + 9) * 45}%"></em><span style="width:${80 - rnd(k + 3) * 15}%"></span><span style="width:${55 - rnd(k + 5) * 20}%"></span></div>`).join('');
+        $('extP').innerHTML = '<div class="load"></div>' + [...Array(MOBILE ? 10 : 5).keys()].map(k => `<div class="res" style="animation-delay:${.5 + k * .12}s"><b style="width:${30 + rnd(k) * 25}%"></b><em style="width:${45 + rnd(k + 9) * 45}%"></em><span style="width:${80 - rnd(k + 3) * 15}%"></span><span style="width:${55 - rnd(k + 5) * 20}%"></span></div>`).join('');
       } else if (it.kind === 'play') {
         const pa = playAction(it.s), shot = lastShot(it.i);
         $('extT').textContent = 'Playtest';
@@ -2505,7 +2524,7 @@ function drawAgent(now, ap, s) {
   // does not flip back and forth
   const mapW0 = VW - panelW; if (BUB.left == null || !said && !thought) BUB.left = ax > mapW0 * .62; else if (BUB.left && ax < mapW0 * .5) BUB.left = false; else if (!BUB.left && ax > mapW0 * .72) BUB.left = true;
   const left = BUB.left;
-  const sl = said ? richWrap(said.text, { size: MOBILE ? 12.5 : 13, weight: said.final ? 600 : 500 }, Math.min(320, VW - 120), MOBILE ? 4 : 6) : [];
+  const sl = said ? richWrap(said.text, { size: MOBILE ? 12.5 : 13, weight: said.final ? 600 : 500 }, Math.min(MOBILE ? 320 : 360, VW - 120), MOBILE ? 4 : 5) : [];
   const sw = said ? Math.max(...sl.map(l => l.w)) + 26 : 0, sh = sl.length * 18 + 16;
   const tl = thought ? richWrap(thought, { size: 11, weight: 400, italic: true }, Math.min(MOBILE ? 180 : 210, VW - 140), 2) : [];
   const tw = thought ? Math.max(...tl.map(l => l.w)) + 18 : 0, th = tl.length * 14 + 10;
@@ -2546,12 +2565,15 @@ const BUB = { left: null, below: null, t0: 0, dt: 16 };
 // A bubble you are reading stays where it is. It moves only when it has to (off screen, over the
 // agent, or the agent has gone too far from it), and then glides there on a critically damped
 // spring. A new text in a showing bubble resizes the box smoothly and fades the words in.
+// the highest a bubble may sit: below the top bar on a phone, below the map's controls on a desktop
+// (which only exist once there is a map)
+const bubTop = () => MOBILE ? 70 : L.comps.length ? 58 : 14;
 function holdBub(key, tx, ty, w, h, ax, ay, now, swapT, pinned) {
   let b = BUB[key + 'p'];
   const dt = Math.min(50, BUB.dt || 16) / 1000, gap = b ? now - b.seen : 1e9;
-  const mapW = VW - panelW, bot = MOBILE ? viewFrame().bot : VH - 12, top = MOBILE ? 70 : 58;   // (desktop: below the map's controls)
+  const mapW = VW - panelW, bot = MOBILE ? viewFrame().bot : VH - 12, top = bubTop();
   // a phone has little room: bubbles sit in the middle of the screen, above or below the agent
-  const wantX = MOBILE ? Math.max(8, (mapW - w) / 2) : tx, wantY = MOBILE ? Math.max(top, Math.min(bot - h - 8, ty)) : ty;
+  const wantX = MOBILE ? Math.max(8, (mapW - w) / 2) : tx, wantY = Math.max(top, Math.min(bot - h - 8, ty));
   // a new bubble appears where it will stay, well inside the screen: it never slides in from an edge
   const inX = Math.max(8, Math.min(mapW - w - 8, wantX)), inY = Math.max(top, Math.min(bot - h - 8, wantY));
   if (!b || (gap > 300 && (b.sw !== swapT || gap > 2500))) b = BUB[key + 'p'] = { x: inX, y: inY, w, h, moving: false, seen: now, sw: swapT };
@@ -2592,7 +2614,7 @@ function holdBub(key, tx, ty, w, h, ax, ay, now, swapT, pinned) {
 }
 // a thought is a passing glimpse: small, faint, and it stays with the agent wherever it goes
 function drawThought(tl, tx, ty, tw, th, ax, ay, now) {
-  const mapW = VW - panelW, top = MOBILE ? 70 : 58, bot = MOBILE ? viewFrame().bot : VH - 12;
+  const mapW = VW - panelW, top = bubTop(), bot = MOBILE ? viewFrame().bot : VH - 12;
   const Z = BUB.tz || (BUB.tz = { w: tw, h: th }), kz = 1 - Math.exp(-(BUB.dt || 16) / 140); Z.w += (tw - Z.w) * kz; Z.h += (th - Z.h) * kz;
   let [x, y] = glideBub('t', tx, ty, ax, ay); const w = Z.w, h = Z.h;
   x = Math.max(8, Math.min(mapW - w - 8, x)); y = Math.max(top, Math.min(bot - h - 4, y));
@@ -3822,7 +3844,7 @@ requestAnimationFrame(frame);
 window.__bubT = () => performance.now() - (BUB.tSeen || 0) < 50;
 window.__bubS = () => BUB.sp && performance.now() - BUB.sp.seen < 50 ? [BUB.sp.x, BUB.sp.y, BUB.sp.id || (BUB.sp.id = Math.random()), BUB.sp.w, BUB.sp.h, BUB.sp.pin, BUB.sp.moving, BUB.sp.m0 ? BUB.sp.m0.T : 0, BUB.sp.al] : null;
 window.__why = () => ({ why: BUB.why || {}, gaps: BUB.gaps || 0 });
-window.__rp = { find: (k, from = 0) => S.findIndex((s, i) => i >= from && s.k === k), finals: () => S.map((s, i) => s.k === "reply" && s.final ? i : -1).filter(i => i >= 0), vrect: k => { const r = V.get(k); if (!r) return null; const [x, y] = w2s(r.x, r.y); return [x, y, r.w * cam.z, r.h * cam.z]; }, st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ energy: +energy.toFixed(2), streamingNow: streaming(performance.now()), ag: w2s(agent.x, agent.y).map(Math.round), vf: viewFrame(), ty: typing.i, tsent: typing.sentAt, tearly: typing.early, spark: !!spark, sgot: spark && spark.got, rest: resting(performance.now()), busy: avatarBusy(performance.now()), stage: stageFor, tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
+window.__rp = { fz: () => fitZoom(), find: (k, from = 0) => S.findIndex((s, i) => i >= from && s.k === k), finals: () => S.map((s, i) => s.k === "reply" && s.final ? i : -1).filter(i => i >= 0), vrect: k => { const r = V.get(k); if (!r) return null; const [x, y] = w2s(r.x, r.y); return [x, y, r.w * cam.z, r.h * cam.z]; }, st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ energy: +energy.toFixed(2), streamingNow: streaming(performance.now()), ag: w2s(agent.x, agent.y).map(Math.round), vf: viewFrame(), ty: typing.i, tsent: typing.sentAt, tearly: typing.early, spark: !!spark, sgot: spark && spark.got, rest: resting(performance.now()), busy: avatarBusy(performance.now()), stage: stageFor, tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
 
 })();
 </script>
