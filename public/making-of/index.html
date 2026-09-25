@@ -73,6 +73,13 @@
   .tb { display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 10px; border-radius: 8px; color: #B8B8B8; font-size: 14px; text-decoration: none; white-space: nowrap; }
   .tb:hover { background: #262626; color: var(--ink); } .tb svg { width: 17px; height: 17px; }
   .views { display: flex; gap: 2px; margin-left: 6px; } .views .ib.on { background: #2E2E2E; color: var(--ink); }
+  .viewseg { display: flex; gap: 2px; background: #1E1E1E; border: 1px solid #2E2E2E; border-radius: 16px; padding: 3px; }
+  .viewseg button { display: flex; align-items: center; gap: 6px; border-radius: 12px; padding: 4px 13px 4px 10px; font-size: 13px; font-weight: 500; color: #8A8A8A; }
+  .viewseg button:hover { color: #C8C8C8; } .viewseg button svg { width: 15px; height: 15px; }
+  .viewseg button.on { background: #2E2E2E; color: var(--ink); }
+  /* the summary panel can be hidden, giving the map the room */
+  .app.nopanel .panel { opacity: 0; pointer-events: none; } .app.nopanel .panel .card { pointer-events: none; }
+  .app.nopanel .composer, .app.nopanel .ext.center { left: 50%; } .app.nopanel .mapctl { right: 16px; }
   /* follow and fit belong to the map */
   .mapctl { position: absolute; top: 12px; right: 388px; z-index: 3; display: flex; gap: 2px; background: rgba(24,24,24,.95); border: 1px solid #333; border-radius: 18px; padding: 3px; transition: opacity .4s, right .32s; }
   .mapctl button { display: flex; align-items: center; gap: 6px; border-radius: 14px; padding: 4px 11px 4px 8px; font-size: 12.5px; font-weight: 500; color: var(--faint); white-space: nowrap; }
@@ -216,15 +223,39 @@
   .stage .who b { color: var(--ink); font-weight: 600; font-size: 14px; } .stage .who span { color: var(--faint); }
   .stage .md > p:first-child b:only-child { font-size: 1.04em; }
   .stage .md .tbl { background: #1A1A1A; }
-  .stage .md > *, .stage .md li { transition: opacity .4s ease-out, transform .5s cubic-bezier(.2,.9,.3,1); }
-  .stage .pend { opacity: 0; transform: translateY(8px); }
+  /* written as you watch: nothing below the scan line exists yet */
+  .stage .md > *, .stage .md li, .stage .md tr { transition: opacity .55s cubic-bezier(.3,.6,.3,1); }
+  .stage .pend { opacity: 0; transition: none; }
+  .stage .writing { -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--p, 0) * 100% - 2px), rgba(0,0,0,.25) calc(var(--p, 0) * 100% + 4px), transparent calc(var(--p, 0) * 100% + 10px));
+    mask-image: linear-gradient(to bottom, #000 calc(var(--p, 0) * 100% - 2px), rgba(0,0,0,.25) calc(var(--p, 0) * 100% + 4px), transparent calc(var(--p, 0) * 100% + 10px)); }
+  .stage tr.writing { -webkit-mask-image: none; mask-image: none; }
+  .stage tr.writing > td, .stage tr.writing > th { -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--p, 0) * 100% - 2px), transparent calc(var(--p, 0) * 100% + 10px)); mask-image: linear-gradient(to bottom, #000 calc(var(--p, 0) * 100% - 2px), transparent calc(var(--p, 0) * 100% + 10px)); }
+  .stage.reveal.on { animation: reveal .5s cubic-bezier(.2,.9,.3,1); } @keyframes reveal { from { opacity: 0; transform: translateY(18px) scale(.985); } }
+  /* over the map: the map stays there, dimmed and softly blurred */
+  .scrim { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3; background: radial-gradient(ellipse 70% 80% at 45% 45%, rgba(10,10,12,.9), rgba(10,10,12,.7)); -webkit-backdrop-filter: blur(3px) saturate(.8); backdrop-filter: blur(3px) saturate(.8);
+    opacity: 0; pointer-events: none; transition: opacity .5s ease; cursor: pointer; }
+  .app.mapanswer .scrim { opacity: 1; pointer-events: auto; }
+  .stagex { position: absolute; top: 18px; z-index: 5; transform: translateX(-100%); display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 9px; border-radius: 15px; background: rgba(40,40,44,.95); border: 1px solid #444; color: #D6D6D6; font-size: 12.5px;
+    opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .stagex svg { width: 15px; height: 15px; } .stagex:hover { background: #3A3A42; color: #fff; }
+  .app.mapanswer .stagex { opacity: 1; pointer-events: auto; }
+  .reopen { position: absolute; z-index: 5; display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px 0 9px; border-radius: 14px; background: rgba(28,28,34,.95); border: 1px solid rgba(127,139,255,.45); color: #DADDFF; font-size: 12.5px; white-space: nowrap;
+    opacity: 0; pointer-events: none; transform: translateY(6px); transition: opacity .3s, transform .3s; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+  .reopen svg { width: 15px; height: 15px; color: var(--accent); } .reopen:hover { border-color: var(--accent); color: #fff; }
+  .reopen.on { opacity: 1; pointer-events: auto; transform: none; }
+  .app.mapanswer .composer { z-index: 4; }
+  .app.mapanswer .mapctl, .app.mapanswer .layers, .app.mapanswer .level { opacity: 0; pointer-events: none; }
+  .app.threadview .scrim, .app.threadview .stagex, .app.threadview .reopen { display: none !important; }
   .app.threadview .stage, .app.threadview .ext.center, .app.threadview .cursor { display: none !important; }
   .app.empty .layers, .app.empty .level { opacity: 0; pointer-events: none; }
   .layers, .level { transition: opacity .4s; }
   /* in the middle while there is no project: the browser as the main thing on screen */
   .ext.center { position: absolute; left: calc((100% - 380px) / 2); top: 50%; transform: translate(-50%, -52%); width: min(640px, calc(100% - 460px)); max-height: none; z-index: 3; pointer-events: auto; }
-  .ext.center .page { min-height: 300px; } .ext.center.off { opacity: 0; transform: translate(-50%, -48%); max-height: none; }
-  .ext.off, .ext.center.off { pointer-events: none !important; } .ext.center.off { transition: opacity .2s, transform .25s; }
+  .ext.center { transition: opacity .45s ease, transform .6s cubic-bezier(.2,.9,.3,1), border-color .4s, box-shadow .4s; }
+  .ext.center .page { min-height: 300px; } .ext.center.off { opacity: 0; transform: translate(-50%, -48%) scale(.97); max-height: none; }
+  .ext.off, .ext.center.off { pointer-events: none !important; } .ext.center.off { transition: opacity .25s, transform .3s; }
+  /* in the middle it is the main thing on screen: active, but quieter than the side card */
+  .ext.center.active { animation: none; border-color: rgba(127,139,255,.4); box-shadow: 0 0 0 1px rgba(127,139,255,.14), 0 22px 60px rgba(0,0,0,.5), 0 0 30px rgba(127,139,255,.1); background: rgba(30,30,36,.98); }
   .composer .model em { font-style: normal; color: #8A8A8A; }
   .composer .model svg { width: 10px; height: 10px; stroke: #8A8A8A; fill: none; stroke-width: 1.6; }
   .composer .mic { color: #BDBDBD; display: grid; place-items: center; width: 22px; }
@@ -453,6 +484,11 @@
   <symbol id="i-thread" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><path d="M6 8h8M6 11h5"/></symbol>
   <symbol id="i-target" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="1.6"/><path d="M10 1.8v2.4M10 15.8v2.4M1.8 10h2.4M15.8 10h2.4"/></symbol>
   <symbol id="i-fit" viewBox="0 0 20 20"><path d="M3.5 7.5v-4h4M16.5 7.5v-4h-4M3.5 12.5v4h4M16.5 12.5v4h-4"/></symbol>
+  <symbol id="i-summary" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><circle cx="6.5" cy="8" r=".9"/><circle cx="6.5" cy="12" r=".9"/><path d="M9 8h5M9 12h5"/></symbol>
+  <symbol id="i-termpane" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><path d="M2.5 12.5h15"/></symbol>
+  <symbol id="i-rightbar" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><path d="M12.5 3.5v13"/></symbol>
+  <symbol id="i-close" viewBox="0 0 20 20"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></symbol>
+  <symbol id="i-bubble" viewBox="0 0 20 20"><path d="M4.5 4h11A2 2 0 0 1 17.5 6v6a2 2 0 0 1-2 2H9.5l-3.5 3v-3h-1.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></symbol>
   <symbol id="i-pen" viewBox="0 0 20 20"><path d="M4 16l1-4 8-8 3 3-8 8z"/></symbol>
   <symbol id="i-pr" viewBox="0 0 20 20"><circle cx="5" cy="4" r="2"/><circle cx="5" cy="16" r="2"/><circle cx="15" cy="16" r="2"/><path d="M5 6v8M15 14V8l-4-3"/></symbol>
   <symbol id="i-clock" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></symbol>
@@ -493,18 +529,23 @@
     <header class="title">
       <span class="name"><svg><use href="#i-folder"/></svg><span id="threadTitle">Research AI personality game</span><span class="repo" id="repoName">tokenbros</span></span>
       <span class="grow"></span>
+      <div class="viewseg" role="tablist"><button id="vMap" class="on" title="Map (T)"><svg><use href="#i-map"/></svg>Map</button><button id="vThread" title="Thread (T)"><svg><use href="#i-thread"/></svg>Thread</button></div>
+      <span class="grow"></span>
       <a class="tb" href="../" title="Play the game this session built">Play Tokenbros ↗</a>
       <button class="ib" title="More"><svg><use href="#i-dots"/></svg></button>
       <button class="tb" id="share" title="Copy a link to this replay"><svg><use href="#i-share"/></svg><span>Share</span></button>
-      <div class="views" role="tablist"><button id="vMap" class="ib on" title="Map"><svg><use href="#i-map"/></svg></button><button id="vThread" class="ib" title="Thread"><svg><use href="#i-thread"/></svg></button></div>
+      <div class="views"><button id="tPanel" class="ib on" title="Summary panel"><svg><use href="#i-summary"/></svg></button><button class="ib" title="Terminal"><svg><use href="#i-termpane"/></svg></button><button id="tReview" class="ib" title="Review"><svg><use href="#i-rightbar"/></svg></button></div>
     </header>
     <div class="body">
       <canvas id="fx" aria-hidden="true"></canvas>
+      <div class="scrim" id="scrim" title="Back to the map"></div>
       <div class="stage" id="stage" aria-live="polite"></div>
+      <button class="stagex" id="stageX" title="Back to the map (Esc)"><svg><use href="#i-close"/></svg>Back to map</button>
+      <button class="reopen" id="reopen" title="Read the last answer again"><svg><use href="#i-thread"/></svg>Last answer</button>
       <canvas id="map" aria-label="Map of the repository as it was at this point, with the agent's reads and edits"></canvas>
       <div id="thread" hidden><div class="tw" id="tw"></div></div>
       <div class="layers" id="layers"></div>
-      <div class="mapctl" id="mapctl"><button class="on" id="follow" title="Follow the agent (F)"><svg><use href="#i-target"/></svg>Follow</button><button id="fit" title="Fit the whole map (0)"><svg><use href="#i-fit"/></svg>Fit</button></div>
+      <div class="mapctl" id="mapctl"><button class="on" id="bubblesT" title="Thought and speech bubbles (B)"><svg><use href="#i-bubble"/></svg>Bubbles</button><button class="on" id="follow" title="Follow the agent (F)"><svg><use href="#i-target"/></svg>Follow</button><button id="fit" title="Fit the whole map (0)"><svg><use href="#i-fit"/></svg>Fit</button></div>
       <div class="level" id="level"></div>
       <div class="panel">
         <div class="card sm">
@@ -633,11 +674,25 @@ function setStep(n, animated) {
   if (!animated) vt = S[n].at;
   enterAt = animated && forward ? performance.now() : -1e9;
   // the user's own messages are typed into the composer and sent before the agent reacts
-  if (animated && forward && (S[n].k === 'prompt' || S[n].k === 'steer')) startTyping(n); else if (!animated) { stopTyping(); if (n <= FIRST_PROMPT) resetIntro(); else finishIntro(); }
+  if (animated && forward && (S[n].k === 'prompt' || S[n].k === 'steer')) startTyping(n); else if (!animated) { stopTyping(); for (const j of [...PRESENT]) if (j > n) PRESENT.delete(j); if (n <= FIRST_PROMPT) resetIntro(); else finishIntro(); }
   onState(animated && forward);
   updatePanels();
 }
+function stepsUntil(j) {
+  if (speed.k === 't') { let ms = 0; for (let k = cur + 1; k <= j; k++) ms += Math.min(IDLE_WAIT, (S[k].at - (k === cur + 1 ? vt : S[k - 1].at)) / speed.v); return Math.max(0, ms); }
+  let s = -acc; for (let k = cur + 1; k <= j; k++) s += dwell(S[k]); return Math.max(0, s / speed.v * 1000);
+}
+function preTypeSteer(now) {
+  if (!playing || typing.i >= 0) return;
+  for (let j = cur + 1; j < Math.min(S.length, cur + 60); j++) {
+    const k = S[j].k; if (k === 'done' || k === 'prompt' || k === 'start') return;
+    if (k !== 'steer') continue;
+    if (!PRESENT.has(j) && stepsUntil(j) <= typeDur(j) + 450) startTyping(j, true);
+    return;
+  }
+}
 function tickPlayback(now) {
+  preTypeSteer(now);
   updateComposer(now);
   if (holding(now)) { lastT = now; return; }
   if (playing && lastT != null) {
@@ -833,14 +888,18 @@ const typing = { i: -1, t0: 0, dur: 0, sentAt: 0, shown: -1 };
 // slower playback gets calmer motion: at 1 step/s everything moves about twice as slowly
 const calm = () => speed.k === 's' ? (speed.v <= 1 ? 2 : 1) : speed.v <= 10 ? 1.7 : speed.v <= 60 ? 1.15 : .8;
 const SEND_HOLD = 480;
-function startTyping(i) {
-  const n = S[i].text.length, fast = speed.k === 't' ? speed.v >= 300 : speed.v >= 8;
+const typeDur = i => { const n = S[i].text.length, fast = speed.k === 't' ? speed.v >= 300 : speed.v >= 8; return Math.max(700, Math.min(fast ? 1200 : 4200 * calm() / 1.7, n * (fast ? 14 : 26) * Math.max(1, calm() / 1.4))); };
+// steers already typed (and sent) while the agent was still working
+const PRESENT = new Set();
+function startTyping(i, early) {
+  if (!early && PRESENT.has(i)) return;
   // the very first message waits for the model to be picked
   const pre = i === FIRST_PROMPT && !introDone ? INTRO_MS : 0; if (pre) startIntro(performance.now());
-  Object.assign(typing, { i, t0: performance.now() + pre, dur: Math.max(700, Math.min(fast ? 1200 : 4200 * calm() / 1.7, n * (fast ? 14 : 26) * Math.max(1, calm() / 1.4))), sentAt: 0, shown: -1 });
+  Object.assign(typing, { i, t0: performance.now() + pre, dur: typeDur(i), sentAt: 0, shown: -1, early: !!early });
+  if (early) PRESENT.add(i);
   $('composer').classList.toggle('steer', S[i].k === 'steer');
-  const at = attachHtml(i);
-  smoothComposer(() => { $('catt').innerHTML = at; $('catt').hidden = !at; $('prompt').innerHTML = '<span class="caret"></span>'; });
+  const at = attachHtml(i); typing.att = at; typing.attShown = !pre;
+  smoothComposer(() => { $('catt').innerHTML = pre ? '' : at; $('catt').hidden = pre || !at; $('prompt').innerHTML = pre ? '' : '<span class="caret"></span>'; });
   $('composer').classList.add('typing'); $('composer').classList.remove('sent');
 }
 function smoothComposer(fn) {
@@ -852,20 +911,21 @@ function smoothComposer(fn) {
   clearTimeout(smoothComposer.t); smoothComposer.t = setTimeout(() => { c.style.height = ''; c.style.transition = ''; c.style.overflow = ''; }, 420);
 }
 function stopTyping() { $('catt').hidden = true; typing.i = -1; typing.sentAt = 0; $('composer').classList.remove('typing', 'sent', 'steer'); $('send').classList.remove('press'); idleComposer(); }
-const holding = now => typing.i >= 0 && !typing.sentAt && playing || (typing.sentAt && now - typing.sentAt < SEND_HOLD * calm()) || stageHolding(now);
+const holding = now => typing.i >= 0 && !typing.sentAt && playing && (!typing.early || (cur + 1 >= typing.i && now - typing.t0 < typing.dur + 180)) || (typing.sentAt && now - typing.sentAt < SEND_HOLD * calm()) || stageHolding(now);
 function idleComposer() {
   $('prompt').innerHTML = `<span class="ph">${cur === 0 && !playing ? 'Press play to replay the session from its first message' : 'Do anything'}</span>`;
 }
 function updateComposer(now) {
   if (typing.i < 0) return;
   const c = $('composer'), s = S[typing.i];
-  if (!typing.sentAt) {
+  if (!typing.sentAt && !typing.attShown && now >= typing.t0 - 250) { typing.attShown = true; const at = typing.att; smoothComposer(() => { $('catt').innerHTML = at; $('catt').hidden = !at; $('prompt').innerHTML = '<span class="caret"></span>'; }); }
+  if (!typing.sentAt && now >= typing.t0) {
     const k = Math.max(0, Math.min(1, (now - typing.t0) / typing.dur)), n = Math.ceil(s.text.length * (1 - Math.pow(1 - k, 1.4)));
     if (n !== typing.shown) { typing.shown = n; $('prompt').innerHTML = esc(s.text.slice(0, n)) + '<span class="caret"></span>'; const t = $('prompt'); t.scrollTop = t.scrollHeight; }
-    if (k >= 1 && now - typing.t0 > typing.dur + 180) {
+    if (k >= 1 && now - typing.t0 > typing.dur + 180 && (!typing.early || cur + 1 >= typing.i || !playing)) {
       typing.sentAt = now; $('send').classList.add('press'); c.classList.remove('typing'); c.classList.add('sent');
       const sr = c.getBoundingClientRect(), mr = cv.getBoundingClientRect();
-      launchSpark(sr.left + sr.width / 2 - mr.left, sr.top + sr.height / 2 - mr.top, now, sr.width, sr.height);
+      launchSpark(sr.left + sr.width / 2 - mr.left, sr.top + sr.height / 2 - mr.top, now, sr.width, sr.height, s.k);
       markSide(true);
     }
   } else if (now - typing.sentAt > 140) $('send').classList.remove('press');
@@ -1327,7 +1387,7 @@ function resize() {
   DPR = Math.min(2, window.devicePixelRatio || 1);
   VW = cv.clientWidth; VH = cv.clientHeight; cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
   fxc.width = cv.width; fxc.height = cv.height;
-  panelW = VW > 900 && !document.querySelector('.app').classList.contains('rv-on') ? 376 : 0;   // Review takes over the right
+  const ac = document.querySelector('.app').classList; panelW = VW > 900 && !ac.contains('rv-on') && !ac.contains('nopanel') ? 376 : 0;   // Review takes over the right
   if (oldC != null) { const d = (cx0() - oldC) / cam.z; cam.x += d; camT.x += d; }
   if (ST && typeof frameOnce === 'function') frameOnce();
 }
@@ -1338,23 +1398,30 @@ const s2w = (x, y) => [(x - cx0()) / cam.z + cam.x, (y - cy0()) / cam.z + cam.y]
    It holds a file-level overview of the component being worked on, and only moves when the work
    leaves the middle of the view. Zoom changes need a real reason (a different part of the map);
    every move is a critically damped glide. */
-const FZ_MIN = .42, FZ_MAX = .78;
+const FZ_MIN = .32, FZ_MAX = .78;
+// the part of the canvas you can actually see: below the map controls, above the composer
+function viewFrame() {
+  const c = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(), top = 64, bot = Math.min(VH - 12, c.top - m.top - 16);
+  return { top, bot, h: Math.max(160, bot - top), cy: (top + bot) / 2, w: Math.max(200, VW - panelW - 80) };
+}
 let followZ = 0;
 function followFrame(snap) {
   const sp = stepSpots(S[cur]);
   if (!sp.length) { if (snap) { fitRect(worldRect(), 120, FZ_MAX, true); followZ = camT.z; } return; }
   const u = union(sp.slice(0, 40)), comps = [...new Set(S[cur].targets.map(fi => F[fi].comp))].map(id => tgtRect('c' + id)).filter(Boolean);
-  const aw = Math.max(200, VW - panelW - 80), ah = Math.max(200, VH - 230);
+  const VF = viewFrame(), aw = VF.w, ah = VF.h - 40;
   // zoom: the touched components, as far as they fit, but never closer than files or further than tiles
   const area = comps.length ? union(comps) : u, zFit = Math.min(aw / (area.w + 160), ah / (area.h + 160));
   const zNeed = Math.min(aw / (u.w + 120), ah / (u.h + 120));          // the touched lines themselves must fit
   const zD = Math.max(FZ_MIN, Math.min(FZ_MAX, zFit, zNeed));
   if (snap || !followZ || Math.abs(Math.log(zD / followZ)) > .35 || zNeed < followZ * .95) followZ = zD;
   camT.z = followZ;
-  // pan: only when the work leaves the calm middle of the view (a dead zone), then settle it back in
-  const fx = u.x + u.w / 2, fy = u.y + Math.min(u.h, 400) / 2, mx = aw * .3 / camT.z, my = ah * .28 / camT.z;
-  const ox = fx - camT.x, oy = fy - (camT.y - 30 / camT.z);
-  if (snap || Math.abs(ox) > mx || Math.abs(oy) > my || u.w * camT.z > aw * .9) { camT.x = fx; camT.y = fy + 30 / camT.z; }
+  // pan: toward the agent's centre of mass (where it will be), only when that leaves the calm
+  // middle of what you can see, then settle it back into the middle of that
+  const fx = sp.reduce((a, r) => a + r.x + r.w / 2, 0) / sp.length, fy = sp.reduce((a, r) => a + r.y + r.h / 2, 0) / sp.length;
+  const shiftY = (VF.cy - cy0()) / camT.z, mx = aw * .26 / camT.z, my = VF.h * .2 / camT.z;
+  const ox = fx - camT.x, oy = fy - (camT.y + shiftY);
+  if (snap || Math.abs(ox) > mx || Math.abs(oy) > my || u.w * camT.z > aw * .9) { camT.x = fx; camT.y = fy - shiftY; }
   if (snap) { Object.assign(cam, { x: camT.x, y: camT.y, z: camT.z }); camV.x = camV.y = camV.z = 0; }
 }
 // critically damped spring toward a target (no overshoot, no jerk when the target moves)
@@ -1440,8 +1507,8 @@ function compTreemap() {
 function blendView() {
   const fz = fitZoom(), now = performance.now(), dt = Math.min(50, now - (tmLast || now)); tmLast = now;
   // the treemaps answer your zoom, not the follow camera's
-  if (!tmOn && !follow && cam.z < fz * .72) tmOn = true; else if (tmOn && (follow || cam.z > fz * .76)) tmOn = false;
-  if (!tbOn && !follow && cam.z < TB_IN) tbOn = true; else if (tbOn && (follow || cam.z > TB_OUT)) tbOn = false;
+  if (!tmOn && !follow && cam.z < fz * .5) tmOn = true; else if (tmOn && (follow || cam.z > fz * .56)) tmOn = false;
+  if (!tbOn && !follow && cam.z < fz * .78) tbOn = true; else if (tbOn && (follow || cam.z > fz * .86)) tbOn = false;
   tmLin = Math.min(1, Math.max(0, tmLin + (tmOn ? 1 : -1) * dt / 800));
   tbLin = Math.min(1, Math.max(0, tbLin + (tbOn ? 1 : -1) * dt / 700));
   tmT = smooth(tmLin); tbT = smooth(tbLin); treeT = Math.max(tbT, tmT);
@@ -1560,18 +1627,37 @@ function onState(animated) {
   if (beams.length > 40) beams = beams.slice(-40);
   if (links.length > 24) links = links.slice(-24);
 }
+// truly idle (the turn is over and nobody is steering): the agent waits by the composer
+function turnOver(now) { return !!ST.turnK && !avatarBusy(now) && !(typing.i >= 0 && S[typing.i].k === 'steer') && !(spark && !spark.got && spark.kind === 'steer'); }
+function resting(now) { return turnOver(now); }
+// parked beside the composer; while you type it turns to you, hovering just above the text box
+function restPoint() {
+  const c = $('composer').getBoundingClientRect(), m = cv.getBoundingClientRect(), bob = Math.sin(performance.now() / 1300) * 4;
+  if (typing.i >= 0 && !typing.sentAt || spark && !spark.got) return s2w(c.left - m.left + c.width / 2, c.top - m.top - 70 + bob);
+  return s2w(c.left - m.left - 72, c.top - m.top + 14 + bob);
+}
 function agentPos(now) {
   // once the outside card closes, fly back to where the work on the map was (or the empty folder)
   let an = agent.anchors;
+  if (L.comps.length && resting(now)) {
+    let tx, ty;
+    if (stageSeat(now)) { const G = stageGeom(), wy = writingY(now); [tx, ty] = s2w(G.ax, (wy != null ? wy : G.ay) + Math.sin(now / 900) * 5); }
+    else [tx, ty] = restPoint();
+    agent.rested = true;
+    const kk = 1 - Math.exp(-(BUB.dt || 16) / 230); agent.x += (tx - agent.x) * kk; agent.y += (ty - agent.y) * kk; return [agent.x, agent.y];
+  }
+  if (agent.rested) { agent.rested = false; agent.fx = agent.x; agent.fy = agent.y; agent.t0 = now; }
   if (an.length && an[0][0] === 'ext') {
     if (!interaction(now)) { if (!agent.leaving) { agent.leaving = true; agent.fx = agent.x; agent.fy = agent.y; agent.t0 = now; } an = agent.mapAnchors; }
     else agent.leaving = false;
   }
   const ps = an.map(anchorPt).filter(Boolean);
   if (!ps.length && !L.comps.length) {
-    const G = stageSeat(now) ? stageGeom() : null, [tx, ty] = s2w(G ? G.ax : (VW - panelW) / 2, (G ? G.ay : VH / 2 - 40) + Math.sin(now / 900) * 5);
+    const G = stageSeat(now) ? stageGeom() : null, wy = G ? writingY(now) : null;
+    const [tx, ty] = s2w(G ? G.ax : (VW - panelW) / 2, (G ? (wy != null ? wy : G.ay) : VH / 2 - 40) + Math.sin(now / 900) * 5);
     if (!agent.placed) { agent.placed = true; agent.x = tx; agent.y = ty; }
-    agent.x += (tx - agent.x) * .08; agent.y += (ty - agent.y) * .08; return [agent.x, agent.y];
+    const kk = 1 - Math.exp(-(BUB.dt || 16) / (wy != null ? 170 : 260));      // a little inertia, never a lag
+    agent.x += (tx - agent.x) * kk; agent.y += (ty - agent.y) * kk; return [agent.x, agent.y];
   }
   if (!ps.length) return [agent.x, agent.y];
   let tx = ps.reduce((s, p) => s + p[0], 0) / ps.length, ty = ps.reduce((s, p) => s + p[1], 0) / ps.length;
@@ -1586,10 +1672,11 @@ function agentPos(now) {
 const THINK_MS = 6000, SAY_MS = 7500, FINAL_MS = 11000;
 function bubbles(now) {
   let thought = null, said = null, tf = 0, sf = 0;
+  const idle = turnOver(now);                             // at rest it has nothing on its mind
   for (let i = cur; i >= Math.max(0, cur - 40) && !(thought && said); i--) {
     const s = S[i]; if (s.k === 'start' || s.k === 'prompt') break;
     const t = seenAt.get(i); if (t == null) continue; const age = now - t;
-    if (!thought && s.thought && age < THINK_MS) { thought = s.thought; tf = Math.min(1, (THINK_MS - age) / 700); }
+    if (!thought && !idle && s.thought && age < THINK_MS) { thought = s.thought; tf = Math.min(1, (THINK_MS - age) / 700); }
     if (!said && s.k === 'reply') { const lim = s.final ? FINAL_MS : SAY_MS; if (age < lim) { said = s; sf = Math.min(1, (lim - age) / 700); } else break; }
   }
   return { thought, said, tf, sf };
@@ -2073,14 +2160,14 @@ function updateExt(now) {
         $('extP').innerHTML = `<img src="${IMG.list[it.ii].src}" alt="Screenshot the agent looked at">`;
       }
     }
-    const centre = !L.comps.length, home = centre ? document.querySelector('.body') : $('extHome');
-    if (el.parentElement !== home) { if (centre) home.appendChild(el); else home.after(el); el.classList.toggle('center', centre); }
+    const centre = !L.comps.length, parent = centre ? document.querySelector('.body') : $('extHome').parentElement;
+    if (el.parentElement !== parent) { el.classList.add('off'); if (centre) parent.appendChild(el); else $('extHome').after(el); el.classList.toggle('center', centre); void el.offsetWidth; }
     el.classList.remove('off');
     const act = S[cur].k === 'web' || S[cur].k === 'image' || S[cur].k === 'playtest';
     el.classList.toggle('active', act); $('extS').textContent = act ? 'live' : 'outside the repo';
   } else if (!el.classList.contains('off')) {
     el.classList.remove('active');
-    if (!extOff) extOff = now; else if (now - extOff > 600) { el.classList.add('off'); extShown = -1; }
+    if (!extOff) extOff = now; else if (now - extOff > 600 || stageFor >= 0) { el.classList.add('off'); extShown = -1; }
   }
 }
 // before anything exists: the agent waits in the middle of an empty folder
@@ -2108,7 +2195,7 @@ const PLAY_URL = []; { let u = 'http://127.0.0.1:5175'; S.forEach((s, i) => { if
 const playUrl = i => PLAY_URL[i].replace(/^https?:\/\//, '');
 function lastShot(i) { for (let j = i; j >= Math.max(0, i - 400); j--) { const k = IMG.steps[S[j].t]; if (k != null) return k; } return null; }
 function interaction(now) {
-  if (stageFor >= 0) return null;                          // the answer is up: the browser has closed
+  if (stageFor >= 0 || turnOver(now)) return null;         // the answer is up, or the turn is over: windows close                          // the answer is up: the browser has closed
   for (let i = cur; i >= Math.max(0, cur - 8); i--) {
     const s = S[i], t = seenAt.get(i); if (t == null) continue;
     const age = now - t; if (age > SEE_MS) break;
@@ -2180,7 +2267,7 @@ function withPop(ax, ay, t0, now, fade, fn) {
 // a sent message flies from the composer's send button to the avatar, which pulses as it lands
 const SPARK_MS = 820;
 let spark = null;
-function launchSpark(x, y, now, w = 0, h = 0) { spark = { x, y, w, h, t0: now }; }
+function launchSpark(x, y, now, w = 0, h = 0, kind = 'prompt') { spark = { x, y, w, h, t0: now, kind }; }
 function drawSpark(now, ax, ay) {
   if (!spark) return;
   const k = (now - spark.t0) / SPARK_MS;
@@ -2208,21 +2295,30 @@ function drawSpark(now, ax, ay) {
 function drawAgent(now, ap, s) {
   const [ax, ay] = w2s(...ap);
   drawSpark(now, ax, ay);
+  drawWriteBeam(now, ax, ay);
   updateStage(now);
-  const o = AV_R - 15, { thought, tf: tFade, sf: sFade } = bubbles(now), said = stageOn() ? null : bubbles(now).said;
-  if (thought !== pop.t) { pop.t = thought; pop.tt = now; }
-  const sk = said ? said.text : ''; if (sk !== pop.s) { pop.s = sk; pop.st = now; }
+  const o = AV_R - 15, bb0 = bubbles(now), thought = SHOW_BUBBLES ? bb0.thought : null, tFade = bb0.tf, sFade = bb0.sf, said = !SHOW_BUBBLES || stageOn() || (L.comps.length && turnOver(now)) ? null : bb0.said;
+  updateReopen(ax, ay);
+  const newT = thought !== pop.t, sk = said ? said.text : '', newS = sk !== pop.s;
+  if (newT) { pop.t = thought; pop.tt = now; } if (newS) { pop.s = sk; pop.st = now; }
+  BUB.dt = Math.min(50, now - (BUB.t0 || now)); BUB.t0 = now;
   // measure both, then stack them on the free side of the avatar: above it, or below when the
   // avatar is near the top edge. The speech sits nearest; the thought floats beyond it.
-  const left = ax > (VW - panelW) * .62;
+  // which side and whether above: decided with some hysteresis, so they do not flip back and forth
+  const mapW0 = VW - panelW; if (BUB.left == null || !said && !thought) BUB.left = ax > mapW0 * .62; else if (BUB.left && ax < mapW0 * .5) BUB.left = false; else if (!BUB.left && ax > mapW0 * .72) BUB.left = true;
+  const left = BUB.left;
   const sl = said ? richWrap(said.text, { size: 13, weight: said.final ? 600 : 500 }, 320, 6) : [];
   const sw = said ? Math.max(...sl.map(l => l.w)) + 26 : 0, sh = sl.length * 18 + 16;
   const tl = thought ? richWrap(thought, { size: 13, weight: 400, italic: true }, 280, 4) : [];
   const tw = thought ? Math.max(...tl.map(l => l.w)) + 26 : 0, th = tl.length * 17 + 14;
   // the thought mirrors the speech on the other side of the avatar; if that side is off-canvas
   // it stacks beyond the speech instead
-  const mapW = VW - panelW, tLeft = !left, tx0 = tLeft ? ax - tw - 34 - o : ax + 34 + o, mirrored = tx0 > 8 && tx0 + tw < mapW - 8;
-  const need = mirrored ? Math.max(said ? sh + 40 : 0, thought ? th + 40 : 0) : (said ? sh + 40 : 0) + (thought ? th + 34 : 0), below = ay - need < 70;
+  const mapW = VW - panelW, tLeft = !left, tx0 = tLeft ? ax - tw - 34 - o : ax + 34 + o, fits = m => tx0 > m && tx0 + tw < mapW - m;
+  if (BUB.mir == null || !thought) BUB.mir = fits(8); else if (BUB.mir && !fits(0)) BUB.mir = false; else if (!BUB.mir && fits(40)) BUB.mir = true;
+  const mirrored = BUB.mir;
+  const need = mirrored ? Math.max(said ? sh + 40 : 0, thought ? th + 40 : 0) : (said ? sh + 40 : 0) + (thought ? th + 34 : 0);
+  if (BUB.below == null || !said && !thought) BUB.below = ay - need < 70; else if (!BUB.below && ay - need < 60) BUB.below = true; else if (BUB.below && ay - need > 130) BUB.below = false;
+  const below = BUB.below;
   let sy = 0, ty = 0;
   if (!below) { sy = ay - 36 - o - sh; ty = mirrored ? ay - 36 - o - th : (said ? sy - 16 : ay - 46 - o) - th; }
   else { sy = ay + 64 + o; ty = mirrored ? ay + 64 + o : said ? sy + sh + 16 : ay + 70 + o; }
@@ -2230,22 +2326,23 @@ function drawAgent(now, ap, s) {
   if (dockedNow) drawDockedBubbles(now, ax, ay, thought, said, tl, tw, th, sl, sw, sh, tFade, sFade);
   else {
   if (thought) withPop(ax, ay, pop.tt, now, tFade, () => {
-    const x = mirrored ? tx0 : left ? ax - tw - 18 - o : ax + 18 + o, y = ty, fp = fluffy(x, y, tw, th);
+    const [x, y] = glideBub('t', mirrored ? tx0 : left ? ax - tw - 18 - o : ax + 18 + o, ty, ax, ay, newT), fp = fluffy(x, y, tw, th);
     g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 14; g.shadowOffsetY = 3; g.fillStyle = THINK.fill; g.fill(fp); g.restore();
     g.strokeStyle = THINK.line; g.lineWidth = 1.2; g.stroke(fp);
-    const inner = mirrored ? tLeft : left, ex = inner ? x + tw - 16 : x + 16, ey = below ? y - 4 : y + th + 4;
+    const ex = Math.max(x + 16, Math.min(x + tw - 16, ax)), ey = y + th / 2 > ay ? y - 4 : y + th + 4;
     for (const [f, rad] of [[.3, 4.2], [.6, 3], [.84, 2]]) { g.beginPath(); g.arc(ex + (ax - ex) * f, ey + (ay - ey) * f, rad, 0, 7); g.fillStyle = THINK.fill; g.fill(); g.strokeStyle = THINK.line; g.lineWidth = 1; g.stroke(); }
     drawRich(tl, x + 13, y + 19, 17, THINK.ink, '#D6D0FA');
   });
   if (said) withPop(ax, ay, pop.st, now, sFade, () => {
-    const x = left ? ax - sw - 34 - o : ax + 34 + o, y = sy, bx = left ? x + sw - 34 : x + 34, dir = below ? -1 : 1;
-    const base = below ? y + 8 : y + sh - 8, edge = below ? y : y + sh;      // the tail starts inside the body: no seam
+    const [x, y] = glideBub('s', left ? ax - sw - 34 - o : ax + 34 + o, sy, ax, ay, newS), up = y + sh / 2 > ay;
+    const bx = Math.max(x + 24, Math.min(x + sw - 24, x + sw / 2 < ax ? x + sw - 34 : x + 34)), dir = up ? -1 : 1;
+    const base = up ? y + 8 : y + sh - 8, edge = up ? y : y + sh;      // the tail starts inside the body: no seam
     g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 16; g.shadowOffsetY = 4;
     g.fillStyle = said.final ? '#FFFFFF' : '#E9E9E9';
     g.beginPath(); rr(x, y, sw, sh, 14);
     // wind the tail the same way as the body so the overlap stays filled
-    const tipX = ax + (left ? -13 - o * .6 : 13 + o * .6), tipY = ay - dir * (15 + o * .6);
-    if (!below) { g.moveTo(bx + 10, base); g.lineTo(bx + 10, edge); g.quadraticCurveTo(bx + 6, edge + dir * 6, tipX, tipY); g.quadraticCurveTo(bx - 2, edge + dir * 12, bx - 10, edge); g.lineTo(bx - 10, base); }
+    const side = x + sw / 2 < ax ? -1 : 1, tipX = ax + side * (13 + o * .6), tipY = ay - dir * (15 + o * .6);
+    if (!up) { g.moveTo(bx + 10, base); g.lineTo(bx + 10, edge); g.quadraticCurveTo(bx + 6, edge + dir * 6, tipX, tipY); g.quadraticCurveTo(bx - 2, edge + dir * 12, bx - 10, edge); g.lineTo(bx - 10, base); }
     else { g.moveTo(bx - 10, base); g.lineTo(bx - 10, edge); g.quadraticCurveTo(bx - 2, edge + dir * 12, tipX, tipY); g.quadraticCurveTo(bx + 6, edge + dir * 6, bx + 10, edge); g.lineTo(bx + 10, base); }
     g.closePath(); g.fill(); g.restore();
     drawRich(sl, x + 13, y + 21, 18, '#111', '#000');
@@ -2256,6 +2353,24 @@ function drawAgent(now, ap, s) {
   drawAvatarBody(ax, ay, s, now, docked);
 }
 
+// the bubbles can be switched off (remembered in this browser)
+let SHOW_BUBBLES = true; try { SHOW_BUBBLES = localStorage.getItem('replay.bubbles') !== 'off'; } catch {}
+function setBubbles(v) { SHOW_BUBBLES = v; $('bubblesT').classList.toggle('on', v); try { localStorage.setItem('replay.bubbles', v ? 'on' : 'off'); } catch {} }
+// a bubble's box glides to a new place relative to the agent (never lagging the agent itself)
+const BUB = { left: null, mir: null, below: null, t0: 0, dt: 16 };
+function glideBub(key, tx, ty, ax, ay, snap) {
+  const o = BUB[key + 'o'], dx = tx - ax, dy = ty - ay;
+  if (!o || snap) { BUB[key + 'o'] = { dx, dy }; return [tx, ty]; }
+  const k = 1 - Math.exp(-BUB.dt / 130); o.dx += (dx - o.dx) * k; o.dy += (dy - o.dy) * k;
+  return [ax + o.dx, ay + o.dy];
+}
+
+// the way back to the last answer: beside the parked agent
+function updateReopen(ax, ay) {
+  const b = $('reopen'), on = canReopen() && resting(performance.now());
+  b.classList.toggle('on', !!on);
+  if (on) { b.style.left = Math.round(ax - b.offsetWidth / 2) + 'px'; b.style.top = Math.round(ay - AV_R * 1.2 - 44) + 'px'; }
+}
 /* ---------- interaction ---------- */
 let drag = null;
 cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false }; cv.setPointerCapture(e.pointerId); cv.classList.add('drag'); });
@@ -2268,7 +2383,11 @@ cv.addEventListener('pointermove', e => {
   showTip(e.clientX, e.clientY);
 });
 cv.addEventListener('pointerup', e => {
-  if (drag && !drag.moved) { if (hover >= 0) openReview(hover); else closeReview(); }
+  if (drag && !drag.moved) {
+    const r = cv.getBoundingClientRect(), [gx, gy] = w2s(agent.x, agent.y);
+    if (canReopen() && Math.hypot(e.clientX - r.left - gx, e.clientY - r.top - gy) < AV_R * 1.6) reopenAnswer();
+    else if (hover >= 0) openReview(hover); else closeReview();
+  }
   drag = null; cv.classList.remove('drag');
 });
 cv.addEventListener('pointerleave', () => { hover = -1; if (stuck < 0) { $('tip').hidden = true; hoverFi = -1; } });
@@ -2297,9 +2416,9 @@ cv.addEventListener('wheel', e => {
   const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top, [wx, wy] = s2w(mx, my);
   let nz = Math.max(.04, Math.min(ZMAX, cam.z * Math.exp(-e.deltaY * .0016)));
   const fz = fitZoom(); focusS = [mx, my];
-  if (tmOn && nz < cam.z) nz = Math.max(nz, fz * .7);       // the full treemap has no dead zone below it
+  if (tmOn && nz < cam.z) nz = Math.max(nz, fz * .46);      // the full treemap has no dead zone below it
   let ax = wx, ay = wy;
-  if (tmOn && nz > fz * .76) {                                // leaving it: land on the map where the pointer was
+  if (tmOn && nz > fz * .56) {                                // leaving it: land on the map where the pointer was
     const hit = hitTile(wx, wy), m = hit && R.get(hit.k);
     if (m) { ax = m.x + hit.u * m.w; ay = m.y + hit.v * m.h; }
   }
@@ -2351,7 +2470,8 @@ const glowOfModel = (k, a) => `rgba(${MODELS[k].glow.join(',')},${a})`;
 
 // phases advance with the agent's energy: nearly still at rest, lively at work
 const PH = { orb: 0, aura: 0, t: 0, spin: 0 };
-function advancePhase(now) { const dt = Math.min(.05, (now - (PH.t || now)) / 1000); PH.t = now; PH.orb += dt * (.1 + 1.25 * energy + PH.spin); PH.aura += dt * (.12 + .95 * energy + PH.spin * .5); }
+function advancePhase(now) { const dt = Math.min(.05, (now - (PH.t || now)) / 1000), w = writeAmt; PH.t = now; PH.orb += dt * (.1 + 1.25 * energy + 1.4 * w + PH.spin); PH.aura += dt * (.12 + .95 * energy + .9 * w + PH.spin * .5); }
+let writeAmt = 0;
 const lerpRGB = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const rgbA = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${Math.max(0, Math.min(1, a))})`;
 // the core: the Codex mark as a body of light, hot at the centre, with a rim
@@ -2569,20 +2689,24 @@ function avatarBusy(now) {
   if (streaming(now)) return true;
   if (!agentWorking()) return false;
   if (typing.i >= 0 && S[typing.i].k === 'prompt' && !typing.sentAt) return false;
-  if (spark && now - spark.t0 < SPARK_MS) return false;
+  if (spark && now - spark.t0 < SPARK_MS && spark.kind !== 'steer') return false;
   return true;
 }
 function receive(now) { recvT = now; energy = Math.max(energy, .85); }
 function drawAvatarBody(ax, ay, s, now, docked) {
   const busy = avatarBusy(now), empty = !L.comps.length;
-  const want = docked ? 9 : empty ? (busy ? 22 : 30) : (busy ? 16 : 20);   // at rest it is bigger and calmer
+  const parked = !empty && resting(now) && !stageSeat(now);
+  const want = docked ? 9 : busy ? (empty ? 22 : 16) : (empty || parked || stageSeat(now)) ? 30 : 20;   // at rest it is bigger and calmer
   AV_R += (want - AV_R) * .1; energy += ((busy ? 1 : 0) - energy) * (busy ? .06 : .05); advancePhase(now);
+  // writing its answer: a steady working beat
+  writeAmt += ((streaming(now) && stageFor >= 0 ? 1 : 0) - writeAmt) * .08;
   // thinking: reasoning between tool steps, or while a thought is showing
   const thinking = busy && !streaming(now) && (!TOOL.has(s.k) || !!bubbles(now).thought);
   thinkAmt += ((thinking ? 1 : 0) - thinkAmt) * .06;
   if (!(morphT0 > now - SWITCH_MS)) PH.spin = 0;
   const rk = (now - recvT) / 750, pulse = rk >= 0 && rk < 1 ? Math.sin(Math.PI * Math.min(1, rk * 1.6)) * (1 - rk) : 0;
-  const r = AV_R * (1 + .3 * pulse), k = modelShown(), mk = Math.min(1, (now - morphT0) / SWITCH_MS), old = mk < 1 ? 'sol' : null;
+  let beat = 0; if (writeAmt > .01 && stream && stream.k) { const age = now - stream.t0 - stream.due[stream.k - 1]; beat = writeAmt * Math.exp(-Math.max(0, age) / 160); }
+  const r = AV_R * (1 + .3 * pulse + .09 * beat + .025 * writeAmt * Math.sin(now / 120)), k = modelShown(), mk = Math.min(1, (now - morphT0) / SWITCH_MS), old = mk < 1 ? 'sol' : null;
   if (old && !docked) { drawSwitch(ax, ay, AV_R, now, mk); return; }
   const col = old ? lerpRGB(MODELS[old].glow, MODELS[k].glow, mk) : MODELS[k].glow, breathe = .5 + .5 * Math.sin(now / 1500);
   // a nebula it lives in
@@ -2605,15 +2729,16 @@ function drawAvatarBody(ax, ay, s, now, docked) {
   else if (busy) { g.strokeStyle = rgbA(col, .9); g.lineWidth = 2; g.beginPath(); g.arc(ax, ay, r + 5, now / 300, now / 300 + 4); g.stroke(); }
   if (docked || stageSeat(now)) return;
   if (TOOL.has(s.k) && s.label && busy && !['web', 'image', 'playtest'].includes(s.k)) actionPill(ax, ay + r * 1.1 + 22, s);
-  else if (!busy && !(typing.i >= 0 && !typing.sentAt) && !(spark && !spark.got)) statusPill(ax, ay + r * 1.1 + 22, 'idle', now, col);   // thinking has its bubbles
+  else if (!busy && !empty && !canReopen() && !(typing.i >= 0 && !typing.sentAt) && !(spark && !spark.got)) statusPill(ax, parked ? ay - r * 1.2 - 36 : ay + r * 1.1 + 22, 'idle', now, col);   // thinking has its bubbles
 }
 
-/* ---------- before there is a project: the answer, in full, in front of you ---------- */
-let stageFor = -1, stageAt = 0, stageOffAt = -1e9, stream = null;
-// the answer stays up while you read it and while you type the next message; it gives way when
-// that message reaches the agent
-function stageReply() {
-  if (L.comps.length) return -1;
+/* ---------- the final answer, in full, in front of you ---------- */
+// Before there is a project it simply is the screen. Once there is a map, it comes up over the map
+// when a turn ends (the map dimmed behind it), can be dismissed, and brought back.
+let stageFor = -1, stageAt = 0, stageOffAt = -1e9, stream = null, stageDismissed = -1, stageReopen = -1;
+// the latest reply, if it is a final answer: it stays up while you read and while you type the
+// next message, and gives way when that message reaches the agent
+function lastFinal() {
   for (let i = cur; i >= 0; i--) {
     const s = S[i];
     if (s.k === 'reply') return s.final ? i : -1;
@@ -2621,46 +2746,124 @@ function stageReply() {
   }
   return -1;
 }
+function stageReply() { const i = lastFinal(); return i >= 0 && L.comps.length && i === stageDismissed ? -1 : i; }
+function dismissAnswer() { if (stageFor >= 0 && L.comps.length) stageDismissed = stageFor; }
+function reopenAnswer() { const i = lastFinal(); if (i < 0) return; stageDismissed = -1; stageReopen = i; }
+const canReopen = () => L.comps.length && stageFor < 0 && lastFinal() >= 0 && lastFinal() === stageDismissed;
 const readSeconds = () => 1.6;                                // a beat, not a wait: pause to read
 // like a thread: the answer in the middle with the full height, its author beside the first line
 function stageGeom() {
   const mapW = VW - panelW, cw = Math.min(740, mapW - 190), x0 = Math.max(24, (mapW - cw) / 2 + 30);
   return { ax: x0 - 58, ay: 100, left: x0, cw };
 }
+const WRITE_TAIL = 520;
+// how far the writing has got through unit k (0..1), and the unit's time slot
+function unitProgress(k, now) { const t = now - stream.t0, d0 = stream.due[k], d1 = stream.slot[k]; return Math.max(0, Math.min(1, (t - d0) / d1)); }
 function updateStage(now) {
-  const i = stageReply(), el = $('stage');
+  const i = stageReply(), el = $('stage'), map = !!L.comps.length;
   if (i !== stageFor) {
+    const reopen = i >= 0 && i === stageReopen; stageReopen = -1;
     if (i < 0 && stageFor >= 0) stageOffAt = now;
     stageFor = i; stageAt = now;
     if (i >= 0) {
       const done = S.slice(i, i + 5).find(x => x.k === 'done'), m = MODELS[modelShown()].name;
-      el.innerHTML = `<div class="who"><b>Codex</b><span>GPT-6 ${m}${done ? ` \u00B7 worked for ${fmtDur(done.dur || 0)}` : ''}</span></div><div class="md">${mdBlock(S[i].text)}</div>`; el.scrollTop = 0;
-      // while playing, the answer streams in as it is written: paragraph by paragraph, list item by list item
+      el.innerHTML = `<div class="who"><b>Codex</b><span>GPT-6 ${m}${done ? ` · worked for ${fmtDur(done.dur || 0)}` : ''}</span></div><div class="md">${mdBlock(S[i].text)}</div>`; el.scrollTop = 0;
+      el.classList.toggle('reveal', reopen);
+      { const G = stageGeom(); el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = '40px'; el.style.bottom = ($('composer').offsetHeight + 22) + 'px'; }
+      void el.offsetWidth;
+      // while playing, it is written as you watch: the scan line sweeps down each paragraph in turn,
+      // and only what it has passed is there
       stream = null;
-      if (playing) {
-        const units = []; for (const b of el.querySelector('.md').children) { if (b.tagName === 'UL' || b.tagName === 'OL') units.push(...b.children); else units.push(b); }
+      if (playing && !reopen) {
+        const units = []; for (const b of el.querySelector('.md').children) { if (b.tagName === 'UL' || b.tagName === 'OL') units.push(...b.children); else if (b.classList.contains('tbl')) units.push(...b.querySelectorAll('tr')); else units.push(b); }
         const pace = speed.k === 't' ? (speed.v >= 300 ? .35 : speed.v >= 60 ? .7 : 1) : speed.v >= 8 ? .35 : 1;
-        // what fits on screen is written at a readable pace (about 2.5 s in all); the rest cascades in
-        const vis = el.clientHeight, raw = units.map(u => u.offsetTop < vis ? Math.min(600, 110 + u.textContent.length * 1.8) : 22);
-        const onScreen = raw.reduce((a, r, k) => a + (units[k].offsetTop < vis ? r : 0), 0), sc = Math.min(1, 2500 / Math.max(1, onScreen)) * pace;
-        let t = 380; const due = units.map((u, k) => { u.classList.add('pend'); const d = t; t += raw[k] * (u.offsetTop < vis ? sc : pace); return d; });
-        stream = { units, due, t0: now, end: t, k: 0 };
+        // one fixed writing speed, whatever the length: a paragraph takes as long as its text
+        const MS_PER_CHAR = .38, MS_PER_UNIT = 45, raw = units.map(u => Math.max(130, Math.min(2600, MS_PER_UNIT + u.textContent.length * MS_PER_CHAR)) * pace);
+        let t = 360; const due = [], slot = [];
+        // tables build up with their rows: the table (outline included) is revealed row by row
+        units.forEach((u, k) => { if (u.tagName === 'TR') u.closest('.tbl').classList.add('pend'); u.classList.add('pend'); due.push(t); slot.push(raw[k]); t += raw[k]; });
+        const er = el.getBoundingClientRect(), ys = units.map(u => u.getBoundingClientRect().top - er.top + el.scrollTop), last = units[units.length - 1];
+        stream = { units, due, slot, ys, yEnd: last.getBoundingClientRect().bottom - er.top + el.scrollTop, t0: now, end: t, k: 0, follow: true };
       }
     }
     el.classList.toggle('on', i >= 0);
   }
-  if (stream && i >= 0) { while (stream.k < stream.units.length && now - stream.t0 >= stream.due[stream.k]) stream.units[stream.k++].classList.remove('pend'); if (stream.k >= stream.units.length && now - stream.t0 > stream.end) stream = null; }
-  if (i < 0) stream = null;
+  if (stream && i >= 0) {
+    const t = now - stream.t0;
+    const finishTable = u => { const tb = u && u.tagName === 'TR' && u.closest('.tbl'); if (tb) tb.style.clipPath = ''; };
+    while (stream.k < stream.units.length && t >= stream.due[stream.k]) {
+      if (stream.k > 0) { const pv = stream.units[stream.k - 1], nx = stream.units[stream.k]; if (!(nx.tagName === 'TR' && pv.tagName === 'TR' && nx.closest('.tbl') === pv.closest('.tbl'))) finishTable(pv); }
+      const u = stream.units[stream.k++]; u.classList.remove('pend');
+      if (u.tagName === 'TR') {                                  // the table shows down to the newest row, outline too
+        const tb = u.closest('.tbl'); tb.classList.remove('pend'); const tr = tb.getBoundingClientRect(), ur = u.getBoundingClientRect();
+        tb.style.clipPath = `inset(0 0 ${Math.max(0, tr.bottom - ur.bottom).toFixed(1)}px 0 round 9px)`;
+      }
+    }
+    if (stream.k >= stream.units.length && t > stream.end) finishTable(stream.units[stream.units.length - 1]);
+    // the view follows the writing down, unless you scroll yourself: one continuous front
+    if (stream.follow) {
+      const el2 = $('stage'), D = stream.due, Y = stream.ys, n = D.length;
+      let j = 0; while (j < n - 1 && D[j + 1] <= t) j++;
+      const front = t <= D[0] ? Y[0] : j < n - 1 ? Y[j] + (Y[j + 1] - Y[j]) * (t - D[j]) / (D[j + 1] - D[j]) : Y[n - 1] + (stream.yEnd - Y[n - 1]) * Math.min(1, (t - D[n - 1]) / stream.slot[n - 1]);
+      const endK = t <= D[n - 1] ? 0 : Math.min(1, (t - D[n - 1]) / stream.slot[n - 1]);
+      const want = Math.max(0, Math.min(el2.scrollHeight - el2.clientHeight, front - el2.clientHeight * .6 * (1 - endK) + 40 * endK));
+      const dt = Math.min(50, now - (stream.lt || now)); stream.lt = now;
+      stream.sp = (stream.sp || el2.scrollTop) + (want - (stream.sp || el2.scrollTop)) * (1 - Math.exp(-dt / 220));
+      if (stream.sp > el2.scrollTop) el2.scrollTop = stream.sp;
+    }
+    if (stream.k >= stream.units.length && t > stream.end + 900) stream = null;
+  }
+  if (i < 0 && stream) { stream.units.forEach(u => { u.classList.remove('pend', 'writing'); const tb = u.tagName === 'TR' && u.closest('.tbl'); if (tb) { tb.classList.remove('pend'); tb.style.clipPath = ''; } }); stream = null; }
   if (i >= 0) {
     const G = stageGeom(), comp = $('composer');
     el.style.left = G.left + 'px'; el.style.width = G.cw + 'px'; el.style.top = '40px';
     el.style.bottom = (comp.offsetHeight + 22) + 'px';
+    const x = $('stageX'); x.style.left = (G.left + G.cw - 14) + 'px';
   }
+  // with a map behind it: dim the map, offer a way back to it
+  const app = document.querySelector('.app'); app.classList.toggle('mapanswer', i >= 0 && map);
+  $('scrim').style.right = panelW + 'px';
 }
 const stageOn = () => stageFor >= 0;
 // the agent keeps its seat beside the answer until the answer has gone
 const stageSeat = now => stageFor >= 0 || now - stageOffAt < 380;
-// long enough to read it, at the watchable speeds
+// writing: a beam from the agent fans over the paragraph being written; its scan line is the edge
+// of the text, so what is below it is not there yet
+function drawWriteBeam(now, ax, ay) {
+  if (!stream || !stream.k || stageFor < 0) return;
+  const k = stream.k - 1, el = stream.units[k], t = now - stream.t0, after = t - (stream.due[k] + stream.slot[k]);
+  const last = k === stream.units.length - 1; if (last && after > WRITE_TAIL) return;
+  const fade = Math.min(1, (t - stream.due[0]) / 300) * (last && after > 0 ? 1 - after / WRITE_TAIL : 1);
+  const st = $('stage').getBoundingClientRect(), fr = fxc.getBoundingClientRect(), r = (el.tagName === 'TR' ? el.closest('.tbl') : el).getBoundingClientRect(), ur = el.getBoundingClientRect();
+  const x0 = r.left - fr.left - 8, x1 = Math.min(r.right, st.right - 20) - fr.left;
+  // one continuous beam: its target glides from paragraph to paragraph instead of jumping
+  const T = Math.max(st.top - fr.top, ur.top - fr.top), B = Math.min(st.bottom - fr.top, ur.bottom - fr.top), dt = Math.min(50, now - (stream.bl || now)); stream.bl = now;
+  const kk = 1 - Math.exp(-dt / 140); stream.bt = stream.bt == null ? T : stream.bt + (T - stream.bt) * kk; stream.bb = stream.bb == null ? B : stream.bb + (B - stream.bb) * kk;
+  const bt = stream.bt, bb = Math.max(stream.bt + 6, stream.bb), col = MODELS[modelShown()].glow;
+  g.save(); g.beginPath(); g.rect(st.left - fr.left - 120, st.top - fr.top, st.width + 120, st.height); g.clip();
+  const bg = g.createLinearGradient(ax, ay, x0, (bt + bb) / 2); bg.addColorStop(0, rgbA(col, .02 * fade)); bg.addColorStop(1, rgbA(col, .13 * fade));
+  g.fillStyle = bg; g.beginPath(); g.moveTo(ax, ay); g.lineTo(x0, bt); g.lineTo(x0, bb); g.closePath(); g.fill();
+  g.strokeStyle = rgbA(col, .22 * fade); g.lineWidth = 1; g.beginPath(); g.moveTo(ax, ay); g.lineTo(x0, bt); g.moveTo(ax, ay); g.lineTo(x0, bb); g.stroke();
+  // what it writes streams out of it: small lights flow along the beam into the paragraph
+  for (let i = 0; i < 16; i++) {
+    const cyc = now / 520 + i / 16, ph = cyc % 1, seed = Math.floor(cyc) * 7 + i * 13, rv = Math.sin(seed * 12.9898) * 43758.5453 % 1, ty = bt + (bb - bt) * Math.abs(rv);
+    const e = ph * ph * (3 - 2 * ph), px2 = ax + (x0 - ax) * e, py = ay + (ty - ay) * e + Math.sin(ph * Math.PI) * (i % 2 ? 6 : -6), a = Math.sin(Math.PI * ph) * fade;
+    g.fillStyle = `rgba(236,234,255,${.85 * a})`; g.beginPath(); g.arc(px2, py, 1.1 + 1.1 * (1 - ph), 0, 7); g.fill();
+  }
+  // a soft light where it lands, fading off to the right; steady, no flashing
+  g.globalCompositeOperation = 'lighter';
+  const lit = g.createLinearGradient(x0, 0, x1, 0); lit.addColorStop(0, rgbA(col, .1 * fade)); lit.addColorStop(.45, rgbA(col, .035 * fade)); lit.addColorStop(1, rgbA(col, 0));
+  g.fillStyle = lit; rr(x0 + 4, bt - 3, x1 - x0, bb - bt + 6, 8); g.fill();
+  g.fillStyle = rgbA(col, .55 * fade); g.fillRect(x0 - .5, bt, 1.5, bb - bt);
+  g.restore();
+}
+// where the writing is now (screen y, within the answer), or null when it is not writing
+function writingY(now) {
+  if (!stream || !stream.k || stageFor < 0) return null;
+  const k = stream.k - 1, el = stream.units[k], t = now - stream.t0; if (k === stream.units.length - 1 && t > stream.due[k] + stream.slot[k] + WRITE_TAIL) return null;
+  const st = $('stage').getBoundingClientRect(), fr = fxc.getBoundingClientRect(), r = el.getBoundingClientRect(), y = (r.top + r.bottom) / 2 - fr.top;
+  return Math.max(st.top - fr.top + 30, Math.min(st.bottom - fr.top - 40, y));
+}
 const streaming = now => !!stream && now - stream.t0 < stream.end;
 const stageHolding = now => stageFor >= 0 && playing && (streaming(now) || ((speed.k === 't' ? speed.v <= 60 : speed.v <= 1) && now - stageAt < (stream ? stream.end : 0) + readSeconds() * 1000));
 
@@ -2973,12 +3176,12 @@ function flyToReview(fi) {
     { left: x1 + 'px', top: y1 + 'px', width: w1 + 'px', height: h1 + 'px', opacity: 0 }], { duration: 560 * Math.max(1, calm() * .7), easing: 'cubic-bezier(.3,.8,.3,1)' });
   a.onfinish = () => gh.remove();
 }
-function openReview(fi) {
+function openReview(fi) { $('tReview').classList.add('on');
   unstick(); const was = rvFi >= 0; rvFi = fi; renderReview(false);
   if (!was) flyToReview(fi);
   document.querySelector('.app').classList.add('rv-on'); focusFile(fi);
 }
-function closeReview() { if (rvFi < 0) return; document.querySelector('.app').classList.remove('rv-on'); rvFi = -1; }
+function closeReview() { $('tReview').classList.remove('on'); if (rvFi < 0) return; document.querySelector('.app').classList.remove('rv-on'); rvFi = -1; }
 function refreshTip() {
   tickTip(performance.now());
   if (rvFi >= 0 && rvAt !== cur) renderReview(true);
@@ -3031,8 +3234,20 @@ new ResizeObserver(() => { resize(); sizeTimeline(); }).observe(document.querySe
 resize(); sizeTimeline(); buildThread(); buildSide();
 // "gpt-6-astra" + "high" reads as the app shows it: GPT-6 Astra High
 buildPicker(); tickModel(performance.now());
+$('stageX').addEventListener('click', dismissAnswer);
+setBubbles(SHOW_BUBBLES);
+$('bubblesT').addEventListener('click', () => setBubbles(!SHOW_BUBBLES));
+document.addEventListener('keydown', e => { if (e.key === 'b' && !e.metaKey && !e.ctrlKey && e.target === document.body) setBubbles(!SHOW_BUBBLES); });
+$('scrim').addEventListener('click', dismissAnswer);
+$('reopen').addEventListener('click', reopenAnswer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('.app').classList.contains('mapanswer')) dismissAnswer(); });
+// scrolling the streaming answer yourself stops it from following
+for (const ev of ['wheel', 'touchmove', 'pointerdown']) $('stage').addEventListener(ev, () => { if (stream) stream.follow = false; }, { passive: true });
 $('repoName').textContent = D.meta.repo; $('smRepo').textContent = D.meta.repo;
 // share: copy a link to this replay
+// the app's pane toggles: the summary panel, and Review
+$('tPanel').addEventListener('click', () => { const on = document.querySelector('.app').classList.toggle('nopanel'); $('tPanel').classList.toggle('on', !on); resize(); });
+$('tReview').addEventListener('click', () => { if (rvFi >= 0) closeReview(); else { const l = changedFiles(); if (l.length) openReview(l[0]); } });
 $('share').addEventListener('click', async () => {
   const lbl = $('share').querySelector('span'); try { await navigator.clipboard.writeText(location.href); lbl.textContent = 'Link copied'; } catch { lbl.textContent = location.href; }
   setTimeout(() => { lbl.textContent = 'Share'; }, 1600);
@@ -3043,7 +3258,7 @@ setStep(0, false);
 // start playing on arrival, at a watchable pace
 setTimeout(() => { if (!playing && cur === 0) setPlaying(true); }, 900);
 requestAnimationFrame(frame);
-window.__rp = { st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
+window.__rp = { st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ energy: +energy.toFixed(2), streamingNow: streaming(performance.now()), ag: w2s(agent.x, agent.y).map(Math.round), vf: viewFrame(), ty: typing.i, tsent: typing.sentAt, tearly: typing.early, spark: !!spark, sgot: spark && spark.got, rest: resting(performance.now()), busy: avatarBusy(performance.now()), stage: stageFor, tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
 
 })();
 </script>
