@@ -525,6 +525,39 @@
   .msheet .opt svg { width: 20px; height: 20px; color: #BDBDBD; } .msheet .opt b { margin-left: auto; font-weight: 500; color: #9B9B9B; }
   body.mobile .cursor svg { display: none; }
   body.mobile .cursor::before { content: ''; position: absolute; left: -12px; top: -12px; width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.3); border: 2px solid rgba(255,255,255,.75); box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+
+  /* ---------- a phone, at the app's own scale (390 pt wide: 17 pt type, 40 pt round buttons) ---------- */
+  .app.mobile .mmenu { width: 40px; height: 40px; border-radius: 20px; }
+  .app.mobile .mmenu svg { width: 22px; height: 22px; stroke-width: 1.8; }
+  .app.mobile .mpill { padding: 1px 3px; border-radius: 21px; } .app.mobile .mpill .ib { width: 38px; height: 38px; border-radius: 19px; } .app.mobile .mpill svg { width: 22px; height: 22px; stroke-width: 1.8; }
+  /* the composer: a slim pill at rest, the two-row box while a message is being written */
+  .app.mobile .composer { left: 30px; right: 30px; bottom: 8px; border-radius: 24px; padding: 0 6px 0 10px; min-height: 48px; justify-content: center; font-size: 17px;
+    transition: left .35s cubic-bezier(.2,.9,.3,1), right .35s cubic-bezier(.2,.9,.3,1), border-radius .35s, padding .35s, border-color .2s, box-shadow .3s; }
+  .app.mobile .composer .crow { margin-top: 0; gap: 6px; }
+  .app.mobile .composer .plus { width: 34px; height: 34px; font-size: 26px; }
+  .app.mobile .composer .mic { width: 34px; } .app.mobile .composer .mic svg { width: 20px; height: 20px; }
+  .app.mobile .composer .send { width: 34px; height: 34px; border-radius: 17px; } .app.mobile .composer .send svg { width: 16px; height: 16px; }
+  .app.mobile .composer .txt { font-size: 17px; line-height: 23px; }
+  .app.mobile .composer .txt .ph { color: #8A8A8A; }
+  .app.mobile .composer:not(.typing):not(.sent) .txt { position: absolute; left: 50px; right: 88px; top: 50%; transform: translateY(-50%); max-height: 23px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app.mobile .composer:not(.typing):not(.sent) .model, .app.mobile .composer:not(.typing):not(.sent) .ctag { display: none; }
+  .app.mobile .composer.typing, .app.mobile .composer.sent { left: 10px; right: 10px; border-radius: 26px; padding: 12px 8px 8px 16px; }
+  .app.mobile .composer.typing .crow, .app.mobile .composer.sent .crow { margin-top: 10px; }
+  .app.mobile .composer .model { font-size: 14px; }
+  /* reading */
+  .app.mobile .stage { font-size: 17px; line-height: 1.45; } .app.mobile .stage .who { font-size: 14px; } .app.mobile .stage .who b { font-size: 16px; }
+  .app.mobile .tw { font-size: 17px; line-height: 1.45; } .app.mobile .tw .you .msg { font-size: 17px; border-radius: 26px; padding: 12px 18px; }
+  .app.mobile .tw .grp { font-size: 15px; }
+  /* the drawer */
+  .app.mobile .side { font-size: 17px; padding-top: 6px; }
+  .app.mobile .brand { padding: 18px 14px 14px 22px; } .app.mobile .brand > span:first-child { font-size: 24px; }
+  .app.mobile .brand .ib { width: 40px; height: 40px; border-radius: 20px; } .app.mobile .brand .ib svg { width: 21px; height: 21px; }
+  .app.mobile .nav div { padding: 10px 14px; gap: 16px; } .app.mobile .nav svg { width: 22px; height: 22px; stroke-width: 1.6; }
+  .app.mobile .sec { font-size: 17px; font-weight: 600; color: var(--ink); padding: 22px 22px 10px; }
+  .app.mobile .item, .app.mobile .prio { padding: 11px 14px; } .app.mobile .item small, .app.mobile .prio .s { font-size: 13.5px; }
+  .app.mobile .me { font-size: 16px; padding: 14px 16px 18px 22px; }
+  .app.mobile .mback { height: 36px; font-size: 15px; top: 70px; }
+  body.mobile .msheet .opt { font-size: 17px; }
 </style>
 </head>
 <body>
@@ -2736,7 +2769,7 @@ function actionPill(x, y, s) {
   const a = actInfo(s), f = a.mono ? `500 11.5px ${MONO}` : `600 12px ${UI}`, cf = `600 11.5px ${MONO}`;
   const extra = a.ad || a.dl ? ` +${a.ad} −${a.dl}` : '';
   g.font = cf; const ew = extra ? g.measureText(extra).width + 4 : 0;
-  const t = fit((a.mono ? '$ ' : '') + a.t, f, 300 - ew); g.font = f; const tw = g.measureText(t).width, w = tw + ew + 40, px0 = x - w / 2;
+  const t = fit((a.mono ? '$ ' : '') + a.t, f, Math.min(300, VW - 60) - ew); g.font = f; const tw = g.measureText(t).width, w = tw + ew + 40, px0 = Math.max(8, Math.min(VW - panelW - 8 - w, x - w / 2));
   rr(px0, y, w, 26, 13); g.fillStyle = 'rgba(12,12,12,.93)'; g.fill(); g.strokeStyle = rgba(a.col, .6); g.lineWidth = 1.2; g.stroke();
   g.save(); g.translate(px0 + 8, y + 5); g.scale(.8, .8); g.strokeStyle = a.col; g.lineWidth = 1.9; g.lineCap = 'round'; g.lineJoin = 'round'; g.stroke(ICONS[a.ic]); g.restore();
   g.fillStyle = a.bad ? '#FFB3BA' : COL.ink; g.fillText(t, px0 + 30, y + 17);
