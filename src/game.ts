@@ -1,3 +1,4 @@
+import { Controller } from './gamepad';
 import { TheoKit } from './theo';
 import { THEO_COLOR } from './theo-art';
 import { CoopSession } from './coop';
@@ -18,7 +19,7 @@ import { peter,peterPortrait,claw,CLAW_COLORS } from './peter-art';
 
 import { World, BASE, LADDERS, clamp } from './world';
 import { Debris } from './debris';
-import { THINKING, thinkingWeapon, thinkingScroll, canvasPoint } from './combat';
+import { THINKING, thinkingWeapon, thinkingScroll } from './combat';
 import { awareness } from './perception';
 import { TOKEN_CAPACITY, RESET_RECOVERY, shotCost } from './tokens';
 
@@ -30,11 +31,13 @@ const rand=(a:number,b:number)=>a+Math.random()*(b-a);
 const $=<T extends Element=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
 export class Game extends PlayerRuntime {
 coop=new CoopSession(this);
+controller?:Controller;
 constructor(canvas:HTMLCanvasElement,preview=false){
     super(canvas,preview);this.local=!preview;
     this.selectCharacter(this.character);
     this.populate();
     if(preview){this.audio.muted=true;this.effects=false;return;}
+    this.controller=new Controller(this);
     window.addEventListener('keydown',e=>{if(e.target instanceof HTMLInputElement&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(e.code))return;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyJ','KeyK','KeyF','KeyE','KeyQ','ControlLeft','ControlRight','KeyW','KeyA','KeyS','KeyD','Escape'].includes(e.code))e.preventDefault();if(!e.repeat)this.press(e.code);});
     window.addEventListener('keyup',e=>this.release(e.code));
     window.addEventListener('blur',()=>{this.keys.clear();this.pointer.down=false;this.pendingShot=0;if(this.state==='playing')this.pause();});
@@ -103,7 +106,7 @@ die(){
   o.innerHTML='<div class="death-card"><div class="result-title">BRO DOWN</div><p>BACK AT THE CHECKPOINT</p><div class="respawn-track"><i></i></div></div>';o.removeAttribute('hidden');
 }
 respawn(){super.respawn();if(!this.preview&&$('#overlay').classList.contains('death-screen'))$('#overlay').setAttribute('hidden','');}
-notify(a:string,b=''){if(this.preview)return;super.notify(a,b);const e=$('.toast'),banner=document.createElement('div'),title=document.createElement('strong'),detail=document.createElement('small');banner.className='event-banner';title.textContent=a;detail.textContent=b;banner.append(title);if(b)banner.append(detail);e.replaceChildren(banner);this.toastTimer=1.65;}
+notify(a:string,b=''){if(this.preview)return;super.notify(a,b);const e=$('.toast'),banner=document.createElement('div'),title=document.createElement('strong'),detail=document.createElement('small');banner.className='event-banner';title.textContent=a;detail.textContent=this.controller?.label(b)??b;banner.append(title);if(b)banner.append(detail);e.replaceChildren(banner);this.toastTimer=1.65;}
 win(){
     this.state='won';this.barks.request('victory');this.keys.clear();this.pointer.down=false;this.pendingShot=0;this.audio.pickup();$('.touch').classList.remove('active');
     const seconds=Math.floor(this.elapsed),clock=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;
@@ -160,6 +163,7 @@ hud(){
       $('#defense-ready').textContent=kit.wardCharging?(kit.wardCharge===1?'Q RELEASE!':`Q ${Math.round(kit.wardCharge*100)}%`):kit.qCooldown>0?`Q ${kit.qCooldown.toFixed(1)}s`:'Q REPEL';$('#defense-ready').classList.toggle('spent',kit.qCooldown>0);$('#control-q').textContent='TAP DEFLECT / HOLD REPEL';$('#control-fire').textContent=kit.grabbing?'COMPACT HELD':'SLOP!';$('#control-scroll').textContent='INFLUENCE SCALE';$('#control-f').textContent='COMPACT';$('#control-e').textContent='HOLD GRAB / RELEASE THROW';
       this.canvas.setAttribute('aria-label','Pidalf: WASD move, Space jump and hold to hover, W rises and S descends while hovering, mouse aim, click backhand, hold E to grab bots or scrap and release to throw, F compact, tap Q to deflect toward the mouse, hold Q then release for a charged radial repel, scroll continuous influence scale, E near uplink overrides it, Escape pause.');pidalfPortrait($<HTMLCanvasElement>('.portrait').getContext('2d')!);
     }else if(this.character==='theo')this.theoKit.hud();else if(this.character==='marcus')this.marcusKit.hud();else portrait($<HTMLCanvasElement>('.portrait').getContext('2d')!,false,this.usage/TOKEN_CAPACITY*100);
+    this.controller?.hints();
   }
 render(){
     const c=this.c;c.save();c.clearRect(0,0,W,H);
@@ -189,7 +193,7 @@ render(){
     for(let i=Math.floor(this.cam/90);i<(this.cam+W)/90;i++){const x=i*90-this.cam;rect(c,x,BASE+513,80,8,'#11251d');rect(c,x+10,BASE+515,3,3,'#415540');}
     c.restore();
     if(this.pointer.active&&this.state==='playing'){
-      const p=canvasPoint(this.pointer.x,this.pointer.y,this.canvas.getBoundingClientRect()),ready=this.fireTimer<=0;
+      const target=this.aimPoint(),p={x:target.x-this.cam,y:target.y-this.camY},ready=this.fireTimer<=0;
       c.strokeStyle=this.character==='theo'?THEO_COLOR:this.character==='marcus'?AUGMENT_COLORS[this.marcusKit.mode]:this.character==='pidalf'?PI_COLOR:this.character==='dimillian'?this.dimillianKit.color:this.character==='peter'?CLAW_COLORS[this.peterKit.kind]:thinkingWeapon(this.thinking).color;c.lineWidth=1.5;const r=7+this.thinking*2;
       const tier=this.character==='marcus'?this.marcusKit.mode:thinkingWeapon(this.thinking).tier;c.beginPath();
       if(this.character==='marcus'&&tier===3){c.moveTo(p.x,p.y);c.arc(p.x,p.y,r,.45,Math.PI*2-.45);c.closePath();}else if(tier===0)c.arc(p.x,p.y,r,0,Math.PI*2);
@@ -234,13 +238,14 @@ drawThinkingFeedback(){
     if(this.effects&&burst>0){c.strokeStyle=color;c.lineWidth=2;c.globalAlpha*=burst;c.strokeRect(x-5-(1-burst)*8,y-5-(1-burst)*5,274+(1-burst)*16,94+(1-burst)*10);c.globalAlpha=Math.min(1,this.modeFeedback*4);}
     if(isMarcus){if(tier===3)pacmanArt(c,x+30,y+27,18,0,.5);else if(tier===2)invaderArt(c,x+30,y+27,this.time,2.5);else if(tier===1)lcdFigure(c,x+30,y+27,1,2,0,1.1);else cartridgeArt(c,x+30,y+27,tier,this.time*5,9);}else if(isDim)dimillian(c,x+20,y+12,1,this.time,false,tier,0,0,.3,false,false,1);else if(isPeter)claw(c,x+31,y+31,tier,this.time,1,tier===2?1.6:1.3);
     else for(let i=0;i<=tier;i++){rect(c,x+12,y+19+i*9,30,4,color);rect(c,x+42,y+18+i*9,6,6,'#f2eee1');}
-    text(c,names[tier],x+62,y+30,color,20);text(c,hints[tier],x+12,y+49,'#dbe0e5',8);
+    text(c,names[tier],x+62,y+30,color,20);text(c,this.controller?.label(hints[tier])??hints[tier],x+12,y+49,'#dbe0e5',8);
     const barX=x+12,barY=y+59,barW=240;
     const selected=isMarcus?[0,2,3].indexOf(tier):tier;const count=3;for(let i=0;i<count;i++){rect(c,barX+i*barW/count,barY,barW/count-2,8,i===selected?color:'#48515d');}
     const marker=barX+this.thinking/2*barW;rect(c,marker-2,barY-3,4,14,'#fff6de');
     text(c,`${Math.round(this.thinking/2*100)}%`,x+252,y+80,color,9,'right');
-    text(c,isMarcus?'AUGMENT · SCROLL / 1 2 3':isDim?'HOT RELOAD · SCROLL / 1 2 3':isPeter?'E THROW · CLICK ATTACK':'THINKING POWER',x+12,y+80,'#a8b4c2',7);
-    if(this.pointer.active){const p=canvasPoint(this.pointer.x,this.pointer.y,this.canvas.getBoundingClientRect());
+    const modeHint=isMarcus?'AUGMENT · SCROLL / 1 2 3':isDim?'HOT RELOAD · SCROLL / 1 2 3':isPeter?'E THROW · CLICK ATTACK':'THINKING POWER';
+    text(c,this.controller?.label(modeHint)??modeHint,x+12,y+80,'#a8b4c2',7);
+    if(this.pointer.active){const target=this.aimPoint(),p={x:target.x-this.cam,y:target.y-this.camY};
       // Shape and segment count change decisively at thresholds; radius follows every scroll sample.
       c.strokeStyle=color;c.lineWidth=2;const r=18+this.thinking*6+(this.effects?burst*10:0);c.beginPath();
       if(this.character==='marcus'&&tier===3){c.moveTo(p.x,p.y);c.arc(p.x,p.y,r,.45,Math.PI*2-.45);c.closePath();}else if(tier===0)c.arc(p.x,p.y,r,0,Math.PI*2);
@@ -252,7 +257,7 @@ drawThinkingFeedback(){
   }
 drawPerception(){
     if(!this.pointer.active||this.state!=='playing')return;
-    const point=canvasPoint(this.pointer.x,this.pointer.y,this.canvas.getBoundingClientRect()),hoverX=point.x+this.cam,hoverY=point.y+this.camY;
+    const point=this.aimPoint(),hoverX=point.x,hoverY=point.y;
     const c=this.c;
     for(const e of this.enemies){
       if(e.dead||e.hacked>0||e.sheep||e.stun>0||Math.abs(e.x-this.player.x)>560||e.y-this.camY<-80||e.y-this.camY>H+80)continue;
@@ -286,7 +291,7 @@ drawRelays(){
       rect(c,x+7,y+18,10,4,'#8f99a8');rect(c,x+9,y-29,3,17,'#727f92');
       c.strokeStyle=r.done?this.accent:'#ffbd6d';c.lineWidth=2;c.beginPath();c.arc(x+10,y-22,10+Math.sin(this.time*4)*3,Math.PI,Math.PI*2);c.stroke();
       text(c,r.done?'OVERRIDDEN':`UPLINK ${i+1}`,x+10,y-39,r.done?this.accent:'#ffc387',10,'center');
-      if(!r.done)text(c,this.character!=='tibo'?'[ E ] OVERRIDE':'[ F ] RESET',x+10,y+48,this.accent,10,'center');
+      if(!r.done)text(c,this.character!=='tibo'?`[ ${this.controller?.active?'RB':'E'} ] OVERRIDE`:`[ ${this.controller?.active?'Y':'F'} ] RESET`,x+10,y+48,this.accent,10,'center');
     }
   }
 drawBoss(){const b=this.boss,c=this.c,x=b.x-this.cam,y=b.y;if(x<-120||x>W+100)return;
@@ -300,6 +305,7 @@ drawBoss(){const b=this.boss,c=this.c,x=b.x-this.cam,y=b.y;if(x<-120||x>W+100)re
 drawExit(){const x=3925-this.cam,c=this.c;if(x<-100||x>W+150)return;c.save();c.translate(0,BASE);rect(c,x-26,418,100,4,'#8f99a8');rect(c,x-18,280,5,140,'#616e7f');rect(c,x+65,280,5,140,'#616e7f');rect(c,x-18,280,88,6,'#8490a0');text(c,this.boss.dead?'EXTRACTION OPEN':'EXTRACTION LOCKED',x+25,265,this.boss.dead?this.accent:'#8d98a8',10,'center');
     if(this.boss.dead){c.globalAlpha=.12+Math.sin(this.time*6)*.05;rect(c,x-12,287,77,131,this.accent);c.globalAlpha=1;text(c,'→',x+25,364,this.accent,36,'center');}else{for(let y=292;y<412;y+=12)rect(c,x-12,y,77,2,'#bc77505c');}c.restore();}
 loop(t:number){
+    this.controller?.poll(Math.min(.05,(t-this.last)/1000||0),t);
     if(this.state==='title'&&this.rosterPreview){this.last=t;this.acc=0;this.frame=requestAnimationFrame(n=>this.loop(n));return;}
     const dt=Math.min(.05,(t-this.last)/1000||0);this.last=t;
     if(this.state==='paused'){this.render();}else{this.acc+=dt;let steps=0;while(this.acc>=1/120&&steps++<7){this.update(1/120);this.acc-=1/120;}this.render();}

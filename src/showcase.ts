@@ -297,8 +297,8 @@ export class Showcase {
  }
  private displayKey(key:string){return key==='Space'?'MOVE':['KeyA','KeyD','KeyW','KeyS'].includes(key)?'MOVE':key.replace('Key','');}
  labels(){
-  this.host.querySelector('#showcase-caption')!.textContent=this.clip.tip;
-  this.host.querySelectorAll<HTMLButtonElement>('[data-clip]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.clip)===this.phase)));this.status();
+  this.host.querySelector('#showcase-caption')!.textContent=this.owner.controller?.label(this.clip.tip)??this.clip.tip;
+  this.host.querySelectorAll<HTMLButtonElement>('[data-clip]').forEach(b=>{b.setAttribute('aria-pressed',String(Number(b.dataset.clip)===this.phase));const title=SHOWCASES[this.scene.character][Number(b.dataset.clip)].title;b.textContent=this.owner.controller?.label(title)??title;});this.status();
  }
  status(){const b=this.host.querySelector<HTMLButtonElement>('#preview-toggle')!;b.textContent=this.paused?'▶ PLAY':'Ⅱ PAUSE';b.setAttribute('aria-label',this.paused?'Play gameplay preview':'Pause gameplay preview');}
  private drawSceneMarks(){
@@ -332,7 +332,8 @@ export class Showcase {
   c.save();c.strokeStyle='#fff2cf';c.globalAlpha=.7;c.lineWidth=2;c.beginPath();c.arc(x,y,9,0,Math.PI*2);c.moveTo(x-15,y);c.lineTo(x-6,y);c.moveTo(x+6,y);c.lineTo(x+15,y);c.moveTo(x,y-15);c.lineTo(x,y-6);c.moveTo(x,y+6);c.lineTo(x,y+15);c.stroke();c.restore();
   const active=new Set([...this.desired].map(key=>this.displayKey(key)));
   for(const el of this.keyElements){const key=el.dataset.demoKey!;el.dataset.active=String(active.has(key)||(this.flashes.get(key)??0)>this.time);el.dataset.held=String(active.has(key));
-   if(key==='MOVE')el.querySelector('kbd')!.textContent=this.desired.has('Space')?'SPACE':[...this.desired].filter(k=>/^Key[WASD]$/.test(k)).map(k=>k.slice(3)).join('+')||'WASD';}
+   const move=this.desired.has('Space')?'SPACE':[...this.desired].filter(k=>/^Key[WASD]$/.test(k)).map(k=>k.slice(3)).join('+')||'WASD';
+   el.querySelector('kbd')!.textContent=this.owner.controller?.active?(key==='MOVE'?(this.desired.has('Space')?'LB':'LS'):({MOUSE:'RT',SCROLL:'D-PAD',E:'RB',Q:'LT',F:'Y'}[key]??key)):(key==='MOVE'?move:key==='MOUSE'?'LMB':key);}
   this.drawWidth=this.canvas.clientWidth;this.drawHeight=this.canvas.clientHeight;
   this.host.style.setProperty('--preview-progress',String(this.finished?1:Math.max(Math.min(.85,this.time/this.duration*.85),this.settled>0?.85+.15*this.settled/.6:0)));
   this.host.dataset.previewCharacter=g.character;this.host.dataset.previewPhase=String(this.phase);this.host.dataset.previewClip=this.clip.id;this.host.dataset.previewTime=this.time.toFixed(2);

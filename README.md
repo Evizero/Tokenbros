@@ -4,6 +4,37 @@
 
 A playable browser run-and-gun prototype starring Tibo, Peter Steinberger, Dimillian, Pidalf, Marcus Bloice and Theo Browne. Climb the Rate-Limit Refinery, override its uplinks, cross by cable, rescue developers, and take out the Rate Limiter.
 
+
+## Controller / Steam Input
+
+Keyboard and mouse remain available. The browser also accepts controllers with
+standard gamepad mapping. In Steam Input, select a **Gamepad** layout for the
+browser/game, then press a controller button with the game page focused.
+
+| Control | Action |
+| --- | --- |
+| Left stick | Move, climb, steer flight |
+| Right stick | Aim; lighter tilt brings the target closer |
+| RT | Attack; hold/release for charged attacks |
+| LT | Defend; holds and toggles follow the character's ability |
+| A or LB | Jump; hold / press again for the character's air ability |
+| X or RB | Secondary ability; hold RB to grab as Pidalf |
+| Y | Special ability |
+| B or left-stick click | Hold to crouch |
+| D-pad left / right | Step modes; hold to adjust power continuously |
+| Menu / Start | Pause / resume; deploy from character selection |
+
+Menus use left stick or D-pad to navigate, A to confirm, B to go back, and Y to
+open Options. LB lets you jump, grapple or hover without taking your thumb off
+the aiming stick. Pidalf can hold RB and press RT to compact his grabbed target.
+Button hints follow the input device automatically. Disconnecting an active
+controller releases its inputs and pauses solo play; co-op opens its local menu.
+
+Tested with simulated standard gamepad input in a browser, not physical Steam
+hardware. Non-standard mappings need Steam Input to expose a standard gamepad.
+Browser sound/fullscreen permissions can still require a browser click.
+
+
 ## Run
 
 ```sh

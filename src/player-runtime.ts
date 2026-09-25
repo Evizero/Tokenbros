@@ -47,6 +47,7 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a);
 export class PlayerRuntime {
   local = false;
   id = "p0";
+  controllerAim: { x: number; y: number } | null = null;
   networkAim: { x: number; y: number } | null = null;
   renderView: {
     c: CanvasRenderingContext2D;
@@ -55,7 +56,7 @@ export class PlayerRuntime {
   } | null = null;
   private context: CanvasRenderingContext2D;
   barks = new HeroBarks(this);
-  rosterPreview: { destroy(): void } | null = null;
+  rosterPreview: { destroy(): void; labels(): void } | null = null;
   otherTibo = new OtherTibo(this);
   defense = new Defense(this);
   character: "tibo" | "peter" | "dimillian" | "pidalf" | "marcus" | "theo" = "tibo";
@@ -904,6 +905,7 @@ export class PlayerRuntime {
   }
   aimPoint() {
     if (this.networkAim) return this.networkAim;
+    if (this.controllerAim) return this.controllerAim;
     if (this.pointer.active) {
       const p = canvasPoint(
         this.pointer.x,
@@ -918,8 +920,8 @@ export class PlayerRuntime {
     };
   }
   updateAim() {
-    if (this.networkAim) {
-      const p = this.networkAim;
+    if (this.networkAim || this.controllerAim) {
+      const p = (this.networkAim ?? this.controllerAim)!;
       this.aimAngle = Math.atan2(
         p.y - this.bodyY - 1,
         p.x - this.player.x - 10,
