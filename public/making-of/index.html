@@ -65,7 +65,19 @@
   .note { padding: 0 20px 10px; font-size: 11px; line-height: 1.4; color: #5E5E5E; }
   .me i { width: 24px; height: 24px; border-radius: 50%; background: #5A5A5A; display: grid; place-items: center; font-style: normal; color: var(--ink); font-size: 11px; }
 
-  .main { display: grid; grid-template-rows: 52px 1fr 60px; min-width: 0; min-height: 0; }
+  .main { display: grid; grid-template-rows: 52px 1fr 60px; grid-template-columns: minmax(0, 1fr); min-width: 0; min-height: 0; }
+  /* the map column never grows past its share of the window: when it is narrow (the review open, a
+     small window) the title bar and timeline drop extras instead of pushing it over the panel */
+  .title, .timeline { min-width: 0; overflow: hidden; }
+  .title .name { flex: 0 1 auto; overflow: hidden; } #threadTitle { overflow: hidden; text-overflow: ellipsis; }
+  .main.w900 .title .name .repo, .main.w900 #share span { display: none; }
+  .main.w780 .timeline .speed { display: none; } .main.w780 .clock { min-width: 0; }
+  .main.w780 .timeline .mspeed { display: block; flex: none; font: 600 11px var(--mono); color: #D6D6D6; background: #222; border: 1px solid #333; border-radius: 13px; padding: 6px 10px; white-space: nowrap; }
+  .main.w780 .mapctl button { font-size: 0; gap: 0; padding: 4px 8px; } .main.w780 .layers > span { display: none; }
+  .main.w640 .timeline .clock, .main.w640 .title .ib[title="More"], .main.w640 .views .ib:not(#tReview) { display: none; }
+  .main.w640 .title { padding-left: 12px; gap: 4px; } .main.w640 .title .name { gap: 6px; } .main.w640 .viewseg button { padding-left: 8px; padding-right: 8px; font-size: 0; gap: 0; } .main.w640 .tbplay .pn { display: none; }
+  .main.w640 .composer .appr { font-size: 0; gap: 0; } .main.w640 .composer .mic { display: none; } .main.w640 .composer .model { white-space: nowrap; }
+  .main.w640 .layers button:not(.on) { font-size: 0; gap: 0; padding-left: 7px; padding-right: 7px; }
   .title { background: var(--main); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 6px; padding: 0 12px 0 20px; }
   .title .name { font-weight: 500; font-size: 15px; letter-spacing: -.01em; display: flex; gap: 10px; align-items: center; min-width: 0; white-space: nowrap; }
   .title .name svg { width: 18px; height: 18px; color: #C8C8C8; flex: none; }
@@ -693,7 +705,7 @@
       <span class="grow"></span>
       <div class="viewseg" role="tablist"><button id="vMap" class="on" title="Map (T)"><svg><use href="#i-map"/></svg>Map</button><button id="vThread" title="Thread (T)"><svg><use href="#i-thread"/></svg>Thread</button></div>
       <span class="grow"></span>
-      <a class="tb" href="../" title="Play the game this session built">Play Tokenbros ↗</a>
+      <a class="tb tbplay" href="../" title="Play the game this session built">Play<span class="pn"> Tokenbros</span> ↗</a>
       <button class="ib" title="More"><svg><use href="#i-dots"/></svg></button>
       <button class="tb" id="share" title="Copy a link to this replay"><svg><use href="#i-share"/></svg><span>Share</span></button>
       <div class="mpill"><button class="ib" id="mview" aria-label="Map or thread"><svg class="a"><use href="#i-thread"/></svg><svg class="b"><use href="#i-map"/></svg></button><button class="ib" id="mmore" aria-label="More"><svg><use href="#i-dots"/></svg></button></div>
@@ -3931,6 +3943,8 @@ document.addEventListener('keydown', e => {
 window.addEventListener('resize', () => { resize(); sizeTimeline(); });
 // the map follows its own size (the Review sidebar opening squeezes it)
 new ResizeObserver(() => { resize(); sizeTimeline(); }).observe(document.querySelector('.main'));
+// how much room the map column has: the title bar and the timeline shed extras as it narrows
+new ResizeObserver(() => { if (MOBILE) return; const m = document.querySelector('.main'), w = m.clientWidth; for (const t of [900, 780, 640]) m.classList.toggle('w' + t, w < t); }).observe(document.querySelector('.main'));
 // the timeline shares its row with the clock, whose text changes width: keep its drawing unstretched
 new ResizeObserver(() => { if (Math.abs(tl.clientWidth - tlW) > .5) sizeTimeline(); }).observe(tl);
 
