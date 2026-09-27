@@ -1867,17 +1867,24 @@ function blockCover(ranges, G) {
   return f;
 }
 const blockAt = (G, i) => [G.x0 + (i % G.cols) * G.cw + (G.cw - G.b) / 2, G.y0 + Math.floor(i / G.cols) * G.ch + (G.ch - G.b) / 2];
-const BLK_EDIT = ['#26382F', '#2A5040', '#2E6650', '#33805F'], BLK_CTX = ['#282C40', '#2F3659', '#364072', '#3E4A8C'], BLK_NONE = '#272727';
+const BLK_EDIT = ['#284536', '#2B5343', '#2F6650', '#33805F'], BLK_CTX = ['#2D3354', '#323A66', '#38427A', '#3E4A8C'], BLK_NONE = '#272727';
 function drawBlocks(fi, r, z, fs, now) {
   // a file too small for blocks keeps one flat colour for what happened to it
   const G = blockGrid(fi, r, z); if (!G || G.b * z < 2.5) { g.fillStyle = tmColor(fi); g.fill(); return; }
-  const cols = new Map(), put = (col, i) => { let l = cols.get(col); if (!l) cols.set(col, l = []); l.push(i); };
+  const cols = new Map(), put = (col, i) => { let l = cols.get(col); if (!l) cols.set(col, l = []); l.push(i); }, ring = [];
   if (LENS === 'activity') {
-    const eU = merged(fs.since), eF = blockCover(eU, G), cF = blockCover(minus(merged(fs.ctx), eU), G), lv = f => Math.min(3, Math.floor(f * 3.999));
-    for (let i = 0; i < G.n; i++) put(eF[i] > 0 ? BLK_EDIT[lv(eF[i])] : cF[i] > 0 ? BLK_CTX[lv(cF[i])] : BLK_NONE, i);
+    // the fill says what happened to the lines (edited: green); what the agent has in its context now
+    // is blue, and on an edited block a blue ring, so reading its own code never looks like nothing
+    const eF = blockCover(merged(fs.since), G), cF = blockCover(merged(fs.ctx), G), lv = f => Math.min(3, Math.floor(f * 3.999));
+    for (let i = 0; i < G.n; i++) { put(eF[i] > 0 ? BLK_EDIT[lv(eF[i])] : cF[i] > 0 ? BLK_CTX[lv(cF[i])] : BLK_NONE, i); if (eF[i] > 0 && cF[i] > 0) ring.push(i); }
   } else { const c0 = tmColor(fi); for (let i = 0; i < G.n; i++) put(c0 === NEUTRAL ? BLK_NONE : c0, i); }
   const rad = Math.max(0, Math.min(G.b * .2, 2.2 / z));
   for (const [col, list] of cols) { g.beginPath(); for (const i of list) { const [x, y] = blockAt(G, i); g.roundRect(x, y, G.b, G.b, rad); } g.fillStyle = col; g.fill(); }
+  if (ring.length) {
+    const lw = Math.max(1.1 / z, G.b * .15), h = lw / 2; g.beginPath();
+    for (const i of ring) { const [x, y] = blockAt(G, i); g.roundRect(x + h, y + h, G.b - lw, G.b - lw, Math.max(0, rad - h)); }
+    g.strokeStyle = '#8C96FF'; g.lineWidth = lw; g.stroke();
+  }
   // the agent at work: the blocks it is writing or reading light up as the scan passes them, then fade
   for (const bm of beams) {
     if (bm.fi !== fi) continue; const el = now - bm.t0; if (el < 0) continue;
@@ -3959,7 +3966,7 @@ requestAnimationFrame(frame);
 window.__bubT = () => performance.now() - (BUB.tSeen || 0) < 50;
 window.__bubS = () => BUB.sp && performance.now() - BUB.sp.seen < 50 ? [BUB.sp.x, BUB.sp.y, BUB.sp.id || (BUB.sp.id = Math.random()), BUB.sp.w, BUB.sp.h, BUB.sp.pin, BUB.sp.moving, BUB.sp.m0 ? BUB.sp.m0.T : 0, BUB.sp.al] : null;
 window.__why = () => ({ why: BUB.why || {}, gaps: BUB.gaps || 0 });
-window.__rp = { tlh: () => tlHover, tlm: (x, y) => tlMark(x, y), tlW: () => tlW, tlx: i => { const r = tl.getBoundingClientRect(); return [r.left + S[i].at / TOTAL_AT * r.width, r.top, r.height]; }, commits: () => CK.map(c => c.s), fz: () => fitZoom(), find: (k, from = 0) => S.findIndex((s, i) => i >= from && s.k === k), finals: () => S.map((s, i) => s.k === "reply" && s.final ? i : -1).filter(i => i >= 0), vrect: k => { const r = V.get(k); if (!r) return null; const [x, y] = w2s(r.x, r.y); return [x, y, r.w * cam.z, r.h * cam.z]; }, st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ energy: +energy.toFixed(2), streamingNow: streaming(performance.now()), ag: w2s(agent.x, agent.y).map(Math.round), vf: viewFrame(), ty: typing.i, tsent: typing.sentAt, tearly: typing.early, spark: !!spark, sgot: spark && spark.got, rest: resting(performance.now()), busy: avatarBusy(performance.now()), stage: stageFor, tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
+window.__rp = { blkstats: () => { const out = { ctx: [0, 0, 0, 0], edit: [0, 0, 0, 0], blkN }; for (const c of L.comps) for (const fi of c.files) { const r = V.get('f' + fi); if (!r || !r.tm) continue; const G = blockGrid(fi, r, cam.z); if (!G) continue; const fs = ST.fs[fi], eF = blockCover(merged(fs.since), G), cF = blockCover(merged(fs.ctx), G); for (let i = 0; i < G.n; i++) { if (eF[i] > 0 && cF[i] > 0) out.both = (out.both || 0) + 1; else if (eF[i] > 0) out.edit[Math.min(3, Math.floor(eF[i] * 3.999))]++; else if (cF[i] > 0) out.ctx[Math.min(3, Math.floor(cF[i] * 3.999))]++; } } return out; }, tlh: () => tlHover, tlm: (x, y) => tlMark(x, y), tlW: () => tlW, tlx: i => { const r = tl.getBoundingClientRect(); return [r.left + S[i].at / TOTAL_AT * r.width, r.top, r.height]; }, commits: () => CK.map(c => c.s), fz: () => fitZoom(), find: (k, from = 0) => S.findIndex((s, i) => i >= from && s.k === k), finals: () => S.map((s, i) => s.k === "reply" && s.final ? i : -1).filter(i => i >= 0), vrect: k => { const r = V.get(k); if (!r) return null; const [x, y] = w2s(r.x, r.y); return [x, y, r.w * cam.z, r.h * cam.z]; }, st: () => STRUCT.key, crect: id => { const r = R.get("c" + id); return r && [r.tx, r.ty, r.tw, r.th]; }, w2s: (x, y) => { const r = cv.getBoundingClientRect(), p = w2s(x, y); return [p[0] + r.left, p[1] + r.top]; }, dbg: () => ({ energy: +energy.toFixed(2), streamingNow: streaming(performance.now()), ag: w2s(agent.x, agent.y).map(Math.round), vf: viewFrame(), ty: typing.i, tsent: typing.sentAt, tearly: typing.early, spark: !!spark, sgot: spark && spark.got, rest: resting(performance.now()), busy: avatarBusy(performance.now()), stage: stageFor, tmOn, tmLin, tbOn, tbLin, fz: fitZoom(), z: cam.z, zt: camT.z, follow }), setStep: (n, a) => setStep(n, a), cam, camT, setFollow: v => setFollow(v), fit: () => fitRect(worldRect(), 100, 2, true), zoomTo: (x, y, z) => { setFollow(false); Object.assign(camT, { x, y, z }); Object.assign(cam, { x, y, z }); }, rect: k => R.get(k), files: () => F.map((f, i) => [i, f.path]) };
 
 })();
 </script>
