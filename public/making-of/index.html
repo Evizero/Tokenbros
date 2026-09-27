@@ -1789,6 +1789,8 @@ function hitTile(wx, wy) {
 // a point on line l of a file, wherever that file is drawn right now (map or treemap)
 function linePt(fi, l, u = .5) {
   const r = V.get('f' + fi); if (!r) return null;
+  // far out a file is blocks: a line is the block that holds it
+  if (treeT >= .5 && r.tm) { const B = blockGrid(fi, r, cam.z); if (B && B.b * cam.z >= 2.5) { const [bx, by] = blockAt(B, Math.min(B.n - 1, Math.max(0, Math.floor((l - 1) / blkN)))); return [bx + u * B.b, by + B.b / 2]; } }
   const G = geoOf(fi), sg = lineSegs(G, l, l)[0] || [0, T_HEAD, LH];
   return [r.x + (sg[0] + u * TW) / Math.max(1, G.w) * r.w, r.y + (sg[1] + sg[2] / 2) / Math.max(1, G.h) * r.h];
 }
@@ -1832,6 +1834,60 @@ const FLY = 1050, LINK_MS = 2800, GLOW_MS = 1500, REL_MS = 3500;
 // what was just read or written: a fast scan, then the whole block glows for a few seconds
 const HOLD = 2500, FADE = 450;
 const holdGlow = (t0, now) => { const a = now - t0; return a < 0 ? 0 : a < HOLD ? 1 : Math.max(0, 1 - (a - HOLD) / FADE); };
+/* ---------- the overview draws a file as blocks ---------- */
+// far out, a file is a grid of small blocks in reading order (left to right, then down), each block
+// a run of its lines, so what the agent edits or reads lights up where it is in the file, and a
+// file never looks like one flat slab. Every block holds the same number of lines, chosen so blocks
+// stay about 7-15 px on screen
+const BLK_STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000];
+let blkN = 20, blkArea = 1;
+function blockScale(z) {
+  let A = 0, n = 0; for (const c of L.comps) for (const fi of c.files) { const r = V.get('f' + fi); if (r && r.tm) { A += r.w * r.h; n += tmVal(fi); } }
+  if (!n) return; blkArea = A / n;
+  const side = k => Math.sqrt(blkArea * k) * z;
+  if (side(blkN) < 7 || side(blkN) > 15) blkN = BLK_STEPS.find(k => side(k) >= 9) || 2000;
+}
+// the label band a tile keeps clear on screen (see drawTreemapLabels)
+const tileLab = (fw, fh) => fw >= 54 ? (fh >= 60 ? 32 : fh >= 36 ? 19 : 0) : 0;
+function blockGrid(fi, r, z) {
+  const v = F[fi].v[ST.vi[fi]], lines = v ? v[1] : 0, n = Math.max(1, Math.ceil(lines / blkN));
+  const lab = tileLab(r.w * z, r.h * z) / z, pad = 3 / z, x0 = r.x + pad, y0 = r.y + (lab || pad), W = r.w - pad * 2, H = r.y + r.h - pad - y0;
+  if (W <= 0 || H <= 0) return null;
+  const cols = Math.max(1, Math.min(n, Math.round(Math.sqrt(n * W / H)) || 1)), rows = Math.ceil(n / cols), cw = W / cols, ch = H / rows;
+  const s = Math.min(cw, ch, Math.sqrt(blkArea * blkN) * 1.3), gap = Math.max(1.3 / z, s * .2);
+  return { x0, y0, cw, ch, cols, n, lines, s, b: s - gap };
+}
+// how much of each block a set of line ranges covers (0..1)
+function blockCover(ranges, G) {
+  const f = new Float32Array(G.n);
+  for (const [a, b] of ranges) for (let i = Math.max(0, Math.floor((a - 1) / blkN)); i <= Math.min(G.n - 1, Math.floor((b - 1) / blkN)); i++) {
+    const lo = Math.max(a, i * blkN + 1), hi = Math.min(b, (i + 1) * blkN), size = Math.max(1, Math.min(blkN, G.lines - i * blkN));
+    if (hi >= lo) f[i] = Math.min(1, f[i] + (hi - lo + 1) / size);
+  }
+  return f;
+}
+const blockAt = (G, i) => [G.x0 + (i % G.cols) * G.cw + (G.cw - G.b) / 2, G.y0 + Math.floor(i / G.cols) * G.ch + (G.ch - G.b) / 2];
+const BLK_EDIT = ['#26382F', '#2A5040', '#2E6650', '#33805F'], BLK_CTX = ['#282C40', '#2F3659', '#364072', '#3E4A8C'], BLK_NONE = '#272727';
+function drawBlocks(fi, r, z, fs, now) {
+  // a file too small for blocks keeps one flat colour for what happened to it
+  const G = blockGrid(fi, r, z); if (!G || G.b * z < 2.5) { g.fillStyle = tmColor(fi); g.fill(); return; }
+  const cols = new Map(), put = (col, i) => { let l = cols.get(col); if (!l) cols.set(col, l = []); l.push(i); };
+  if (LENS === 'activity') {
+    const eU = merged(fs.since), eF = blockCover(eU, G), cF = blockCover(minus(merged(fs.ctx), eU), G), lv = f => Math.min(3, Math.floor(f * 3.999));
+    for (let i = 0; i < G.n; i++) put(eF[i] > 0 ? BLK_EDIT[lv(eF[i])] : cF[i] > 0 ? BLK_CTX[lv(cF[i])] : BLK_NONE, i);
+  } else { const c0 = tmColor(fi); for (let i = 0; i < G.n; i++) put(c0 === NEUTRAL ? BLK_NONE : c0, i); }
+  const rad = Math.max(0, Math.min(G.b * .2, 2.2 / z));
+  for (const [col, list] of cols) { g.beginPath(); for (const i of list) { const [x, y] = blockAt(G, i); g.roundRect(x, y, G.b, G.b, rad); } g.fillStyle = col; g.fill(); }
+  // the agent at work: the blocks it is writing or reading light up as the scan passes them, then fade
+  for (const bm of beams) {
+    if (bm.fi !== fi) continue; const el = now - bm.t0; if (el < 0) continue;
+    const p = Math.min(1, el / bm.dur), upto = p < 1 ? Math.max(bm.a, bm.a + (bm.b - bm.a + 1) * (1 - Math.pow(1 - p, 2)) - 1) : bm.b, gA = p < 1 ? 1 : holdGlow(bm.t0 + bm.dur, now);
+    if (gA <= 0) continue;
+    const hot = bm.write ? '#7CFFC4' : '#A9B2FF', i0 = Math.max(0, Math.floor((bm.a - 1) / blkN)), i1 = Math.min(G.n - 1, Math.floor((upto - 1) / blkN)), e = G.b * .22;
+    g.beginPath(); for (let i = i0; i <= i1; i++) { const [x, y] = blockAt(G, i); g.roundRect(x - e, y - e, G.b + e * 2, G.b + e * 2, rad + e); } g.fillStyle = rgba(hot, .16 * gA); g.fill();
+    g.beginPath(); for (let i = i0; i <= i1; i++) { const [x, y] = blockAt(G, i); g.roundRect(x, y, G.b, G.b, rad); } g.fillStyle = rgba(hot, (bm.write ? .8 : .65) * gA); g.fill();
+  }
+}
 // an arrow lights up only when an edit changes that relationship: an import between the two
 // components added or removed, read straight off the before/after snapshots
 const relAt = new Map();
@@ -2102,6 +2158,7 @@ function draw(now) {
   }
   // files
   const tileMode = z >= LOD_TILE, text = isCode(z), vec = z * DPR > 2.4;
+  if (treeT > 0) blockScale(z);
   const ta = text ? Math.min(1, (z * FS - 4.5) / 1.6) : 0, minBand = px(2, 1.5, 3);
   for (const c of L.comps) for (const fi of c.files) {
     const r = V.get('f' + fi); if (!r || r.x > vx1 || r.y > vy1 || r.x + r.w < vx0 || r.y + r.h < vy0) continue;
@@ -2112,15 +2169,10 @@ function draw(now) {
     if (LENS !== 'activity' && treeT < 1) { const c0 = tmColor(fi); if (c0 !== NEUTRAL) { g.globalAlpha = r.a * .55 * (1 - treeT); g.fillStyle = c0; g.fill(); g.globalAlpha = r.a; } }
     if (treeT > 0) {
       const tch = touchedAt.get(fi), gl = tch ? holdGlow(tch.t, now) : 0;
-      g.globalAlpha = r.a * treeT * (MOBILE && mcomp && F[fi].comp !== mcomp ? .3 : 1); g.fillStyle = tmColor(fi); g.fill();
+      g.globalAlpha = r.a * treeT * (MOBILE && mcomp && F[fi].comp !== mcomp ? .3 : 1); g.fillStyle = '#171717'; g.fill();
+      drawBlocks(fi, r, z, fs, now); rr(r.x, r.y, r.w, r.h, r.tm ? px(7 - 4 * treeT, 1.5, 7) : 7);
       if (gl > 0) { g.strokeStyle = rgba(tch.col === COL.green ? '#7CFFC4' : '#A9B2FF', .95 * gl); g.lineWidth = px(2.5, 1.5, 3); g.stroke(); }
       if ((LENS !== 'activity') && flagged(fi)) { g.fillStyle = COL.red; g.fillRect(r.x, r.y, r.w, Math.min(r.h, px(3, 2, 3))); }
-      // what the agent has in context stays visible from far out: an inner outline, and a bar for how much
-      const cf = LENS === 'activity' && fileDelta(fi).some(Boolean) ? ctxFrac(fi) : 0;   // changed and in context: both show
-      if (cf > 0) {
-        const lw = px(1.6, 1.2, 2); rr(r.x + lw, r.y + lw, r.w - lw * 2, r.h - lw * 2, px(3, 1, 4)); g.strokeStyle = rgba(COL.accent, .85); g.lineWidth = lw; g.stroke();
-        const bh = Math.min(r.h * .3, px(4, 3, 5)); g.fillStyle = COL.accent; g.fillRect(r.x + lw, r.y + r.h - lw - bh, (r.w - lw * 2) * Math.max(.06, cf), bh);
-      }
       g.globalAlpha = r.a * cA;
     }
     for (let k = 1; k < G.k; k++) { g.fillStyle = '#0F0F0F'; g.fillRect(r.x + k * (TW + TG) - TG + 3, r.y + T_HEAD, TG - 6, r.h - T_HEAD - T_FOOT); }
@@ -2324,9 +2376,9 @@ function drawTreemapLabels(al) {
     g.globalAlpha = al;
     for (const fi of c.files) {
       const q = V.get('f' + fi); if (!q) continue;
-      const [fx, fy] = w2s(q.x, q.y), fw = q.w * cam.z, fh = q.h * cam.z; if (fw < 54 || fh < 20) continue;
+      const [fx, fy] = w2s(q.x, q.y), fw = q.w * cam.z, fh = q.h * cam.z, lab = tileLab(fw, fh); if (!lab) continue;
       const ff = `11.5px ${UI}`; g.font = ff; g.fillStyle = 'rgba(236,236,236,.92)'; g.fillText(fit(F[fi].path.split('/').pop(), ff, fw - 12), fx + 6, fy + 14);
-      if (fh >= 34) {
+      if (lab >= 32) {
         const v = F[fi].v[ST.vi[fi]], mm = metricOf(fi), [ad, dl] = fileDelta(fi);
         const cfp = ctxFrac(fi);
         const t = LENS === 'activity' ? (ad || dl ? `+${ad} \u2212${dl}` : cfp ? `${Math.max(1, Math.round(cfp * 100))}% in context` : `${v ? v[1] : 0} lines`) : LENS === 'coverage' ? (mm && mm[2] != null ? `cov ${mm[2]}%` : F[fi].path.startsWith('src/') && !/\.test\./.test(F[fi].path) ? 'no tests' : '') : (mm ? `cx ${mm[1]}` : '');
@@ -2709,8 +2761,9 @@ function drawReadFlow(bm, el, at, p, bA, ap, now) {
   // the beam: wide at the lines, gathering to a point at the agent, brightest where it arrives
   const grd = g.createLinearGradient(mx, my, ap[0], ap[1]); grd.addColorStop(0, rgba(bm.col, .05 * bA)); grd.addColorStop(1, rgba(bm.col, .3 * bA));
   g.fillStyle = grd; g.beginPath(); g.moveTo(L0[0], L0[1]); g.lineTo(L1[0], L1[1]); g.lineTo(ap[0], ap[1]); g.closePath(); g.fill();
-  // the read head: a thin line that has only touched the text, nothing painted
-  g.strokeStyle = rgba(bm.col, .8 * bA); g.lineWidth = px(1.4, 1, 2); g.beginPath(); g.moveTo(L0[0], L0[1]); g.lineTo(L1[0], L1[1]); g.stroke();
+  // the read head: a thin line that has only touched the text, nothing painted (far out, the lit
+  // blocks say it)
+  if (treeT < .5) { g.strokeStyle = rgba(bm.col, .8 * bA); g.lineWidth = px(1.4, 1, 2); g.beginPath(); g.moveTo(L0[0], L0[1]); g.lineTo(L1[0], L1[1]); g.stroke(); }
   // fragments of the text, pulled in
   const v = F[bm.fi].v[ST.vi[bm.fi]], ls = v ? linesOf(v[5]) : null, md = isMd(bm.fi);
   const n = 14, span = Math.max(1, Math.ceil(at) - bm.a);
